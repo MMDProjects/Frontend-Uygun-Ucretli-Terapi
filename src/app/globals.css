@@ -1,26 +1,219 @@
 @import "tailwindcss";
 
 :root {
+  --site-header-height: 4.5rem;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --muted: #e6f0ee;
+  --muted-foreground: #4a4a4a;
+  --border: #cce1de;
+  --input: #cce1de;
+  --ring: #016a59;
+  --primary: #016a59;
+  --primary-foreground: #ffffff;
+  --primary-hover: #014a3e;
+  --primary-active: #01352d;
+  --secondary: #4d978b;
+  --secondary-foreground: #ffffff;
+  --accent: #99c3bd;
+  --accent-foreground: #01352d;
+  --destructive: #dc2626;
+  --warning: #f59e0b;
+  --success: #016a59;
+  --radius: 1rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --font-sans: var(--font-plus-jakarta-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--site-header-height);
 }
 
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+}
+
+/* Katmansız `a` kuralları utility sınıflarını (text-white vb.) ezer; base layer kullan. */
+@layer base {
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 20%, white);
+}
+
+.page-shell {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.section-shell {
+  @apply py-12 sm:py-16 lg:py-20;
+}
+
+.surface-card {
+  @apply rounded-[var(--radius)] border border-border bg-card text-card-foreground shadow-sm;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #e6f0ee 25%, #f4f8f7 37%, #e6f0ee 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/** Nasıl çalışır — yalnızca aktif adım pini (hafif parlama) */
+@keyframes pin-soft-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 45%, transparent);
+  }
+  55% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+.how-it-works-pin-glow {
+  animation: pin-soft-glow 2.4s ease-in-out infinite;
+}
+
+/** Dikey ilerleme çubuğu — pin ile aynı süre ve easing (2.4s) */
+@keyframes how-it-works-fill-sync {
+  0%,
+  100% {
+    opacity: 0.9;
+    filter: brightness(0.98);
+  }
+  55% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+}
+
+.how-it-works-fill-sync {
+  animation: how-it-works-fill-sync 2.4s ease-in-out infinite;
+}
+
+/** İnce parlama bandı — track üzerinde, yine 2.4s senkron */
+@keyframes how-it-works-spine-gloss {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(-40%);
+  }
+  55% {
+    opacity: 0.55;
+    transform: translateY(40%);
+  }
+}
+
+.how-it-works-spine-gloss {
+  animation: how-it-works-spine-gloss 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .skeleton {
+    animation: none;
+  }
+
+  .how-it-works-pin-glow {
+    animation: none;
+  }
+
+  .how-it-works-fill-sync,
+  .how-it-works-spine-gloss {
+    animation: none;
+  }
+}
+
+/**
+ * Sabit header akışta yer kaplamaz; ilk blok arka planı viewport üstüne kadar uzanır.
+ * İçerik header altında kalsın diye üst dolgu: varsayılan section-shell üst ritmi + header.
+ */
+#main-content > *:first-child {
+  scroll-margin-top: var(--site-header-height);
+  padding-top: calc(var(--site-header-height) + 3rem);
+}
+
+@media (min-width: 640px) {
+  #main-content > *:first-child {
+    padding-top: calc(var(--site-header-height) + 4rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  #main-content > *:first-child {
+    padding-top: calc(var(--site-header-height) + 5rem);
+  }
+}
+
+#main-content > *:first-child.hero-full-bleed {
+  padding-top: var(--site-header-height);
 }
