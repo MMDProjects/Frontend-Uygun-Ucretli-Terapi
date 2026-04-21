@@ -12,7 +12,7 @@ export function HomePersonalizedStrip() {
 
   return (
     <div
-      className="rounded-2xl border border-border bg-muted/60 px-4 py-3 text-sm text-muted-foreground"
+      className="mb-6 rounded-2xl border border-border bg-muted/60 px-4 py-3 text-sm text-muted-foreground sm:mb-8"
       role="status"
     >
       {displayName ? (

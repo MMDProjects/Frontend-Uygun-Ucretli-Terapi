@@ -4,9 +4,10 @@ import {
   AboutHomeSection,
   FinalCtaSection,
   HeroSection,
+  HomeBentoSection,
   HomeFaqSection,
+  OfferingsShowcaseSection,
   PortfolioSection,
-  ServicesSection,
   TestimonialsSection,
 } from "@/features/home";
 import { siteConfig } from "@/lib/constants/site";
@@ -29,8 +30,9 @@ export default function Home() {
   return (
     <>
       <HeroSection />
-      <ServicesSection />
+      <OfferingsShowcaseSection />
       <PortfolioSection />
+      <HomeBentoSection />
       <TestimonialsSection />
       <AboutHomeSection />
       <HomeFaqSection />

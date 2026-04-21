@@ -2,13 +2,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import type { Expert } from "@/types/domain";
 
 type ExpertCardProps = {
   expert: Expert;
+  className?: string;
+  showPhoto?: boolean;
+  centerCta?: boolean;
 };
 
-export function ExpertCard({ expert }: ExpertCardProps) {
+export function ExpertCard({
+  expert,
+  className,
+  showPhoto = true,
+  centerCta = false,
+}: ExpertCardProps) {
   const initials = expert.name
     .split(" ")
     .map((part) => part[0])
@@ -16,26 +25,33 @@ export function ExpertCard({ expert }: ExpertCardProps) {
     .slice(0, 2);
 
   return (
-    <article className="surface-card flex h-full min-h-[21rem] flex-col overflow-hidden">
+    <article
+      className={cn(
+        "surface-card flex h-full min-h-[21rem] flex-col overflow-hidden",
+        className,
+      )}
+    >
       <div className="px-6 pt-6">
-        <div className="flex items-start gap-4">
-          <div className="shrink-0">
-            <div className="relative size-[72px] overflow-hidden rounded-2xl bg-muted">
-              {expert.photoUrl ? (
-                <Image
-                  src={expert.photoUrl}
-                  alt={`${expert.name} profil fotoğrafı`}
-                  fill
-                  className="object-cover object-center"
-                  sizes="72px"
-                />
-              ) : (
-                <span className="flex size-full items-center justify-center text-xl font-semibold text-primary">
-                  {initials}
-                </span>
-              )}
+        <div className={cn("flex items-start gap-4", !showPhoto && "justify-center")}>
+          {showPhoto ? (
+            <div className="shrink-0">
+              <div className="relative size-[72px] overflow-hidden rounded-2xl bg-muted">
+                {expert.photoUrl ? (
+                  <Image
+                    src={expert.photoUrl}
+                    alt={`${expert.name} profil fotoğrafı`}
+                    fill
+                    className="object-cover object-center"
+                    sizes="72px"
+                  />
+                ) : (
+                  <span className="flex size-full items-center justify-center text-xl font-semibold text-primary">
+                    {initials}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          ) : null}
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold text-primary-hover">{expert.name}</h3>
             <p className="text-sm text-muted-foreground">{expert.title}</p>
@@ -74,7 +90,10 @@ export function ExpertCard({ expert }: ExpertCardProps) {
 
         <Link
           href={`/uzmanlar/${expert.slug}`}
-          className="absolute bottom-4 right-4 z-[3] inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-center text-sm font-semibold !text-white shadow-sm transition-colors hover:bg-primary-hover hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
+          className={cn(
+            "absolute bottom-4 z-[3] inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-center text-sm font-semibold !text-white shadow-sm transition-colors hover:bg-primary-hover hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none",
+            centerCta ? "left-1/2 -translate-x-1/2" : "right-4",
+          )}
         >
           Profili İncele
         </Link>

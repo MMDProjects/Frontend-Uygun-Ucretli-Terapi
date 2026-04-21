@@ -1,7 +1,9 @@
 export { AboutHomeSection } from "./components/about-home-section";
 export { FinalCtaSection } from "./components/final-cta-section";
 export { HeroSection } from "./components/hero-section";
+export { HomeBentoSection } from "./components/home-bento-section";
 export { HomeFaqSection } from "./components/home-faq-section";
+export { OfferingsShowcaseSection } from "./components/offerings-showcase-section";
 export { HomePersonalizedStrip } from "./components/home-personalized-strip";
 export { PortfolioSection } from "./components/portfolio-section";
 export { ServicesSection } from "./components/services-section";
