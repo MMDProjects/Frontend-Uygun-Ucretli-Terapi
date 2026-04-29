@@ -90,7 +90,7 @@ select {
 }
 
 .section-shell {
-  @apply py-12 sm:py-16 lg:py-20;
+  @apply py-20;
 }
 
 .surface-card {
@@ -299,6 +299,31 @@ select {
   animation: recommended-experts-marquee 20s ease-in-out infinite;
 }
 
+@keyframes offerings-card-shake {
+  0%,
+  78%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  82% {
+    transform: translate3d(-1px, 0, 0) rotate(-0.3deg);
+  }
+  86% {
+    transform: translate3d(1px, 0, 0) rotate(0.3deg);
+  }
+  90% {
+    transform: translate3d(-1px, 0, 0) rotate(-0.2deg);
+  }
+  94% {
+    transform: translate3d(1px, 0, 0) rotate(0.2deg);
+  }
+}
+
+.offerings-card-shake {
+  animation: offerings-card-shake 3.8s ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -335,6 +360,10 @@ select {
   }
 
   .recommended-experts-marquee-track {
+    animation: none;
+  }
+
+  .offerings-card-shake {
     animation: none;
   }
 }

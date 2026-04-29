@@ -2,13 +2,11 @@ import type { Metadata } from "next";
 
 import {
   AboutHomeSection,
-  FinalCtaSection,
   HeroSection,
   HomeBentoSection,
   HomeFaqSection,
   OfferingsShowcaseSection,
   PortfolioSection,
-  TestimonialsSection,
 } from "@/features/home";
 import { siteConfig } from "@/lib/constants/site";
 
@@ -33,10 +31,8 @@ export default function Home() {
       <OfferingsShowcaseSection />
       <PortfolioSection />
       <HomeBentoSection />
-      <TestimonialsSection />
       <AboutHomeSection />
       <HomeFaqSection />
-      <FinalCtaSection />
     </>
   );
 }

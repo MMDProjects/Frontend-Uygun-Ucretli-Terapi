@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-import { Button } from "@/components/ui/button";
 
 import { HOW_IT_WORKS_STEPS } from "../data/steps";
 import { HowItWorksStepNumbers } from "./how-it-works-step-numbers";
@@ -134,9 +131,8 @@ export function HowItWorksFlow() {
                 Nasıl çalışır?
               </h1>
               <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-                Yan taraftaki kutu başlık alanıyla aynı genişlik ve yükseklikte; 1–5 rozetleri
-                W harfi gibi sıralanır. Tıklayınca süreç o adıma gider. Alttaki çubuk ve pinler aynı
-                animasyonu paylaşır; animasyon rozet alanını kaydırmaz.
+                Uzman seçiminden ilk seansa kadar her adımı şeffaf ve öngörülebilir biçimde tasarladık.
+                Aşağıdaki adımlara tıklayarak süreci keşfedebilirsiniz.
               </p>
             </div>
 
@@ -152,7 +148,7 @@ export function HowItWorksFlow() {
         </div>
       </section>
 
-      <section className="pb-16 pt-10 sm:pt-12 lg:pt-16">
+      <section className="bg-[#e6f0ee] py-12">
         <div className="page-shell">
           <h2 className="sr-only">Süreç özeti</h2>
           <HowItWorksTimeline
@@ -162,11 +158,6 @@ export function HowItWorksFlow() {
             onSelectStep={(i) => scrollToStep(i, true)}
           />
 
-          <div className="mt-10 sm:mt-12">
-            <Button asChild className="h-12 w-full rounded-2xl text-base sm:h-14 sm:text-base">
-              <Link href="/uzmanlar">Uzmanları keşfet</Link>
-            </Button>
-          </div>
         </div>
       </section>
     </>

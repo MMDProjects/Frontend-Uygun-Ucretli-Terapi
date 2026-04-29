@@ -3,18 +3,27 @@ import Link from "next/link";
 import { Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/common/section-heading";
 import { siteConfig } from "@/lib/constants/site";
 
 export function AboutHomeSection() {
   return (
     <section
-      className="bg-[#2a3230] py-12 text-white sm:py-16 lg:py-20"
+      className="bg-[#cce1de] py-20"
       aria-labelledby="home-about-heading"
     >
-      <div className="page-shell">
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+      <div className="page-shell space-y-8">
+        <SectionHeading
+          title="Biz kimiz?"
+          description="Güven, şeffaflık ve erişilebilirliği ön planda tutan bir ekiple psikolojik danışmanlığı herkes için ulaşılabilir kılıyoruz."
+          titleId="home-about-heading"
+        />
+
+        <div className="grid items-stretch gap-5 lg:grid-cols-[1fr_1fr]">
+
+          {/* Sol: Video kutusu */}
           <div
-            className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/30 shadow-lg"
+            className="relative min-h-[300px] overflow-hidden rounded-[2rem] border border-border/60 bg-black/30 shadow-sm"
             role="img"
             aria-label="Biz kimiz videosu kapak görseli; oynat düğmesi dekoratif"
           >
@@ -31,22 +40,46 @@ export function AboutHomeSection() {
               </span>
             </div>
           </div>
-          <div className="space-y-5">
-            <h2
-              id="home-about-heading"
-              className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl"
-            >
-              Biz kimiz?
-            </h2>
-            <p className="text-base leading-7 text-white/85">
-              {siteConfig.brandShortName} ekibi, online psikolojik danışmanlıkta güven, şeffaflık ve
-              erişilebilirliği ön planda tutar. Misyonumuz, doğru uzmanla güvenli
-              bir bağ kurmanızı kolaylaştırmaktır.
+
+          {/* Sağ: PsikoDestek ile tanışın kutusu */}
+          <div className="flex flex-col justify-center gap-6 rounded-[2rem] border border-border/60 bg-white p-8 shadow-sm">
+            <h3 className="text-balance text-2xl font-bold tracking-tight text-primary-hover sm:text-3xl">
+              {siteConfig.brandShortName} ile tanışın
+            </h3>
+            <p className="text-base leading-7 text-muted-foreground">
+              {siteConfig.brandShortName} ekibi, online psikolojik danışmanlıkta güven,
+              şeffaflık ve erişilebilirliği ön planda tutar. Misyonumuz, doğru
+              uzmanla güvenli bir bağ kurmanızı kolaylaştırmaktır.
             </p>
-            <Button asChild variant="secondary" className="min-h-11">
-              <Link href="/hakkimizda">Hakkımızda</Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "KVKK Uyumlu",
+                "Güvenli Bağlantı",
+                "Onaylı Uzmanlar",
+                "Ücretsiz Ön Görüşme",
+                "7/24 Erişim",
+                "Anonim Testler",
+                "Çevrimiçi Seans",
+                "Uzman Eşleştirme",
+              ].map((badge) => (
+                <span
+                  key={badge}
+                  className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <Button asChild>
+                <Link href="/hakkimizda">Hakkımızda</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/uzmanlar">Uzmanları incele</Link>
+              </Button>
+            </div>
           </div>
+
         </div>
       </div>
     </section>

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const contactFormSchema = z.object({
   fullName: z.string().min(2, "Ad soyad zorunludur."),
   email: z.string().email("Gecerli bir e-posta girin."),
+  phone: z.string().min(10, "Gecerli bir telefon numarasi girin."),
   subject: z.enum([
     "soru-sorun",
     "randevu",

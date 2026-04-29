@@ -9,41 +9,48 @@ import { HomePersonalizedStrip } from "./home-personalized-strip";
 const centerFloatTags = ["Gizlilik önceliği"] as const;
 const centerBottomTags = ["Ruh sağlığı", "Bilinçli destek"] as const;
 
+// Orta kutu yatay slider — fotoğraf 1: terapist ve danışan oturumu
 const heroBentoMainImageSrc =
-  "https://images.unsplash.com/photo-1604881991720-f91add269bed?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?q=80&w=1170&auto=format&fit=crop";
 
+// Orta kutu yatay slider — fotoğraf 2: huzurlu doğa, yeşil orman yolu
 const heroBentoSecondaryImageSrc =
-  "https://plus.unsplash.com/premium_photo-1680630201319-a028d6b84cf3?q=80&w=1511&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1171&auto=format&fit=crop";
 
+// Sağ alt kutu dikey slider — fotoğraf 3: sahilde meditasyon
 const heroBentoTertiaryImageSrc =
-  "https://images.unsplash.com/photo-1474418397713-7ede21d49118?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  "https://images.unsplash.com/photo-1508672019048-805c876b67e2?q=80&w=1173&auto=format&fit=crop";
+
+// Sağ alt kutu dikey slider — fotoğraf 4: dağ ve gün doğumu (umut teması)
+const heroBentoQuaternaryImageSrc =
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1170&auto=format&fit=crop";
 
 const heroBackgroundImageSrc =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const heroRightBottomSliderImages = [
   {
-    src: heroBentoSecondaryImageSrc,
-    alt: "Meditasyon ve iç huzur temalı sakin bir görsel",
+    src: heroBentoTertiaryImageSrc,
+    alt: "Sahilde meditasyon yapan huzurlu bir kişi",
   },
   {
-    src: heroBentoTertiaryImageSrc,
-    alt: "Doğada dinginlik hissi oluşturan yürüyüş yolu görseli",
+    src: heroBentoQuaternaryImageSrc,
+    alt: "Dağ zirvesinde gün doğumu — umut ve yeni başlangıç teması",
   },
 ] as const;
 
 const heroCenterSliderImages = [
   {
     src: heroBentoMainImageSrc,
-    alt: "Beyaz yüzey üzerinde destekleyici şekilde birbirine tutunan iki kişinin elleri",
+    alt: "Terapist ve danışan arasında güven veren bir görüşme anı",
   },
   {
     src: heroBentoSecondaryImageSrc,
-    alt: "Meditasyon ve iç huzur temalı sakin bir görsel",
+    alt: "Huzur veren yeşil orman yolu — zihinsel dinginlik teması",
   },
   {
     src: heroBentoMainImageSrc,
-    alt: "Beyaz yüzey üzerinde destekleyici şekilde birbirine tutunan iki kişinin elleri",
+    alt: "Terapist ve danışan arasında güven veren bir görüşme anı",
   },
 ] as const;
 
@@ -76,10 +83,7 @@ export function HeroSection() {
         <div className="grid min-h-0 w-full max-lg:flex-none grid-cols-1 items-stretch gap-4 sm:gap-5 lg:flex-1 lg:grid-cols-12 lg:grid-rows-1 lg:gap-5 lg:[grid-template-rows:minmax(0,1fr)]">
           {/* Sol: başlık + CTA */}
           <div className="flex flex-col justify-center gap-6 rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm sm:p-8 lg:col-span-4 lg:h-full lg:min-h-0 lg:rounded-[2.25rem] lg:p-8">
-            <p className="inline-flex w-fit items-center gap-2 rounded-full border border-border/80 bg-white px-3 py-1.5 text-xs font-semibold tracking-wide text-muted-foreground shadow-sm">
-              <span className="text-primary" aria-hidden>
-                •
-              </span>
+            <p className="inline-flex w-fit items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover">
               Online psikolojik danışmanlık
             </p>
 
@@ -105,14 +109,14 @@ export function HeroSection() {
             </p>
 
             <div className="flex flex-wrap gap-3 pt-1">
-              <Button asChild size="lg" className="h-12 rounded-full px-7 text-base shadow-sm">
+              <Button asChild size="lg" className="shadow-sm">
                 <Link href="/uzmanlar">Uzman bul</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="h-12 rounded-full border-primary/90 bg-white px-7 text-base shadow-sm"
+                className="border-primary/90 bg-white shadow-sm"
               >
                 <Link href="/testler">Ücretsiz test yap</Link>
               </Button>
@@ -151,7 +155,7 @@ export function HeroSection() {
               {centerFloatTags.map((label) => (
                 <span
                   key={label}
-                  className="rounded-full border border-white/70 bg-white/75 px-3 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-md"
+                  className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover"
                 >
                   {label}
                 </span>
@@ -159,7 +163,7 @@ export function HeroSection() {
             </div>
 
             <div className="absolute bottom-22 right-4 z-[1] max-w-[12.5rem] sm:bottom-24 sm:right-5 sm:max-w-[13.5rem]">
-              <div className="w-full rounded-2xl border border-white/60 bg-white/45 p-3.5 shadow-md backdrop-blur-md sm:p-4">
+              <div className="w-full rounded-[2rem] border border-border/60 bg-white p-3.5 shadow-md sm:p-4">
                 <p className="text-[2rem] font-bold tabular-nums text-primary sm:text-3xl">
                   50+
                 </p>
@@ -173,7 +177,7 @@ export function HeroSection() {
               {centerBottomTags.map((label) => (
                 <span
                   key={label}
-                  className="rounded-full border border-white/70 bg-white/75 px-3 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-md"
+                  className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover"
                 >
                   {label}
                 </span>
@@ -225,11 +229,11 @@ export function HeroSection() {
                 <span className="hero-indicator-dot hero-indicator-dot-vertical-a" />
                 <span className="hero-indicator-dot hero-indicator-dot-vertical-b" />
               </div>
-              <p className="absolute left-4 top-4 z-[1] inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/75 px-3 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur-md">
+              <p className="absolute left-4 top-4 z-[1] inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover">
                 Topluluk
               </p>
               <div className="absolute bottom-4 right-4 z-[1] pointer-events-auto sm:bottom-5 sm:right-5">
-                <LiveUserCount className="h-auto rounded-full border-white/70 bg-white/75 px-3 py-1 text-xs shadow-sm backdrop-blur-md" />
+                <LiveUserCount className="h-auto rounded-full bg-muted px-3 py-1 text-xs text-primary-hover" />
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
@@ -51,7 +52,7 @@ function SpineProgressBar({ progressPercent }: { progressPercent: number }) {
       )}
       aria-hidden
     >
-      <div className="relative h-full w-2.5 overflow-hidden rounded-full bg-muted/95 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]">
+      <div className="relative h-full w-2.5 overflow-hidden rounded-full bg-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]">
         <div
           className="absolute left-0 right-0 top-0 rounded-full bg-primary"
           style={{ height: `${Math.min(100, Math.max(0, progressPercent))}%` }}
@@ -92,71 +93,40 @@ type StepPanelProps = {
 
 /** Üst ~60% koyu hero + alt beyaz içerik — referans kart düzeni */
 function StepPanel({ step, isActive, align, onSelect }: StepPanelProps) {
-  const { Icon } = step;
-  const textAlignBottom = align === "left" ? "text-left" : "text-left md:text-right";
-
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        /* Uzman kartı (`surface-card`) ile aynı köşe yarıçapı ve kenarlık */
-        "group w-full max-w-none overflow-hidden rounded-[var(--radius)] border border-border bg-card text-left shadow-sm transition-[box-shadow,border-color] duration-300 md:max-w-md",
-        "hover:border-primary/20 hover:shadow-md",
+        "group w-full max-w-none overflow-hidden rounded-[2rem] border border-border/60 bg-white text-left shadow-sm transition-[box-shadow,border-color] duration-300 md:max-w-md",
+        "hover:border-primary/30 hover:shadow-md",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        isActive && "border-primary/25 shadow-lg ring-1 ring-primary/15",
+        isActive && "border-primary/30 shadow-lg ring-1 ring-primary/15",
       )}
       aria-current={isActive ? "step" : undefined}
     >
-      {/* Hero: koyu yeşil, grid doku, beyaz başlık + sticker görsel */}
-      <div
-        className={cn(
-          "relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-hover",
-          "px-5 pb-4 pt-4 sm:px-6 sm:pb-5 sm:pt-5",
-        )}
-      >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255,255,255,0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: "22px 22px",
-          }}
-          aria-hidden
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary-active/40 via-transparent to-transparent" aria-hidden />
-
-        <div className="relative flex min-h-0 flex-col gap-3 md:flex-row md:items-stretch md:gap-4">
+      {/* Üst: primary arka plan — yüksek */}
+      <div className="relative overflow-hidden bg-primary px-5 pb-6 pt-6 sm:px-6 sm:pb-8 sm:pt-7">
+        <div className="flex min-h-0 flex-col gap-4 md:flex-row md:items-stretch md:gap-4">
           <div
             className={cn(
-              "flex min-h-0 min-w-0 flex-1 flex-col gap-2",
+              "flex min-h-0 min-w-0 flex-1 flex-col gap-3",
               align === "right" && "md:order-2 md:text-right",
             )}
           >
-            <div
-              className={cn(
-                "flex flex-wrap items-center gap-2",
-                align === "right" && "md:flex-row-reverse",
-              )}
-            >
-              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/25 backdrop-blur-sm sm:size-11">
-                <Icon className="size-[1.125rem] text-white sm:size-5" aria-hidden />
-              </span>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75">
-                Adım {step.order}
-              </span>
-            </div>
-            <h3 className="text-balance text-xl font-bold leading-[1.15] tracking-tight text-white sm:text-2xl sm:leading-tight">
+            {/* Adım badge — hero section stiliyle tutarlı */}
+            <span className={cn("w-fit rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover", align === "right" && "md:ml-auto")}>
+              Adım {step.order}
+            </span>
+            <h3 className="text-balance text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl">
               {step.title}
             </h3>
-            <p className="max-w-prose text-sm leading-snug text-white/88 sm:text-[0.9375rem]">{step.cardTagline}</p>
+            <p className="text-sm leading-snug text-white/80">{step.cardTagline}</p>
           </div>
 
           <div
             className={cn(
-              "relative mx-auto aspect-[4/3] w-full max-w-sm shrink-0 overflow-hidden rounded-2xl border-[4px] border-white/45 shadow-xl ring-1 ring-black/10 md:mx-0 md:aspect-auto md:min-h-0 md:w-40 md:self-stretch",
+              "relative mx-auto aspect-[4/3] w-full max-w-sm shrink-0 overflow-hidden rounded-[1.5rem] md:mx-0 md:aspect-auto md:min-h-0 md:w-56 md:self-stretch",
               align === "right" && "md:order-1",
             )}
           >
@@ -164,17 +134,24 @@ function StepPanel({ step, isActive, align, onSelect }: StepPanelProps) {
               src={step.imageSrc}
               alt={step.imageAlt}
               fill
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
-              sizes="(max-width: 768px) 90vw, 11rem"
+              className="object-contain p-3 transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none"
+              sizes="(max-width: 768px) 90vw, 10rem"
             />
           </div>
         </div>
       </div>
 
-      {/* Alt: beyaz alan — özet + detay */}
-      <div className={cn("border-t border-border/50 bg-card px-5 py-4 sm:px-6 sm:py-4", textAlignBottom)}>
-        <p className="text-sm font-medium leading-snug text-foreground sm:text-base">{step.summary}</p>
+      {/* Alt: beyaz alan */}
+      <div className="border-t border-border/50 bg-white px-5 py-4 sm:px-6 sm:py-5">
+        <p className="text-sm font-semibold leading-snug text-primary-hover sm:text-base">{step.summary}</p>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.detail}</p>
+        <Link
+          href={step.linkHref}
+          onClick={(e) => e.stopPropagation()}
+          className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {step.linkLabel}
+        </Link>
       </div>
     </button>
   );

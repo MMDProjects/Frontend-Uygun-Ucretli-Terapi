@@ -60,6 +60,7 @@ export function ContactForm({
       : {
           fullName: "",
           email: "",
+          phone: "",
           subject: "soru-sorun",
           message: "",
           kvkkApproved: false,
@@ -71,7 +72,7 @@ export function ContactForm({
   };
 
   return (
-    <div className="surface-card p-6 sm:p-8">
+    <div className="rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm sm:p-8">
       <div className="mb-6 space-y-2">
         <h2 className="text-2xl font-semibold text-primary-hover">{title}</h2>
         <p className="text-sm leading-6 text-muted-foreground">{description}</p>
@@ -121,6 +122,17 @@ export function ContactForm({
               {form.formState.errors.email?.message}
             </p>
           </div>
+          {!isCorporate && (
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefon *</Label>
+              <Input id="phone" type="tel" {...form.register("phone")} />
+              <p className="text-xs text-destructive">
+                {"phone" in form.formState.errors
+                  ? form.formState.errors.phone?.message
+                  : undefined}
+              </p>
+            </div>
+          )}
           {isCorporate ? (
             <>
               <div className="space-y-2">
@@ -150,7 +162,7 @@ export function ContactForm({
           <Label htmlFor="subject">Konu *</Label>
           <select
             id="subject"
-            className="flex h-11 w-full rounded-2xl border border-input bg-white px-4 py-2 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-11 w-full rounded-xl border border-input bg-white px-4 py-2 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
             {...form.register("subject")}
           >
             {(isCorporate ? corporateSubjectOptions : subjectOptions).map(
@@ -171,7 +183,7 @@ export function ContactForm({
           </p>
         </div>
 
-        <label className="flex items-start gap-3 rounded-2xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+        <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
           <input
             type="checkbox"
             className="mt-1 size-4 rounded border-border"

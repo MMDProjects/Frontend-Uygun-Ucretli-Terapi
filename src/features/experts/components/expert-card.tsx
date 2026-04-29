@@ -10,6 +10,7 @@ type ExpertCardProps = {
   className?: string;
   showPhoto?: boolean;
   centerCta?: boolean;
+  expandContentDesktop?: boolean;
 };
 
 export function ExpertCard({
@@ -17,6 +18,7 @@ export function ExpertCard({
   className,
   showPhoto = true,
   centerCta = false,
+  expandContentDesktop = false,
 }: ExpertCardProps) {
   const initials = expert.name
     .split(" ")
@@ -28,6 +30,7 @@ export function ExpertCard({
     <article
       className={cn(
         "surface-card flex h-full min-h-[21rem] flex-col overflow-hidden",
+        expandContentDesktop && "lg:min-h-0",
         className,
       )}
     >
@@ -77,14 +80,32 @@ export function ExpertCard({
         ))}
       </div>
 
-      <div className="relative mt-4 flex min-h-0 flex-1 flex-col px-6 pb-0">
-        <div className="relative min-h-[6.25rem] flex-1 overflow-hidden">
-          <p className="absolute inset-0 overflow-hidden text-pretty pr-0.5 text-sm leading-6 text-muted-foreground">
+      <div
+        className={cn(
+          "relative mt-4 flex min-h-0 flex-1 flex-col px-6 pb-0",
+          expandContentDesktop && "lg:pb-6",
+        )}
+      >
+        <div
+          className={cn(
+            "relative min-h-[6.25rem] flex-1 overflow-hidden",
+            expandContentDesktop && "lg:min-h-0 lg:overflow-visible",
+          )}
+        >
+          <p
+            className={cn(
+              "absolute inset-0 overflow-hidden text-pretty pr-0.5 text-sm leading-6 text-muted-foreground",
+              expandContentDesktop && "lg:static lg:overflow-visible",
+            )}
+          >
             {expert.bio}
           </p>
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[5.5rem] bg-gradient-to-t from-card from-20% via-card/75 to-transparent [mask-image:linear-gradient(to_top,black_26%,transparent_100%)] backdrop-blur-[4px] motion-reduce:backdrop-blur-none supports-[backdrop-filter]:backdrop-blur-[12px]"
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[5.5rem] bg-gradient-to-t from-card from-20% via-card/75 to-transparent [mask-image:linear-gradient(to_top,black_26%,transparent_100%)] backdrop-blur-[4px] motion-reduce:backdrop-blur-none supports-[backdrop-filter]:backdrop-blur-[12px]",
+              expandContentDesktop && "lg:hidden",
+            )}
           />
         </div>
 
@@ -93,6 +114,7 @@ export function ExpertCard({
           className={cn(
             "absolute bottom-4 z-[3] inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-center text-sm font-semibold !text-white shadow-sm transition-colors hover:bg-primary-hover hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none",
             centerCta ? "left-1/2 -translate-x-1/2" : "right-4",
+            expandContentDesktop && "lg:static lg:mt-4 lg:self-end lg:translate-x-0",
           )}
         >
           Profili İncele

@@ -1,5 +1,6 @@
 "use client";
 
+import * as Popover from "@radix-ui/react-popover";
 import { ArrowDownWideNarrow, Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +15,9 @@ const searchSubmitBtn =
 
 export function ExpertsHeroSection() {
   const [query, setQuery] = useState("");
+  const [activeSort, setActiveSort] = useState<"rating" | "name-asc" | "name-desc">(
+    "rating",
+  );
 
   return (
     <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
@@ -76,22 +80,118 @@ export function ExpertsHeroSection() {
 
                 {/* Pill dışı — sağda filtre & sırala */}
                 <div className="flex shrink-0 items-center justify-center gap-2 sm:justify-start">
-                  <button
-                    type="button"
-                    className={pillIconBtn}
-                    aria-haspopup="dialog"
-                    aria-label="Filtrele"
-                  >
-                    <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    className={pillIconBtn}
-                    aria-haspopup="listbox"
-                    aria-label="Sırala"
-                  >
-                    <ArrowDownWideNarrow className="size-5" strokeWidth={2} aria-hidden />
-                  </button>
+                  <Popover.Root modal={false}>
+                    <Popover.Trigger asChild>
+                      <button
+                        type="button"
+                        className={pillIconBtn}
+                        aria-haspopup="dialog"
+                        aria-label="Filtrele"
+                      >
+                        <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
+                      </button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Content
+                        side="bottom"
+                        align="end"
+                        sideOffset={10}
+                        collisionPadding={16}
+                        className="z-[60] w-[min(calc(100vw-2rem),18rem)] rounded-[var(--radius)] border border-border/80 bg-card p-4 shadow-xl outline-none"
+                      >
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-foreground">Filtrele</p>
+                            <p className="text-xs text-muted-foreground">
+                              Uzmanlik alanina gore hizli filtre secimi.
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {["Kaygi", "Aile", "Cift", "Ergen", "Stres", "Travma"].map(
+                              (tag) => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-primary-hover transition hover:bg-accent/40"
+                                >
+                                  {tag}
+                                </button>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
+
+                  <Popover.Root modal={false}>
+                    <Popover.Trigger asChild>
+                      <button
+                        type="button"
+                        className={pillIconBtn}
+                        aria-haspopup="dialog"
+                        aria-label="Sırala"
+                      >
+                        <ArrowDownWideNarrow className="size-5" strokeWidth={2} aria-hidden />
+                      </button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Content
+                        side="bottom"
+                        align="end"
+                        sideOffset={10}
+                        collisionPadding={16}
+                        className="z-[60] w-[min(calc(100vw-2rem),18rem)] rounded-[var(--radius)] border border-border/80 bg-card p-4 shadow-xl outline-none"
+                      >
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-foreground">Sirala</p>
+                            <p className="text-xs text-muted-foreground">
+                              Listeleme bicimini secin.
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <button
+                              type="button"
+                              onClick={() => setActiveSort("rating")}
+                              className={cn(
+                                "w-full rounded-xl border px-3 py-2 text-left text-sm transition",
+                                activeSort === "rating"
+                                  ? "border-primary bg-muted text-primary-hover"
+                                  : "border-border bg-background text-foreground hover:bg-muted/60",
+                              )}
+                            >
+                              Puana gore (yuksekten dusuge)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveSort("name-asc")}
+                              className={cn(
+                                "w-full rounded-xl border px-3 py-2 text-left text-sm transition",
+                                activeSort === "name-asc"
+                                  ? "border-primary bg-muted text-primary-hover"
+                                  : "border-border bg-background text-foreground hover:bg-muted/60",
+                              )}
+                            >
+                              Isme gore (A-Z)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveSort("name-desc")}
+                              className={cn(
+                                "w-full rounded-xl border px-3 py-2 text-left text-sm transition",
+                                activeSort === "name-desc"
+                                  ? "border-primary bg-muted text-primary-hover"
+                                  : "border-border bg-background text-foreground hover:bg-muted/60",
+                              )}
+                            >
+                              Isme gore (Z-A)
+                            </button>
+                          </div>
+                        </div>
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
                 </div>
               </div>
             </form>

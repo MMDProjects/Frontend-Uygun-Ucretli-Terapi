@@ -18,6 +18,8 @@ export type HowItWorksStep = {
   /** Adım kartı görseli (next/image — remotePatterns ile uyumlu URL) */
   imageSrc: string;
   imageAlt: string;
+  linkHref: string;
+  linkLabel: string;
 };
 
 export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
@@ -30,9 +32,10 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
     detail:
       "Uzmanlar sayfasında alan, anahtar kelime ve puanlara göre arama yap. Profilde tanıtım metnini, sertifika ve CV PDF’lerini ve onaylı yorumları okuyarak sana en uygun uzmanı belirle.",
     Icon: Search,
-    imageSrc:
-      "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80",
+    imageSrc: "/undraw_choose_5kz4 (1).svg",
     imageAlt: "Uzman arama ve seçim sürecini temsil eden görsel",
+    linkHref: "/uzmanlar",
+    linkLabel: "Uzmanları gör",
   },
   {
     id: "account",
@@ -43,9 +46,10 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
     detail:
       "Danışan kaydıyla ad, iletişim ve KVKK onayını tamamla. Zaten üyeysen giriş yap; anonim olarak da listeyi ve blogu incelemeye devam edebilirsin.",
     Icon: UserRound,
-    imageSrc:
-      "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80",
+    imageSrc: "/undraw_user-account_fvqa (1).svg",
     imageAlt: "Hesap oluşturma ve güvenli girişi temsil eden görsel",
+    linkHref: "/kayit",
+    linkLabel: "Hesap oluştur",
   },
   {
     id: "contact",
@@ -56,9 +60,10 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
     detail:
       "Uzman profilinde Canlı Destek ile WhatsApp üzerinden ücretsiz ön görüşmeyi başlatabilir veya giriş yaptıysan talep formunu doldurarak iletişim talebini iletebilirsin.",
     Icon: MessageCircle,
-    imageSrc:
-      "https://images.unsplash.com/photo-1516321318423-f751f576d41f?auto=format&fit=crop&w=800&q=80",
+    imageSrc: "/undraw_online-meeting_qe61 (1).svg",
     imageAlt: "İletişim ve ön görüşme adımını temsil eden görsel",
+    linkHref: "/iletisim",
+    linkLabel: "İletişime geç",
   },
   {
     id: "packages",
@@ -69,9 +74,10 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
     detail:
       "Uzman kartında fiyat gösterilmez; tüm paket adları, seans sayıları ve fiyatlar yalnızca Paketler sayfasında listelenir. Admin güncellemeleri anında buraya yansır.",
     Icon: Package,
-    imageSrc:
-      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80",
+    imageSrc: "/undraw_questions_52ic (1).svg",
     imageAlt: "Paket ve planlama adımını temsil eden görsel",
+    linkHref: "/paketler",
+    linkLabel: "Paketleri gör",
   },
   {
     id: "journey",
@@ -82,8 +88,9 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
     detail:
       "Giriş yaptıysan test sonuçların arşivlenir; ana sayfalarda sana özel CTA’lar görünür. Blog ve SSS ile bilgilendirilmeye devam edebilirsin.",
     Icon: ClipboardList,
-    imageSrc:
-      "https://images.unsplash.com/photo-1494390248081-4cd9749c948e?auto=format&fit=crop&w=800&q=80",
+    imageSrc: "/undraw_well-done_kqud.svg",
     imageAlt: "Sürece devam ve içerikleri temsil eden görsel",
+    linkHref: "/testler",
+    linkLabel: "Testlere başla",
   },
 ];

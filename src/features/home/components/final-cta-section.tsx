@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export function FinalCtaSection() {
   return (
     <section
-      className="bg-[#2a3230] py-12 text-white sm:py-14 lg:py-16"
+      className="bg-[#2a3230] py-12 text-white"
       aria-labelledby="home-final-cta-heading"
     >
       <div className="page-shell">
@@ -23,10 +23,10 @@ export function FinalCtaSection() {
               İlk adımı bugün atın.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button asChild variant="secondary" className="min-h-11">
+              <Button asChild variant="secondary">
                 <Link href="/uzmanlar">Uzmanları incele</Link>
               </Button>
-              <Button asChild variant="outline" className="min-h-11 border-white/40 bg-transparent !text-white hover:bg-white/10 hover:!text-white">
+              <Button asChild variant="outline" className="border-white/40 bg-transparent !text-white hover:bg-white/10 hover:!text-white">
                 <Link href="/iletisim">İletişime geç</Link>
               </Button>
             </div>

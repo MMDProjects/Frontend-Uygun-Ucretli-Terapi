@@ -27,7 +27,7 @@ const offerings = [
 
 export function OfferingsShowcaseSection() {
   return (
-    <section className="bg-background py-14 sm:py-16 lg:py-20" aria-labelledby="home-offerings-heading">
+    <section className="bg-[#e6f0ee] py-20" aria-labelledby="home-offerings-heading">
       <div className="page-shell space-y-8">
         <div className="flex items-start justify-between gap-4">
           <SectionHeading
@@ -40,18 +40,21 @@ export function OfferingsShowcaseSection() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:gap-x-5 md:gap-y-8 md:grid-cols-2 xl:gap-4 xl:grid-cols-4">
           {offerings.map((item, index) => {
             if (index === 1) {
               return (
-                <div key={item.title} className="relative isolate overflow-visible">
+                <div key={item.title} className="relative isolate overflow-visible pb-3 md:pb-4 xl:pb-0">
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 z-0 translate-x-5 -translate-y-10 rotate-[8deg] rounded-[2rem] bg-[#99c3bd]"
+                    className="pointer-events-none absolute inset-0 z-0 translate-x-2 -translate-y-4 rotate-[4deg] rounded-[2rem] bg-[#cce1de] md:translate-x-3 md:-translate-y-6 md:rotate-[6deg] xl:translate-x-5 xl:-translate-y-10 xl:rotate-[8deg]"
                   />
-                  <article className="relative z-10 translate-y-5 rotate-[-5deg] overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary to-primary-hover p-6 text-white shadow-sm">
-                    <h3 className="text-xl font-semibold leading-tight">{item.title}</h3>
-                    <p className="mt-6 text-sm leading-6 text-white/90">{item.description}</p>
+                  <article
+                    className="offerings-card-shake relative z-10 translate-y-2 rotate-[-2deg] overflow-hidden rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm md:translate-y-3 md:rotate-[-3deg] xl:translate-y-5 xl:rotate-[-5deg]"
+                    style={{ animationDelay: `${index * 0.55}s` }}
+                  >
+                    <h3 className="text-xl font-semibold leading-tight text-primary-hover">{item.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
                   </article>
                 </div>
               );
@@ -60,10 +63,11 @@ export function OfferingsShowcaseSection() {
             return (
               <article
                 key={item.title}
-                className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary-hover to-primary p-6 text-white shadow-sm"
+                className="offerings-card-shake relative overflow-hidden rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm"
+                style={{ animationDelay: `${index * 0.55}s` }}
               >
-                <h3 className="text-xl font-semibold leading-tight">{item.title}</h3>
-                <p className="mt-6 text-sm leading-6 text-white/90">{item.description}</p>
+                <h3 className="text-xl font-semibold leading-tight text-primary-hover">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
               </article>
             );
           })}

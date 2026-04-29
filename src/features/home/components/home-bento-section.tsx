@@ -1,98 +1,84 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/common/section-heading";
+import { TestCard } from "@/features/tests";
+import { testsPreview } from "@/features/shared/data/mock-content";
 
-const testHighlights = [
-  {
-    name: "Depresyon Belirti Testi",
-    field: "Duygu durumu",
-    description: "Mevcut ruh halinizi kisa sorularla degerlendirin.",
-  },
-  {
-    name: "Anksiyete Duzeyi Testi",
-    field: "Kaygi analizi",
-    description: "Gunluk yasam kaygi etkisini puanlayarak gorun.",
-  },
-  {
-    name: "Stres Farkindalik Testi",
-    field: "Stres yonetimi",
-    description: "Stres tetikleyicilerinizi erken fark edin.",
-  },
-] as const;
+const therapyImageSrc =
+  "https://images.unsplash.com/photo-1604881991720-f91add269bed?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0";
 
 export function HomeBentoSection() {
+  const featuredTests = testsPreview.slice(0, 3);
+
   return (
-    <section className="bg-muted py-12 sm:py-16 lg:py-20" aria-labelledby="home-bento-title">
-      <div className="page-shell">
+    <section className="bg-muted py-20" aria-labelledby="home-bento-title">
+      <div className="page-shell space-y-8">
+        <SectionHeading
+          title="Testlerle kendinizi tanıyın"
+          description="Kısa sürede tamamlanan bilimsel testlerle ruh halinizi ölçün, sonuçları yorumlayın ve size uygun destek yolunu belirleyin."
+          titleId="home-bento-title"
+        />
+
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <article className="rounded-[1.75rem] border border-border bg-background p-6 shadow-sm lg:col-span-3 lg:min-h-[200px]">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">
-                Testlerle kendinizi taniyin
+          {/* Sol: öne çıkan kart + 3 test kartı */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {/* Öne çıkan kart */}
+            <article className="relative overflow-hidden rounded-[2rem] bg-primary p-6 shadow-sm sm:col-span-3">
+              <div
+                className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full border border-white/10"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute -bottom-8 right-24 h-32 w-32 rounded-full border border-white/5"
+                aria-hidden
+              />
+              <p className="relative z-10 text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                Ücretsiz &amp; Anonim
               </p>
-              <h2
-                id="home-bento-title"
-                className="mt-3 text-balance text-2xl font-bold tracking-tight text-primary-hover sm:text-3xl"
-              >
-                Bilimsel olceklere dayali testlerle dogru adimi daha net atin
+              <h2 className="relative z-10 mt-3 text-balance text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                Kendinizi daha iyi anlamak için doğru yer
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                Kisa surede tamamlanan testler sayesinde ruh halinizi olcun, sonuclari
-                yorumlayin ve size uygun destek yolunu belirleyin.
+              <p className="relative z-10 mt-3 max-w-2xl text-sm leading-7 text-white/80">
+                Her test adım adım ilerler; sonuç ekranında güçlü alanlarınız ve
+                riskli başlıklarınız sade bir dille özetlenir. Tamamen gizli,
+                herhangi bir kayıt gerektirmez.
               </p>
             </article>
 
-            {testHighlights.map((item) => (
-              <article
-                key={item.name}
-                className="rounded-[1.75rem] border border-border bg-background p-5 shadow-sm lg:min-h-[200px]"
-              >
-                <p className="text-sm font-semibold text-primary">{item.field}</p>
-                <h3 className="mt-2 text-lg font-bold text-foreground">{item.name}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p>
-              </article>
+            {featuredTests.map((test) => (
+              <TestCard key={test.slug} test={test} />
             ))}
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_2fr]">
-            <article className="relative min-h-[200px] overflow-hidden rounded-[1.75rem] border border-border bg-background shadow-sm">
+          {/* Sağ: fotoğraf + buton + sonuç */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_2fr] lg:grid-cols-1">
+            {/* Fotoğraf */}
+            <article className="relative min-h-[200px] overflow-hidden rounded-[2rem] border border-border/60 shadow-sm">
               <Image
-                src="/images/herosect.png"
-                alt="Kristina profil gorseli"
+                src={therapyImageSrc}
+                alt="Danışmanlık seansı — iki kişinin destekleyici el teması"
                 fill
-                sizes="(max-width: 640px) 100vw, 16vw"
-                className="object-cover object-top"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover object-center"
               />
             </article>
 
-            <article className="rounded-[1.75rem] border border-border bg-background p-5 shadow-sm sm:min-h-[200px]">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">
-                Test deneyimi
+            {/* Sonuç ve yönlendirme */}
+            <article className="flex flex-col justify-center rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm sm:col-span-2 lg:col-span-1">
+              <h3 className="text-xl font-bold tracking-tight text-primary-hover">
+                Sonuç ve yönlendirme
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-[0.95rem]">
+                Test sonrasında uygun uzman alanlarını görür, isterseniz tek
+                tıkla psikolojik destek talebine geçiş yapabilirsiniz.
               </p>
-              <h3 className="mt-2 text-xl font-bold text-foreground">Kisa, anlasilir ve guvenli</h3>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Her test adim adim ilerler; sonuc ekraninda guclu alanlariniz ve riskli
-                basliklariniz sade bir dille ozetlenir.
-              </p>
-            </article>
-
-            <article className="rounded-[1.75rem] border border-border bg-primary p-4 shadow-sm sm:col-span-2">
-              <Button
-                asChild
-                variant="secondary"
-                className="h-12 w-full rounded-full bg-white px-6 text-sm font-semibold text-primary hover:bg-white/90"
+              <Link
+                href="/uzmanlar"
+                className="mt-4 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline"
               >
-                <Link href="/testler">Testlere hemen basla</Link>
-              </Button>
-            </article>
-
-            <article className="rounded-[1.75rem] border border-border bg-[#cce1de] p-5 shadow-sm sm:col-span-2 sm:min-h-[150px]">
-              <p className="text-sm font-semibold text-primary-active">Sonuc ve yonlendirme</p>
-              <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Test sonrasinda uygun uzman alanlarini gorur, isterseniz tek tikla
-                psikolojik destek talebine gecis yapabilirsiniz.
-              </p>
+                Uzman bul →
+              </Link>
             </article>
           </div>
         </div>

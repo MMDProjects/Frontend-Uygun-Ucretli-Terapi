@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-import { FloatingSupportCluster } from "@/components/common/floating-support-cluster";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { SiteShell } from "@/components/layout/site-shell";
 import { siteConfig } from "@/lib/constants/site";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
   subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -46,18 +46,7 @@ export default function RootLayout({
         >
           İçeriğe atla
         </a>
-        <div className="flex min-h-screen flex-col">
-          <SiteHeader />
-          <main
-            id="main-content"
-            className="flex-1 pb-28 sm:pb-24"
-            tabIndex={-1}
-          >
-            {children}
-          </main>
-          <SiteFooter />
-        </div>
-        <FloatingSupportCluster />
+        <SiteShell>{children}</SiteShell>
       </body>
     </html>
   );

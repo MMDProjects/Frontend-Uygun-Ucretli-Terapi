@@ -1,44 +1,40 @@
-import Link from "next/link";
+"use client";
 
-import { Button } from "@/components/ui/button";
-import { testsPreview } from "@/features/shared/data/mock-content";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { TestCard } from "@/features/tests";
+import { TestsHeroSection } from "@/features/tests";
+import { PreviousResultsSection } from "@/features/tests/components/previous-results-section";
+import { testsPreview, mockTestResults } from "@/features/shared/data/mock-content";
 
 export default function TestsPage() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <>
-      <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
-        <div className="page-shell">
-          <div className="max-w-3xl space-y-4">
-            <h1 className="text-balance text-4xl font-semibold tracking-tight text-primary-hover sm:text-5xl">
-              Testler
-            </h1>
-            <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Kısa ve anlaşılır psikolojik testlerle kendinizi daha iyi tanıyın.
-              Test sonucunda puan özetinizi görebilir, uzman eşleşmesi için sonraki
-              adımı planlayabilirsiniz.
-            </p>
-          </div>
-        </div>
-      </section>
+      <TestsHeroSection />
 
-      <section className="pb-16 pt-10 sm:pt-12 lg:pt-16">
-        <div className="page-shell grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {testsPreview.map((test) => (
-            <article key={test.slug} className="surface-card flex h-full flex-col p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                Ortalama {test.durationMinutes} dk
+      {isAuthenticated && (
+        <PreviousResultsSection results={mockTestResults} />
+      )}
+
+      <section className="bg-[#e6f0ee] py-12">
+        <div className="page-shell">
+          {isAuthenticated && (
+            <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
+              <p className="text-sm font-semibold text-primary">
+                Test Yaptırmak İster misiniz?
               </p>
-              <h2 className="mt-3 text-xl font-semibold text-primary-hover">
-                {test.title}
-              </h2>
-              <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-                {test.description}
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Uzmanlarımız test sonuçlarınızı değerlendirerek size özel bir yol haritası çıkarabilir.
               </p>
-              <Button asChild className="mt-6 w-fit">
-                <Link href={`/testler/${test.slug}`}>Teste Başla</Link>
-              </Button>
-            </article>
-          ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {testsPreview.map((test) => (
+              <TestCard key={test.slug} test={test} />
+            ))}
+          </div>
         </div>
       </section>
     </>

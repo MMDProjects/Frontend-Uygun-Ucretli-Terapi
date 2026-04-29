@@ -18,8 +18,8 @@ export default function PackagesPage() {
         </div>
       </section>
 
-      <section className="pb-16 pt-10 sm:pt-12 lg:pt-16">
-        <div className="page-shell grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+      <section className="bg-[#e6f0ee] py-12">
+        <div className="page-shell grid gap-6 md:grid-cols-2 xl:grid-cols-5 xl:items-start">
           {packagePlans.map((plan) => (
             <PackageCard key={plan.name} plan={plan} />
           ))}
