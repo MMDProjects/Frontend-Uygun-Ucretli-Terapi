@@ -2,14 +2,46 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthStore } from "@/lib/stores/auth-store";
+
+const MOCK_USERS = [
+  { email: "danisan10@gmail.com", password: "danisan10", displayName: "Deniz Yılmaz", role: "danisan" as const },
+];
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { setSession } = useAuthStore();
+  const router = useRouter();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 600));
+
+    const user = MOCK_USERS.find(
+      (u) => u.email === email.trim().toLowerCase() && u.password === password
+    );
+
+    if (!user) {
+      setError("E-posta veya şifre hatalı.");
+      setLoading(false);
+      return;
+    }
+
+    setSession({ isAuthenticated: true, displayName: user.displayName, role: user.role });
+    router.push("/");
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted px-5 py-12">
@@ -22,7 +54,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form className="space-y-5" noValidate>
+          <form className="space-y-5" noValidate onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 E-posta <span className="text-destructive">*</span>
@@ -33,6 +65,9 @@ export default function LoginPage() {
                 placeholder="ornek@email.com"
                 autoComplete="email"
                 className="h-11 rounded-2xl"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
 
@@ -55,6 +90,9 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className="h-11 rounded-2xl pr-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -67,8 +105,22 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
-              Giriş Yap
+            {error && (
+              <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+                <AlertCircle className="size-4 shrink-0 text-destructive" />
+                <p className="text-xs font-medium text-destructive">{error}</p>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Giriş yapılıyor…
+                </>
+              ) : (
+                "Giriş Yap"
+              )}
             </Button>
           </form>
         </div>

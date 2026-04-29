@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,11 +17,31 @@ export default function UzmanGirisPage() {
   const { setSession } = useAuthStore();
   const router = useRouter();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const MOCK_UZMANLAR = [
+    { email: "uzman10@gmail.com", password: "uzman10", displayName: "Dr. Ayşe Kaya" },
+  ];
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSession({ isAuthenticated: true, displayName: "Dr. Ayşe Kaya", role: "uzman" });
+    await new Promise((r) => setTimeout(r, 700));
+
+    const user = MOCK_UZMANLAR.find(
+      (u) => u.email === email.trim().toLowerCase() && u.password === password
+    );
+
+    if (!user) {
+      setError("E-posta veya şifre hatalı.");
+      setLoading(false);
+      return;
+    }
+
+    setSession({ isAuthenticated: true, displayName: user.displayName, role: "uzman" });
     router.push("/uzman/dashboard");
   }
 
@@ -59,6 +79,8 @@ export default function UzmanGirisPage() {
                 placeholder="doktor@email.com"
                 autoComplete="email"
                 className="h-11 rounded-2xl"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -82,6 +104,8 @@ export default function UzmanGirisPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className="h-11 rounded-2xl pr-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <button
@@ -98,6 +122,13 @@ export default function UzmanGirisPage() {
                 </button>
               </div>
             </div>
+
+            {error && (
+              <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+                <AlertCircle className="size-4 shrink-0 text-destructive" />
+                <p className="text-xs font-medium text-destructive">{error}</p>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
