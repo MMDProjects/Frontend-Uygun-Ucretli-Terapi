@@ -13,6 +13,7 @@ const ADMIN_PROTECTED_PREFIXES = [
   "/admin/icerik",
   "/admin/formlar",
   "/admin/ayarlar",
+  "/admin/bildirimler",
 ] as const;
 
 function isProtectedAdminRoute(pathname: string): boolean {

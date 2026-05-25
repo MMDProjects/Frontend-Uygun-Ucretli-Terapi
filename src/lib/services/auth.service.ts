@@ -82,7 +82,9 @@ export async function refreshSession(): Promise<void> {
       body: { refreshToken },
     });
     applySession(data);
-  } catch {
+  } catch (e) {
+    // TypeError = network/fetch failure (backend offline) — keep session intact
+    if (e instanceof TypeError) return;
     clearTokens();
     useAuthStore.getState().clearSession();
   }

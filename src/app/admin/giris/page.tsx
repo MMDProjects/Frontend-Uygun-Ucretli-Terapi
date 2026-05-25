@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setAdminSessionCookies, verifyDemoLogin } from "@/lib/demo-auth";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 export default function AdminGirisPage() {
   const router = useRouter();
@@ -32,12 +33,14 @@ export default function AdminGirisPage() {
     }
 
     setAdminSessionCookies("user");
+    useAuthStore.getState().setSession({ userId: "demo", displayName: user.name, email: user.email, role: "admin" });
     toast.success(`Hoş geldiniz, ${user.name}`);
     router.push("/admin/dashboard");
   }
 
   function handleDemoLogin() {
     setAdminSessionCookies("demo");
+    useAuthStore.getState().setSession({ userId: "demo", displayName: "Admin", email: "", role: "admin" });
     toast.success("Demo oturumu açıldı.");
     router.push("/admin/dashboard");
   }
