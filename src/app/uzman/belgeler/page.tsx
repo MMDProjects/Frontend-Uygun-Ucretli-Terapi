@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/features/admin/components/page-header";
 import { cn } from "@/lib/utils";
 
 type UploadedFile = {
@@ -182,6 +183,11 @@ export default function UzmanBelgelerPage() {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title="Belgelerim"
+        description="CV ve sertifikalarınızı yükleyin. Danışanlar tarafından görülebilir."
+      />
+
       {uploadSuccess && (
         <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
           <CheckCircle2 className="size-4 shrink-0 text-green-600" />

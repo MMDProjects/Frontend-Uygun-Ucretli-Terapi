@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, CheckCheck, MessageCircle, AlertCircle, Info } from "lucide-react";
-import { MOCK_NOTIFICATIONS } from "@/features/uzman/data/mock-uzman";
-import type { UzmanNotification, UzmanNotificationType } from "@/types/domain";
+import { toast } from "sonner";
+import { PageHeader } from "@/features/admin/components/page-header";
+import {
+  getMyUzmanNotifications,
+  markUzmanNotificationRead,
+  type ApiUzmanNotification,
+} from "@/lib/services/uzman.service";
+import type { UzmanNotificationType } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
 const TYPE_CONFIG: Record<
@@ -36,7 +42,7 @@ function NotificationItem({
   notif,
   onMarkRead,
 }: {
-  notif: UzmanNotification;
+  notif: ApiUzmanNotification;
   onMarkRead: (id: string) => void;
 }) {
   const config = TYPE_CONFIG[notif.type];
@@ -71,7 +77,13 @@ function NotificationItem({
           >
             {notif.message}
           </p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{notif.createdAt}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            {new Date(notif.createdAt).toLocaleDateString("tr-TR", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
         </div>
         {!notif.isRead && (
           <button
@@ -90,44 +102,68 @@ function NotificationItem({
 }
 
 export default function UzmanBildirimlerPage() {
-  const [notifications, setNotifications] = useState<UzmanNotification[]>(
-    MOCK_NOTIFICATIONS
-  );
+  const [notifications, setNotifications] = useState<ApiUzmanNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMyUzmanNotifications()
+      .then(setNotifications)
+      .catch(() => toast.error("Bildirimler yüklenemedi."))
+      .finally(() => setLoading(false));
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  function markRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+  async function markRead(id: string) {
+    try {
+      await markUzmanNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      );
+    } catch {
+      toast.error("İşlem başarısız.");
+    }
   }
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  async function markAllRead() {
+    const unread = notifications.filter((n) => !n.isRead);
+    try {
+      await Promise.all(unread.map((n) => markUzmanNotificationRead(n.id)));
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      toast.error("İşlem başarısız.");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <div className="h-10 w-48 skeleton rounded-xl" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-20 skeleton rounded-2xl" />
+        ))}
+      </div>
+    );
   }
 
   return (
     <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          {unreadCount > 0
-            ? `${unreadCount} okunmamış bildirim`
-            : "Tüm bildirimler okundu"}
-        </p>
+      <PageHeader
+        title="Bildirimler"
+        description={unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : "Tüm bildirimler okundu"}
+      >
         {unreadCount > 0 && (
           <button
             type="button"
             onClick={markAllRead}
-            className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+            className="flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
           >
             <CheckCheck className="size-3.5" />
             Tümünü Okundu İşaretle
           </button>
         )}
-      </div>
+      </PageHeader>
 
-      {/* List */}
       {notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-white py-16 text-center">
           <Bell className="mb-3 size-10 text-muted-foreground/40" />

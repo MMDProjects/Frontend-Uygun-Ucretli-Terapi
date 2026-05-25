@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageSquare, Mail, CheckCircle2, Clock, ChevronDown, ChevronUp } from "lucide-react";
-import { MOCK_DANISAN_REQUESTS } from "@/features/uzman/data/mock-uzman";
-import type { UzmanDanisanRequest, ExpertRequestStatus } from "@/types/domain";
+import { toast } from "sonner";
+import { PageHeader } from "@/features/admin/components/page-header";
+import {
+  getMyUzmanRequests,
+  updateUzmanRequestStatus,
+  type ApiUzmanRequest,
+} from "@/lib/services/uzman.service";
+import type { ExpertRequestStatus } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
 const STATUS_TABS: { label: string; value: ExpertRequestStatus | "Tümü" }[] = [
@@ -28,10 +34,33 @@ const STATUS_CONFIG = {
   },
 } as const;
 
-function RequestCard({ req }: { req: UzmanDanisanRequest }) {
+function RequestCard({
+  req,
+  onStatusChange,
+}: {
+  req: ApiUzmanRequest;
+  onStatusChange: (id: string, status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI") => Promise<void>;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const config = STATUS_CONFIG[req.status];
   const StatusIcon = config.icon;
+  const danisanName = `${req.user.firstName} ${req.user.lastName}`.trim();
+
+  const date = new Date(req.createdAt).toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  async function handleAction(status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI") {
+    setUpdating(true);
+    try {
+      await onStatusChange(req.id, status);
+    } finally {
+      setUpdating(false);
+    }
+  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
@@ -41,11 +70,11 @@ function RequestCard({ req }: { req: UzmanDanisanRequest }) {
         className="flex w-full items-start gap-4 p-5 text-left"
       >
         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
-          {req.danisanName.charAt(0)}
+          {danisanName.charAt(0)}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-foreground">{req.danisanName}</p>
+            <p className="text-sm font-semibold text-foreground">{danisanName}</p>
             <span
               className={cn(
                 "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold",
@@ -57,7 +86,7 @@ function RequestCard({ req }: { req: UzmanDanisanRequest }) {
             </span>
           </div>
           <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{req.message}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">{req.dateLabel}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{date}</p>
         </div>
         <div className="shrink-0 text-muted-foreground">
           {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -72,30 +101,34 @@ function RequestCard({ req }: { req: UzmanDanisanRequest }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {req.email && (
+            {req.user.email && (
               <a
-                href={`mailto:${req.email}`}
+                href={`mailto:${req.user.email}`}
                 className="flex items-center gap-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
               >
                 <Mail className="size-3.5" />
-                {req.email}
+                {req.user.email}
               </a>
             )}
 
             {req.status === "Beklemede" && (
               <button
                 type="button"
-                className="rounded-xl bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-hover"
+                disabled={updating}
+                onClick={() => handleAction("UZMANA_YONLENDIRILDI")}
+                className="rounded-xl bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
               >
-                Yanıtla
+                {updating ? "…" : "Yanıtla"}
               </button>
             )}
             {req.status === "Yanıtlandı" && (
               <button
                 type="button"
-                className="rounded-xl bg-green-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-green-700"
+                disabled={updating}
+                onClick={() => handleAction("TAMAMLANDI")}
+                className="rounded-xl bg-green-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
               >
-                Tamamlandı İşaretle
+                {updating ? "…" : "Tamamlandı İşaretle"}
               </button>
             )}
           </div>
@@ -106,23 +139,61 @@ function RequestCard({ req }: { req: UzmanDanisanRequest }) {
 }
 
 export default function UzmanTaleplerPage() {
+  const [requests, setRequests] = useState<ApiUzmanRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ExpertRequestStatus | "Tümü">("Tümü");
 
+  useEffect(() => {
+    getMyUzmanRequests()
+      .then(setRequests)
+      .catch(() => toast.error("Talepler yüklenemedi."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleStatusChange(
+    id: string,
+    status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI",
+  ) {
+    try {
+      await updateUzmanRequestStatus(id, status);
+      const label = status === "UZMANA_YONLENDIRILDI" ? "Yanıtlandı" : "Tamamlandı";
+      setRequests((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: label as ExpertRequestStatus } : r))
+      );
+      toast.success("Durum güncellendi.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "İşlem başarısız.");
+    }
+  }
+
   const filtered =
-    activeTab === "Tümü"
-      ? MOCK_DANISAN_REQUESTS
-      : MOCK_DANISAN_REQUESTS.filter((r) => r.status === activeTab);
+    activeTab === "Tümü" ? requests : requests.filter((r) => r.status === activeTab);
 
   const counts = {
-    Tümü: MOCK_DANISAN_REQUESTS.length,
-    Beklemede: MOCK_DANISAN_REQUESTS.filter((r) => r.status === "Beklemede").length,
-    Yanıtlandı: MOCK_DANISAN_REQUESTS.filter((r) => r.status === "Yanıtlandı").length,
-    Tamamlandı: MOCK_DANISAN_REQUESTS.filter((r) => r.status === "Tamamlandı").length,
+    Tümü: requests.length,
+    Beklemede: requests.filter((r) => r.status === "Beklemede").length,
+    Yanıtlandı: requests.filter((r) => r.status === "Yanıtlandı").length,
+    Tamamlandı: requests.filter((r) => r.status === "Tamamlandı").length,
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <div className="h-10 w-48 skeleton rounded-xl" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-24 skeleton rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
-      {/* Tabs */}
+      <PageHeader
+        title="Danışan Talepleri"
+        description="Gelen danışan formlarını inceleyin ve yanıtlayın."
+      />
+
       <div className="flex flex-wrap gap-2">
         {STATUS_TABS.map(({ label, value }) => (
           <button
@@ -149,7 +220,6 @@ export default function UzmanTaleplerPage() {
         ))}
       </div>
 
-      {/* List */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-white py-16 text-center">
           <MessageSquare className="mb-3 size-10 text-muted-foreground/40" />
@@ -158,7 +228,7 @@ export default function UzmanTaleplerPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((req) => (
-            <RequestCard key={req.id} req={req} />
+            <RequestCard key={req.id} req={req} onStatusChange={handleStatusChange} />
           ))}
         </div>
       )}

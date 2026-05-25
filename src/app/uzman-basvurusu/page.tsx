@@ -1,12 +1,55 @@
 "use client";
 
 import { useState } from "react";
+import { useForm, useFieldArray, type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { X, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+
+// ─── Schema ───────────────────────────────────────────────────────────────────
+
+const schema = z.object({
+  ad: z.string().min(2, "Ad zorunludur."),
+  soyad: z.string().min(2, "Soyad zorunludur."),
+  eposta: z.string().email("Geçerli e-posta girin."),
+  telefon: z.string().min(10, "Geçerli telefon numarası girin."),
+  il: z.string().min(1, "İl zorunludur."),
+  ilce: z.string().min(1, "İlçe zorunludur."),
+  yas: z.string().optional(),
+  cinsiyet: z.string().optional(),
+  site: z.string().optional(),
+  instagram: z.string().optional(),
+  lisansUni: z.string().min(2, "Üniversite adı zorunludur."),
+  lisansBolum: z.string().min(2, "Bölüm zorunludur."),
+  lisansYil: z.string().optional(),
+  ylUni: z.string().optional(),
+  ylBolum: z.string().optional(),
+  ylYil: z.string().optional(),
+  sertifikalar: z.array(z.object({ ad: z.string(), kurum: z.string() })),
+  hedefKitle: z.array(z.string()),
+  uzmanlikAlanlari: z.array(z.string()),
+  deneyim: z.string().optional(),
+  biyografi: z
+    .string()
+    .min(1, "Biyografi zorunludur.")
+    .refine(
+      (v) => v.trim().split(/\s+/).filter(Boolean).length >= 80,
+      { message: "Biyografi en az 80 kelime olmalıdır." }
+    )
+    .refine(
+      (v) => v.trim().split(/\s+/).filter(Boolean).length <= 150,
+      { message: "Biyografi en fazla 150 kelime olabilir." }
+    ),
+  kvkk: z.boolean().refine((v) => v, { message: "KVKK onayı zorunludur." }),
+  kosullar: z.boolean().refine((v) => v, { message: "Kullanım koşulları onayı zorunludur." }),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 // ─── Sabit veriler ────────────────────────────────────────────────────────────
 
@@ -17,6 +60,14 @@ const STEPS = [
   { id: 4, label: "Uzmanlık" },
   { id: 5, label: "Onay" },
 ];
+
+const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
+  1: ["ad", "soyad", "eposta", "telefon", "il", "ilce"],
+  2: ["lisansUni", "lisansBolum"],
+  3: [],
+  4: ["biyografi"],
+  5: ["kvkk", "kosullar"],
+};
 
 const HEDEF_KITLE = ["Yetişkin", "Çocuk", "Ergen", "Çift"];
 
@@ -41,39 +92,6 @@ const DENEYIM_SURESI = [
   "10 yıldan fazla",
 ];
 
-// ─── Tip tanımları ────────────────────────────────────────────────────────────
-
-type Sertifika = { ad: string; kurum: string };
-
-type FormData = {
-  // Adım 1
-  ad: string; soyad: string; eposta: string; telefon: string;
-  il: string; ilce: string; yas: string; cinsiyet: string;
-  site: string; instagram: string;
-  // Adım 2
-  lisansUni: string; lisansBolum: string; lisansYil: string;
-  ylUni: string; ylBolum: string; ylYil: string;
-  // Adım 3
-  sertifikalar: Sertifika[];
-  // Adım 4
-  hedefKitle: string[]; uzmanlikAlanlari: string[];
-  deneyim: string; biyografi: string;
-  // Adım 5
-  kvkk: boolean; kosullar: boolean;
-};
-
-const INITIAL: FormData = {
-  ad: "", soyad: "", eposta: "", telefon: "",
-  il: "", ilce: "", yas: "", cinsiyet: "",
-  site: "", instagram: "",
-  lisansUni: "", lisansBolum: "", lisansYil: "",
-  ylUni: "", ylBolum: "", ylYil: "",
-  sertifikalar: [{ ad: "", kurum: "" }],
-  hedefKitle: [], uzmanlikAlanlari: [],
-  deneyim: "", biyografi: "",
-  kvkk: false, kosullar: false,
-};
-
 // ─── Yardımcı bileşenler ──────────────────────────────────────────────────────
 
 function FieldGroup({ children }: { children: React.ReactNode }) {
@@ -81,21 +99,37 @@ function FieldGroup({ children }: { children: React.ReactNode }) {
 }
 
 function Field({
-  label, required, children,
-}: { label: string; required?: boolean; children: React.ReactNode }) {
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm font-medium text-foreground">
-        {label}{required && <span className="ml-0.5 text-destructive">*</span>}
+        {label}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
       </span>
       {children}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
 
 function Chip({
-  label, active, onClick,
-}: { label: string; active: boolean; onClick: () => void }) {
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -114,35 +148,39 @@ function Chip({
 
 // ─── Adım bileşenleri ─────────────────────────────────────────────────────────
 
-function Step1({ data, set }: { data: FormData; set: (k: keyof FormData, v: string) => void }) {
+type BaseStepProps = {
+  register: UseFormRegister<FormValues>;
+  errors: FieldErrors<FormValues>;
+};
+
+function Step1({ register, errors }: BaseStepProps) {
   return (
     <div className="space-y-5">
       <FieldGroup>
-        <Field label="Ad" required>
-          <Input value={data.ad} onChange={(e) => set("ad", e.target.value)} />
+        <Field label="Ad" required error={errors.ad?.message}>
+          <Input {...register("ad")} />
         </Field>
-        <Field label="Soyad" required>
-          <Input value={data.soyad} onChange={(e) => set("soyad", e.target.value)} />
+        <Field label="Soyad" required error={errors.soyad?.message}>
+          <Input {...register("soyad")} />
         </Field>
-        <Field label="E-posta" required>
-          <Input type="email" value={data.eposta} onChange={(e) => set("eposta", e.target.value)} />
+        <Field label="E-posta" required error={errors.eposta?.message}>
+          <Input type="email" {...register("eposta")} />
         </Field>
-        <Field label="Telefon" required>
-          <Input type="tel" placeholder="05XX XXX XX XX" value={data.telefon} onChange={(e) => set("telefon", e.target.value)} />
+        <Field label="Telefon" required error={errors.telefon?.message}>
+          <Input type="tel" placeholder="05XX XXX XX XX" {...register("telefon")} />
         </Field>
-        <Field label="İl" required>
-          <Input value={data.il} onChange={(e) => set("il", e.target.value)} />
+        <Field label="İl" required error={errors.il?.message}>
+          <Input {...register("il")} />
         </Field>
-        <Field label="İlçe" required>
-          <Input value={data.ilce} onChange={(e) => set("ilce", e.target.value)} />
+        <Field label="İlçe" required error={errors.ilce?.message}>
+          <Input {...register("ilce")} />
         </Field>
         <Field label="Yaş">
-          <Input type="number" min={18} value={data.yas} onChange={(e) => set("yas", e.target.value)} />
+          <Input type="number" min={18} {...register("yas")} />
         </Field>
         <Field label="Cinsiyet">
           <select
-            value={data.cinsiyet}
-            onChange={(e) => set("cinsiyet", e.target.value)}
+            {...register("cinsiyet")}
             className="h-11 w-full rounded-2xl border border-input bg-white px-4 text-base text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="">Seçin</option>
@@ -152,10 +190,10 @@ function Step1({ data, set }: { data: FormData; set: (k: keyof FormData, v: stri
           </select>
         </Field>
         <Field label="Kişisel Site">
-          <Input placeholder="https://..." value={data.site} onChange={(e) => set("site", e.target.value)} />
+          <Input placeholder="https://..." {...register("site")} />
         </Field>
         <Field label="Instagram">
-          <Input placeholder="@uzmanadi" value={data.instagram} onChange={(e) => set("instagram", e.target.value)} />
+          <Input placeholder="@uzmanadi" {...register("instagram")} />
         </Field>
       </FieldGroup>
     </div>
@@ -163,27 +201,43 @@ function Step1({ data, set }: { data: FormData; set: (k: keyof FormData, v: stri
 }
 
 function EduBlock({
-  title, required,
-  uni, bolum, yil,
-  onUni, onBolum, onYil,
+  title,
+  required,
+  uniName,
+  bolumName,
+  yilName,
+  register,
+  errors,
 }: {
-  title: string; required?: boolean;
-  uni: string; bolum: string; yil: string;
-  onUni: (v: string) => void; onBolum: (v: string) => void; onYil: (v: string) => void;
+  title: string;
+  required?: boolean;
+  uniName: keyof FormValues;
+  bolumName: keyof FormValues;
+  yilName: keyof FormValues;
+  register: UseFormRegister<FormValues>;
+  errors: FieldErrors<FormValues>;
 }) {
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-primary">{title}</h3>
       <FieldGroup>
-        <Field label="Üniversite" required={required}>
-          <Input value={uni} onChange={(e) => onUni(e.target.value)} />
+        <Field
+          label="Üniversite"
+          required={required}
+          error={(errors[uniName] as { message?: string })?.message}
+        >
+          <Input {...register(uniName)} />
         </Field>
         <div className="space-y-4">
-          <Field label="Bölüm" required={required}>
-            <Input value={bolum} onChange={(e) => onBolum(e.target.value)} />
+          <Field
+            label="Bölüm"
+            required={required}
+            error={(errors[bolumName] as { message?: string })?.message}
+          >
+            <Input {...register(bolumName)} />
           </Field>
           <Field label="Mezuniyet Yılı">
-            <Input type="number" placeholder="2020" value={yil} onChange={(e) => onYil(e.target.value)} />
+            <Input type="number" placeholder="2020" {...register(yilName)} />
           </Field>
         </div>
       </FieldGroup>
@@ -191,43 +245,42 @@ function EduBlock({
   );
 }
 
-function Step2({ data, set }: { data: FormData; set: (k: keyof FormData, v: string) => void }) {
+function Step2({ register, errors }: BaseStepProps) {
   return (
     <div className="space-y-8">
       <EduBlock
-        title="Lisans Eğitimi" required
-        uni={data.lisansUni} bolum={data.lisansBolum} yil={data.lisansYil}
-        onUni={(v) => set("lisansUni", v)}
-        onBolum={(v) => set("lisansBolum", v)}
-        onYil={(v) => set("lisansYil", v)}
+        title="Lisans Eğitimi"
+        required
+        uniName="lisansUni"
+        bolumName="lisansBolum"
+        yilName="lisansYil"
+        register={register}
+        errors={errors}
       />
       <div className="border-t border-border" />
       <EduBlock
         title="Yüksek Lisans (Opsiyonel)"
-        uni={data.ylUni} bolum={data.ylBolum} yil={data.ylYil}
-        onUni={(v) => set("ylUni", v)}
-        onBolum={(v) => set("ylBolum", v)}
-        onYil={(v) => set("ylYil", v)}
+        uniName="ylUni"
+        bolumName="ylBolum"
+        yilName="ylYil"
+        register={register}
+        errors={errors}
       />
     </div>
   );
 }
 
-function Step3({
-  sertifikalar, setSertifikalar,
-}: { sertifikalar: Sertifika[]; setSertifikalar: (s: Sertifika[]) => void }) {
-  const update = (i: number, field: keyof Sertifika, val: string) => {
-    const next = sertifikalar.map((s, idx) => idx === i ? { ...s, [field]: val } : s);
-    setSertifikalar(next);
-  };
-  const remove = (i: number) => setSertifikalar(sertifikalar.filter((_, idx) => idx !== i));
-  const add = () => setSertifikalar([...sertifikalar, { ad: "", kurum: "" }]);
+function Step3({ control }: { control: Control<FormValues> }) {
+  const { fields, append, remove } = useFieldArray({ control, name: "sertifikalar" });
 
   return (
     <div className="space-y-4">
-      {sertifikalar.map((s, i) => (
-        <div key={i} className="relative rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
-          {sertifikalar.length > 1 && (
+      {fields.map((field, i) => (
+        <div
+          key={field.id}
+          className="relative rounded-2xl border border-border bg-muted/20 p-4 space-y-3"
+        >
+          {fields.length > 1 && (
             <button
               type="button"
               onClick={() => remove(i)}
@@ -237,16 +290,24 @@ function Step3({
             </button>
           )}
           <Field label="Sertifika Adı">
-            <Input placeholder="Sertifika adı" value={s.ad} onChange={(e) => update(i, "ad", e.target.value)} />
+            <Input
+              placeholder="Sertifika adı"
+              defaultValue={field.ad}
+              name={`sertifikalar.${i}.ad`}
+            />
           </Field>
           <Field label="Veren Kurum">
-            <Input placeholder="Kurum" value={s.kurum} onChange={(e) => update(i, "kurum", e.target.value)} />
+            <Input
+              placeholder="Kurum"
+              defaultValue={field.kurum}
+              name={`sertifikalar.${i}.kurum`}
+            />
           </Field>
         </div>
       ))}
       <button
         type="button"
-        onClick={add}
+        onClick={() => append({ ad: "", kurum: "" })}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-3 text-sm font-medium text-primary transition hover:border-primary hover:bg-muted/30"
       >
         <Plus className="size-4" />
@@ -256,20 +317,42 @@ function Step3({
   );
 }
 
-function Step4({ data, set, toggleChip }: {
-  data: FormData;
-  set: (k: keyof FormData, v: string) => void;
-  toggleChip: (field: "hedefKitle" | "uzmanlikAlanlari", val: string) => void;
+function Step4({
+  register,
+  errors,
+  watch,
+  setValue,
+}: BaseStepProps & {
+  watch: UseFormWatch<FormValues>;
+  setValue: UseFormSetValue<FormValues>;
 }) {
+  const hedefKitle = watch("hedefKitle");
+  const uzmanlikAlanlari = watch("uzmanlikAlanlari");
+  const biyografi = watch("biyografi") ?? "";
+  const wordCount = biyografi.trim() ? biyografi.trim().split(/\s+/).length : 0;
+
+  function toggleChip(field: "hedefKitle" | "uzmanlikAlanlari", val: string) {
+    const current = watch(field);
+    setValue(
+      field,
+      current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
+      { shouldValidate: true }
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="space-y-2.5">
-        <Label>Hedef Kitle <span className="text-muted-foreground font-normal">(Çoklu Seçim)</span></Label>
+        <Label>
+          Hedef Kitle{" "}
+          <span className="text-muted-foreground font-normal">(Çoklu Seçim)</span>
+        </Label>
         <div className="flex flex-wrap gap-2">
           {HEDEF_KITLE.map((k) => (
             <Chip
-              key={k} label={k}
-              active={data.hedefKitle.includes(k)}
+              key={k}
+              label={k}
+              active={hedefKitle.includes(k)}
               onClick={() => toggleChip("hedefKitle", k)}
             />
           ))}
@@ -277,12 +360,16 @@ function Step4({ data, set, toggleChip }: {
       </div>
 
       <div className="space-y-2.5">
-        <Label>Uzmanlık Alanları <span className="text-muted-foreground font-normal">(Çoklu Seçim)</span></Label>
+        <Label>
+          Uzmanlık Alanları{" "}
+          <span className="text-muted-foreground font-normal">(Çoklu Seçim)</span>
+        </Label>
         <div className="flex flex-wrap gap-2">
           {UZMANLIK_ALANLARI.map((a) => (
             <Chip
-              key={a} label={a}
-              active={data.uzmanlikAlanlari.includes(a)}
+              key={a}
+              label={a}
+              active={uzmanlikAlanlari.includes(a)}
               onClick={() => toggleChip("uzmanlikAlanlari", a)}
             />
           ))}
@@ -291,101 +378,132 @@ function Step4({ data, set, toggleChip }: {
 
       <Field label="Deneyim Süresi">
         <select
-          value={data.deneyim}
-          onChange={(e) => set("deneyim", e.target.value)}
+          {...register("deneyim")}
           className="h-11 w-full max-w-xs rounded-2xl border border-input bg-white px-4 text-sm text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Seçin</option>
-          {DENEYIM_SURESI.map((d) => <option key={d}>{d}</option>)}
+          {DENEYIM_SURESI.map((d) => (
+            <option key={d}>{d}</option>
+          ))}
         </select>
       </Field>
 
       <div className="space-y-1.5">
-        <Label htmlFor="biyografi">
-          Kendinizi Tanıtın (Biyografi) <span className="text-destructive">*</span>
-          <span className="ml-2 text-xs font-normal text-muted-foreground">min 80, maks 150 kelime</span>
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="biyografi">
+            Kendinizi Tanıtın (Biyografi){" "}
+            <span className="text-destructive">*</span>
+          </Label>
+          <span
+            className={[
+              "text-xs font-semibold",
+              wordCount < 80 || wordCount > 150 ? "text-destructive" : "text-green-600",
+            ].join(" ")}
+          >
+            {wordCount} / 150 kelime
+          </span>
+        </div>
         <textarea
           id="biyografi"
           rows={5}
           placeholder="Danışanlarınıza kendinizi anlatın..."
-          value={data.biyografi}
-          onChange={(e) => set("biyografi", e.target.value)}
+          {...register("biyografi")}
           className="w-full rounded-2xl border border-input bg-white px-4 py-3 text-base text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring resize-y"
         />
-        <p className="text-xs text-muted-foreground text-right">
-          {data.biyografi.trim() ? data.biyografi.trim().split(/\s+/).length : 0} kelime
-        </p>
+        {errors.biyografi && (
+          <p className="text-xs text-destructive">{errors.biyografi.message}</p>
+        )}
       </div>
     </div>
   );
 }
 
-function Step5({ data, set }: {
-  data: FormData;
-  set: (k: keyof FormData, v: boolean) => void;
-}) {
+function Step5({ register, errors }: BaseStepProps) {
   return (
     <div className="space-y-4">
-      <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition hover:bg-muted/30">
-        <input
-          type="checkbox"
-          checked={data.kvkk}
-          onChange={(e) => set("kvkk", e.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-primary"
-        />
-        <span className="text-sm text-muted-foreground">
-          <Link href="/kvkk" className="font-semibold text-primary hover:underline">
-            KVKK Aydınlatma Metni
-          </Link>
-          {"'"}ni okudum ve kabul ediyorum. <span className="text-destructive">*</span>
-        </span>
-      </label>
+      <div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition hover:bg-muted/30">
+          <input
+            type="checkbox"
+            {...register("kvkk")}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span className="text-sm text-muted-foreground">
+            <Link href="/kvkk" className="font-semibold text-primary hover:underline">
+              KVKK Aydınlatma Metni
+            </Link>
+            {"'"}ni okudum ve kabul ediyorum.{" "}
+            <span className="text-destructive">*</span>
+          </span>
+        </label>
+        {errors.kvkk && (
+          <p className="mt-1 text-xs text-destructive">{errors.kvkk.message}</p>
+        )}
+      </div>
 
-      <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition hover:bg-muted/30">
-        <input
-          type="checkbox"
-          checked={data.kosullar}
-          onChange={(e) => set("kosullar", e.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-primary"
-        />
-        <span className="text-sm text-muted-foreground">
-          Platform kullanım koşullarını kabul ediyorum. <span className="text-destructive">*</span>
-        </span>
-      </label>
+      <div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition hover:bg-muted/30">
+          <input
+            type="checkbox"
+            {...register("kosullar")}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span className="text-sm text-muted-foreground">
+            Platform kullanım koşullarını kabul ediyorum.{" "}
+            <span className="text-destructive">*</span>
+          </span>
+        </label>
+        {errors.kosullar && (
+          <p className="mt-1 text-xs text-destructive">{errors.kosullar.message}</p>
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── Ana sayfa ────────────────────────────────────────────────────────────────
+// ─── Ana bileşen ──────────────────────────────────────────────────────────────
 
 export default function ExpertApplicationPage() {
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    setValue,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      ad: "", soyad: "", eposta: "", telefon: "",
+      il: "", ilce: "", yas: "", cinsiyet: "",
+      site: "", instagram: "",
+      lisansUni: "", lisansBolum: "", lisansYil: "",
+      ylUni: "", ylBolum: "", ylYil: "",
+      sertifikalar: [{ ad: "", kurum: "" }],
+      hedefKitle: [], uzmanlikAlanlari: [],
+      deneyim: "", biyografi: "",
+      kvkk: false, kosullar: false,
+    },
+  });
+
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<FormData>(INITIAL);
-
-  const setField = (k: keyof FormData, v: string) =>
-    setData((prev) => ({ ...prev, [k]: v }));
-
-  const setBoolField = (k: keyof FormData, v: boolean) =>
-    setData((prev) => ({ ...prev, [k]: v }));
-
-  const setSertifikalar = (s: Sertifika[]) =>
-    setData((prev) => ({ ...prev, sertifikalar: s }));
-
-  const toggleChip = (field: "hedefKitle" | "uzmanlikAlanlari", val: string) =>
-    setData((prev) => ({
-      ...prev,
-      [field]: prev[field].includes(val)
-        ? (prev[field] as string[]).filter((v) => v !== val)
-        : [...(prev[field] as string[]), val],
-    }));
-
   const isLast = step === STEPS.length;
+
+  async function goNext() {
+    const fields = STEP_FIELDS[step];
+    const valid = fields.length === 0 || (await trigger(fields));
+    if (valid) setStep((s) => s + 1);
+  }
+
+  async function onSubmit(_data: FormValues) {
+    await new Promise((r) => setTimeout(r, 900));
+    alert("Başvurunuz alındı.");
+  }
 
   return (
     <div className="min-h-screen bg-muted py-10 px-4 sm:px-6">
       <div className="mx-auto max-w-2xl">
-        {/* Başlık */}
         <h1 className="mb-8 text-center text-2xl font-bold text-foreground sm:text-3xl">
           Uzman Başvuru Formu
         </h1>
@@ -408,10 +526,16 @@ export default function ExpertApplicationPage() {
                   s.id < STEPS.length ? "border-r border-border" : "",
                 ].join(" ")}
               >
-                <span className={[
-                  "flex size-5 items-center justify-center rounded-full text-xs font-bold",
-                  isActive ? "bg-white/20 text-white" : isDone ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
-                ].join(" ")}>
+                <span
+                  className={[
+                    "flex size-5 items-center justify-center rounded-full text-xs font-bold",
+                    isActive
+                      ? "bg-white/20 text-white"
+                      : isDone
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground",
+                  ].join(" ")}
+                >
                   {s.id}
                 </span>
                 <span className="text-xs font-medium">{s.label}</span>
@@ -421,33 +545,53 @@ export default function ExpertApplicationPage() {
         </div>
 
         {/* Form kartı */}
-        <div className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
-          {step === 1 && <Step1 data={data} set={setField} />}
-          {step === 2 && <Step2 data={data} set={setField} />}
-          {step === 3 && <Step3 sertifikalar={data.sertifikalar} setSertifikalar={setSertifikalar} />}
-          {step === 4 && <Step4 data={data} set={setField} toggleChip={toggleChip} />}
-          {step === 5 && <Step5 data={data} set={setBoolField} />}
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+            {step === 1 && <Step1 register={register} errors={errors} />}
+            {step === 2 && <Step2 register={register} errors={errors} />}
+            {step === 3 && <Step3 control={control} />}
+            {step === 4 && (
+              <Step4
+                register={register}
+                errors={errors}
+                watch={watch}
+                setValue={setValue}
+              />
+            )}
+            {step === 5 && <Step5 register={register} errors={errors} />}
+          </div>
 
-        {/* Navigasyon */}
-        <div className="mt-4 flex items-center justify-between">
-          {step > 1 ? (
-            <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
-              Geri
-            </Button>
-          ) : (
-            <div />
-          )}
-          <Button
-            onClick={() => {
-              if (!isLast) setStep((s) => s + 1);
-            }}
-            type={isLast ? "submit" : "button"}
-            className={isLast ? "font-bold" : ""}
-          >
-            {isLast ? "Başvuruyu Gönder" : step === 4 ? "Özete Git →" : "Devam Et →"}
-          </Button>
-        </div>
+          {/* Navigasyon */}
+          <div className="mt-4 flex items-center justify-between">
+            {step > 1 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep((s) => s - 1)}
+              >
+                Geri
+              </Button>
+            ) : (
+              <div />
+            )}
+            {isLast ? (
+              <Button type="submit" className="font-bold" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Gönderiliyor…
+                  </>
+                ) : (
+                  "Başvuruyu Gönder"
+                )}
+              </Button>
+            ) : (
+              <Button type="button" onClick={goNext}>
+                {step === 4 ? "Özete Git →" : "Devam Et →"}
+              </Button>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );

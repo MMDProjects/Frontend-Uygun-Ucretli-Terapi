@@ -3,8 +3,8 @@
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { TestCard } from "@/features/tests";
 import { TestsHeroSection } from "@/features/tests";
-import { PreviousResultsSection } from "@/features/tests/components/previous-results-section";
-import { testsPreview, mockTestResults } from "@/features/shared/data/mock-content";
+import { TestHistorySection } from "@/features/tests/components/test-history-section";
+import { testsPreview } from "@/features/shared/data/mock-content";
 
 export default function TestsPage() {
   const { isAuthenticated } = useAuthStore();
@@ -13,9 +13,7 @@ export default function TestsPage() {
     <>
       <TestsHeroSection />
 
-      {isAuthenticated && (
-        <PreviousResultsSection results={mockTestResults} />
-      )}
+      {isAuthenticated && <TestHistorySection />}
 
       <section className="bg-[#e6f0ee] py-12">
         <div className="page-shell">

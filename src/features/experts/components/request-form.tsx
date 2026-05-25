@@ -1,14 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import Link from "next/link";
 import { Send, LogIn, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { sendExpertRequest } from "@/lib/services/danisan.service";
+
+const schema = z.object({
+  message: z.string().min(10, "Mesajınız en az 10 karakter olmalıdır."),
+  kvkk: z.boolean().refine((v) => v, { message: "KVKK onayı zorunludur." }),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 type RequestFormProps = {
   expertName: string;
@@ -16,9 +27,18 @@ type RequestFormProps = {
 };
 
 export function RequestForm({ expertName, expertSlug }: RequestFormProps) {
-  const { isAuthenticated, displayName } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { message: "", kvkk: false },
+  });
 
   if (!isAuthenticated) {
     return (
@@ -58,24 +78,23 @@ export function RequestForm({ expertName, expertSlug }: RequestFormProps) {
         <div>
           <p className="font-bold text-foreground">Talebiniz Alındı</p>
           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            {expertName} ile görüşme talebiniz iletildi.{" "}
-            <Link href="/taleplerim" className="font-semibold text-primary hover:underline">
-              Taleplerim
-            </Link>{" "}
-            sayfasından durumu takip edebilirsiniz.
+            {expertName} ile görüşme talebiniz iletildi. Uzman en kısa sürede sizinle iletişime geçecek.
           </p>
         </div>
       </div>
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+  async function onSubmit(data: FormValues) {
+    try {
+      await sendExpertRequest(expertSlug, data.message);
       setSubmitted(true);
-    }, 1200);
+      toast.success("Talebiniz başarıyla gönderildi!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gönderim başarısız.";
+      setError("root", { message: msg });
+      toast.error(msg);
+    }
   }
 
   return (
@@ -87,63 +106,44 @@ export function RequestForm({ expertName, expertSlug }: RequestFormProps) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 px-5 pb-5 pt-4" noValidate>
-        <div className="space-y-1.5">
-          <Label htmlFor="req-name" className="text-sm font-medium">
-            Ad Soyad <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="req-name"
-            defaultValue={displayName ?? ""}
-            placeholder="Adınız Soyadınız"
-            className="h-10 rounded-xl"
-            required
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="req-email" className="text-sm font-medium">
-            E-posta <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="req-email"
-            type="email"
-            placeholder="ornek@email.com"
-            className="h-10 rounded-xl"
-            required
-          />
-        </div>
-
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-5 pb-5 pt-4" noValidate>
         <div className="space-y-1.5">
           <Label htmlFor="req-message" className="text-sm font-medium">
             Mesajınız <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="req-message"
+            {...register("message")}
             placeholder="Destek almak istediğiniz konuyu kısaca açıklayın…"
-            className="min-h-[100px] resize-none rounded-xl"
-            required
+            className="min-h-[120px] resize-none rounded-xl"
           />
+          {errors.message && <p className="text-xs text-destructive">{errors.message.message}</p>}
         </div>
 
-        {/* KVKK onayı — tüm public formlarda zorunlu */}
-        <label className="flex cursor-pointer items-start gap-2.5">
-          <input
-            type="checkbox"
-            required
-            className="mt-0.5 size-4 shrink-0 cursor-pointer accent-primary"
-          />
-          <span className="text-xs leading-relaxed text-muted-foreground">
-            <Link href="/kvkk" className="font-medium text-primary hover:underline">
-              KVKK Aydınlatma Metni
-            </Link>
-            &apos;ni okudum, kişisel verilerimin işlenmesine onay veriyorum.{" "}
-            <span className="text-destructive">*</span>
-          </span>
-        </label>
+        <div className="space-y-1">
+          <label className="flex cursor-pointer items-start gap-2.5">
+            <input
+              type="checkbox"
+              {...register("kvkk")}
+              className="mt-0.5 size-4 shrink-0 cursor-pointer accent-primary"
+            />
+            <span className="text-xs leading-relaxed text-muted-foreground">
+              <Link href="/kvkk" className="font-medium text-primary hover:underline">
+                KVKK Aydınlatma Metni
+              </Link>
+              &apos;ni okudum, kişisel verilerimin işlenmesine onay veriyorum.{" "}
+              <span className="text-destructive">*</span>
+            </span>
+          </label>
+          {errors.kvkk && <p className="text-xs text-destructive">{errors.kvkk.message}</p>}
+        </div>
 
-        <Button type="submit" className="w-full gap-2" disabled={loading}>
-          {loading ? (
+        {errors.root && (
+          <p className="text-xs text-destructive">{errors.root.message}</p>
+        )}
+
+        <Button type="submit" className="w-full gap-2" disabled={isSubmitting}>
+          {isSubmitting ? (
             <>
               <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
               Gönderiliyor…

@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertCircle, Camera, CheckCircle2, Star } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/features/admin/components/page-header";
 import { ProfileStatusBadge } from "@/features/uzman/components/profile-status-badge";
-import { MOCK_UZMAN_PROFILE, ADMIN_KEYWORD_LIST } from "@/features/uzman/data/mock-uzman";
+import {
+  getMyUzmanProfile,
+  updateMyUzmanProfile,
+  getActiveTags,
+  type ApiUzmanProfile,
+  type ApiTag,
+} from "@/lib/services/uzman.service";
 import { cn } from "@/lib/utils";
 
 const MAX_KEYWORDS = 5;
@@ -16,77 +24,91 @@ const MIN_WORDS = 80;
 const MAX_WORDS = 150;
 
 function countWords(text: string) {
-  return text
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
+  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
 export default function UzmanProfilPage() {
-  const profile = MOCK_UZMAN_PROFILE;
+  const [profile, setProfile] = useState<ApiUzmanProfile | null>(null);
+  const [allTags, setAllTags] = useState<ApiTag[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [bio, setBio] = useState(profile.bio);
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(profile.keywords);
+  const [title, setTitle] = useState("");
+  const [bio, setBio] = useState("");
+  const [education, setEducation] = useState("");
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    Promise.all([getMyUzmanProfile(), getActiveTags()])
+      .then(([p, tags]) => {
+        setProfile(p);
+        setAllTags(tags);
+        setTitle(p.title ?? "");
+        setBio(p.bio ?? "");
+        setEducation(p.education ?? "");
+        setSelectedTagIds(p.tags.map((t) => t.id));
+      })
+      .catch(() => toast.error("Profil yüklenemedi."))
+      .finally(() => setLoading(false));
+  }, []);
 
   const wordCount = countWords(bio);
   const wordCountValid = wordCount >= MIN_WORDS && wordCount <= MAX_WORDS;
   const keywordsValid =
-    selectedKeywords.length >= MIN_KEYWORDS && selectedKeywords.length <= MAX_KEYWORDS;
+    selectedTagIds.length >= MIN_KEYWORDS && selectedTagIds.length <= MAX_KEYWORDS;
 
-  function toggleKeyword(kw: string) {
-    setSelectedKeywords((prev) =>
-      prev.includes(kw)
-        ? prev.filter((k) => k !== kw)
+  function toggleTag(id: string) {
+    setSelectedTagIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((k) => k !== id)
         : prev.length < MAX_KEYWORDS
-        ? [...prev, kw]
+        ? [...prev, id]
         : prev
     );
   }
 
-  async function handleSaveDraft() {
+  async function handleSave() {
+    if (!wordCountValid || !keywordsValid) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      await updateMyUzmanProfile({ title, bio, education, tagIds: selectedTagIds });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      if (profile) {
+        setProfile((p) => p ? { ...p, status: "onay_bekliyor" } : p);
+      }
+      toast.success("Profil güncellendi, admin onayı bekleniyor.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  async function handleSubmit() {
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setSubmitting(false);
-    alert("Profiliniz onay için gönderildi.");
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-48 skeleton rounded-xl" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-32 skeleton rounded-2xl" />
+        ))}
+      </div>
+    );
   }
+
+  if (!profile) return null;
+
+  const name = `${profile.userId}`;
 
   return (
     <div className="space-y-6">
-      {/* Status bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-border/60 bg-white p-5">
-        <div>
-          <p className="text-sm font-semibold text-foreground">Profil Durumu</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Her güncelleme sonrası profil onaya gönderilmelidir.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ProfileStatusBadge status={profile.status} />
-          {(profile.status === "taslak" || profile.status === "pasif") && (
-            <Button size="sm" onClick={handleSubmit} disabled={submitting || !wordCountValid || !keywordsValid}>
-              {submitting ? (
-                <>
-                  <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Gönderiliyor…
-                </>
-              ) : (
-                "Admine Gönder"
-              )}
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Profilim"
+        description="Her güncelleme sonrası profil onaya gönderilmelidir."
+      >
+        <ProfileStatusBadge status={profile.status} />
+      </PageHeader>
 
       {profile.adminNote && (
         <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
@@ -103,8 +125,13 @@ export default function UzmanProfilPage() {
         <h3 className="mb-4 text-sm font-bold text-foreground">Profil Fotoğrafı</h3>
         <div className="flex items-center gap-5">
           <div className="relative">
-            <div className="flex size-20 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
-              AK
+            <div className="flex size-20 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
+              {profile.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatarUrl} alt="avatar" className="size-full object-cover" />
+              ) : (
+                profile.title?.charAt(0) ?? "?"
+              )}
             </div>
             <button
               type="button"
@@ -135,43 +162,49 @@ export default function UzmanProfilPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">
-              Ad Soyad <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              defaultValue={profile.name}
-              className="h-10 rounded-xl"
-              readOnly
-            />
-            <p className="text-[10px] text-muted-foreground">Ad-soyad admin tarafından onaylanmıştır.</p>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">
               Unvan <span className="text-destructive">*</span>
             </Label>
-            <Input defaultValue={profile.title} className="h-10 rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">
-              Telefon <span className="text-destructive">*</span>
-            </Label>
             <Input
-              type="tel"
-              defaultValue={profile.phone}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className="h-10 rounded-xl"
+              placeholder="Klinik Psikolog"
             />
-            <p className="text-[10px] text-muted-foreground">Danışanlara gösterilmez; yalnızca admin görür.</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Yıldız Puanı</Label>
             <div className="flex h-10 items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3">
               <Star className="size-4 fill-yellow-400 text-yellow-400" />
               <span className="text-sm font-semibold text-foreground">
-                {profile.rating} / 5
+                {profile.rating.toFixed(1)} / 5
               </span>
-              <span className="text-xs text-muted-foreground">(28 değerlendirme)</span>
             </div>
           </div>
+          {profile.phone && (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Telefon</Label>
+              <Input
+                type="tel"
+                defaultValue={profile.phone}
+                className="h-10 rounded-xl"
+                readOnly
+              />
+              <p className="text-[10px] text-muted-foreground">Danışanlara gösterilmez; yalnızca admin görür.</p>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Education */}
+      <div className="rounded-2xl border border-border/60 bg-white p-5">
+        <h3 className="mb-4 text-sm font-bold text-foreground">Eğitim</h3>
+        <Textarea
+          value={education}
+          onChange={(e) => setEducation(e.target.value)}
+          rows={3}
+          className="rounded-xl resize-none"
+          placeholder="Üniversite, bölüm, yıl…"
+        />
       </div>
 
       {/* Bio */}
@@ -183,9 +216,7 @@ export default function UzmanProfilPage() {
           <span
             className={cn(
               "text-xs font-semibold",
-              wordCount < MIN_WORDS
-                ? "text-destructive"
-                : wordCount > MAX_WORDS
+              wordCount < MIN_WORDS || wordCount > MAX_WORDS
                 ? "text-destructive"
                 : "text-green-600"
             )}
@@ -212,7 +243,7 @@ export default function UzmanProfilPage() {
         )}
       </div>
 
-      {/* Keywords */}
+      {/* Tags */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
@@ -229,18 +260,18 @@ export default function UzmanProfilPage() {
               !keywordsValid ? "text-destructive" : "text-green-600"
             )}
           >
-            {selectedKeywords.length} / {MAX_KEYWORDS}
+            {selectedTagIds.length} / {MAX_KEYWORDS}
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {ADMIN_KEYWORD_LIST.map((kw) => {
-            const selected = selectedKeywords.includes(kw);
-            const disabled = !selected && selectedKeywords.length >= MAX_KEYWORDS;
+          {allTags.map((tag) => {
+            const selected = selectedTagIds.includes(tag.id);
+            const disabled = !selected && selectedTagIds.length >= MAX_KEYWORDS;
             return (
               <button
-                key={kw}
+                key={tag.id}
                 type="button"
-                onClick={() => toggleKeyword(kw)}
+                onClick={() => toggleTag(tag.id)}
                 disabled={disabled}
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-semibold transition",
@@ -251,14 +282,14 @@ export default function UzmanProfilPage() {
                     : "border-border/60 bg-white text-muted-foreground hover:border-primary/40 hover:text-primary"
                 )}
               >
-                {kw}
+                {tag.name}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Bottom actions */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           <span className="text-destructive">*</span> zorunlu alan
@@ -270,28 +301,18 @@ export default function UzmanProfilPage() {
               Kaydedildi
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={saving}>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving || !wordCountValid || !keywordsValid}
+          >
             {saving ? (
               <>
-                <span className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Kaydediliyor…
               </>
             ) : (
-              "Taslak Kaydet"
-            )}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={submitting || !wordCountValid || !keywordsValid}
-          >
-            {submitting ? (
-              <>
-                <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Gönderiliyor…
-              </>
-            ) : (
-              "Admine Gönder"
+              "Kaydet & Onaya Gönder"
             )}
           </Button>
         </div>

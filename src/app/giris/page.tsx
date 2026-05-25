@@ -1,46 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { loginDanisan } from "@/lib/services/auth.service";
+import { useState } from "react";
 
-const MOCK_USERS = [
-  { email: "danisan10@gmail.com", password: "danisan10", displayName: "Deniz Yılmaz", role: "danisan" as const },
-];
+const schema = z.object({
+  email: z.string().email("Geçerli bir e-posta girin."),
+  password: z.string().min(1, "Şifre zorunludur."),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { setSession } = useAuthStore();
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-    const user = MOCK_USERS.find(
-      (u) => u.email === email.trim().toLowerCase() && u.password === password
-    );
-
-    if (!user) {
-      setError("E-posta veya şifre hatalı.");
-      setLoading(false);
-      return;
+  async function onSubmit(values: FormValues) {
+    try {
+      const data = await loginDanisan(values.email, values.password);
+      const role = data.user.role.toLowerCase();
+      toast.success("Giriş başarılı!");
+      if (role === "admin") router.push("/admin/dashboard");
+      else router.push("/");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Giriş başarısız.";
+      setError("root", { message: msg });
     }
-
-    setSession({ isAuthenticated: true, displayName: user.displayName, role: user.role });
-    router.push("/");
   }
 
   return (
@@ -54,7 +56,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form className="space-y-5" noValidate onSubmit={handleSubmit}>
+          <form className="space-y-5" noValidate onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 E-posta <span className="text-destructive">*</span>
@@ -65,10 +67,11 @@ export default function LoginPage() {
                 placeholder="ornek@email.com"
                 autoComplete="email"
                 className="h-11 rounded-2xl"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -90,9 +93,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className="h-11 rounded-2xl pr-11"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -103,17 +104,20 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password.message}</p>
+              )}
             </div>
 
-            {error && (
+            {errors.root && (
               <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5">
                 <AlertCircle className="size-4 shrink-0 text-destructive" />
-                <p className="text-xs font-medium text-destructive">{error}</p>
+                <p className="text-xs font-medium text-destructive">{errors.root.message}</p>
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
                 <>
                   <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Giriş yapılıyor…

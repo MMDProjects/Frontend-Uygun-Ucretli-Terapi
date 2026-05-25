@@ -20,8 +20,11 @@
   --accent: #99c3bd;
   --accent-foreground: #01352d;
   --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
   --warning: #f59e0b;
   --success: #016a59;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
   --radius: 1rem;
 }
 
@@ -44,8 +47,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-warning: var(--warning);
   --color-success: var(--success);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --font-sans: var(--font-plus-jakarta-sans);
   --font-mono: var(--font-geist-mono);
 }

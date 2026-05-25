@@ -1,9 +1,10 @@
 "use client";
 
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { logout } from "@/lib/services/auth.service";
 
 export function DevAuthToggle() {
-  const { isAuthenticated, role, setSession, clearSession } = useAuthStore();
+  const { isAuthenticated, role, setSession } = useAuthStore();
 
   if (process.env.NODE_ENV !== "development") return null;
 
@@ -20,7 +21,7 @@ export function DevAuthToggle() {
           </p>
           <button
             type="button"
-            onClick={clearSession}
+            onClick={() => logout()}
             className="rounded-xl bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/20"
           >
             Çıkış Yap
@@ -32,8 +33,9 @@ export function DevAuthToggle() {
             type="button"
             onClick={() =>
               setSession({
-                isAuthenticated: true,
+                userId: "dev-danisan",
                 displayName: "Selin Karaca",
+                email: "selin@dev.com",
                 role: "danisan",
               })
             }
@@ -45,8 +47,9 @@ export function DevAuthToggle() {
             type="button"
             onClick={() =>
               setSession({
-                isAuthenticated: true,
+                userId: "dev-uzman",
                 displayName: "Dr. Ayşe Kaya",
+                email: "ayse@dev.com",
                 role: "uzman",
               })
             }
@@ -58,8 +61,9 @@ export function DevAuthToggle() {
             type="button"
             onClick={() =>
               setSession({
-                isAuthenticated: true,
+                userId: "dev-admin",
                 displayName: "Admin",
+                email: "admin@dev.com",
                 role: "admin",
               })
             }

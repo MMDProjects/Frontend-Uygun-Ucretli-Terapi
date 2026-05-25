@@ -18,14 +18,15 @@ const UZMAN_PANEL_PREFIXES = [
   "/uzman/bildirimler",
 ];
 
-function isUzmanPanel(pathname: string) {
+function isPanelRoute(pathname: string) {
+  if (pathname.startsWith("/admin")) return true;
   return UZMAN_PANEL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (isUzmanPanel(pathname)) {
+  if (isPanelRoute(pathname)) {
     return <>{children}</>;
   }
 

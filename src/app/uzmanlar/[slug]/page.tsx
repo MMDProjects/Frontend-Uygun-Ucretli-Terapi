@@ -1,23 +1,30 @@
-"use client";
-
-import { use } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Star, Award, FileText } from "lucide-react";
 
-import { featuredExperts } from "@/features/shared/data/mock-content";
+import { getExpert } from "@/lib/services/public.service";
 import { RequestForm } from "@/features/experts/components/request-form";
+import { FavoriteButton } from "@/features/experts/components/favorite-button";
+
+export const revalidate = 60;
 
 type ExpertDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
-  const { slug } = use(params);
-  const expert = featuredExperts.find((item) => item.slug === slug);
+export default async function ExpertDetailPage({ params }: ExpertDetailPageProps) {
+  const { slug } = await params;
+
+  let expert: Awaited<ReturnType<typeof getExpert>> | null = null;
+  try {
+    expert = await getExpert(slug);
+  } catch {
+    notFound();
+  }
 
   if (!expert) notFound();
 
+  const name = `${expert.user.firstName} ${expert.user.lastName}`.trim();
   const fullStars = Math.floor(expert.rating);
   const hasHalf = expert.rating % 1 >= 0.5;
 
@@ -29,17 +36,17 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             {/* Fotoğraf */}
             <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl border-2 border-white shadow-md sm:size-28">
-              {expert.photoUrl ? (
+              {expert.avatarUrl ? (
                 <Image
-                  src={expert.photoUrl}
-                  alt={expert.name}
+                  src={expert.avatarUrl}
+                  alt={name}
                   fill
                   className="object-cover"
                   sizes="112px"
                 />
               ) : (
                 <span className="flex size-full items-center justify-center bg-primary text-3xl font-bold text-white">
-                  {expert.name.charAt(0)}
+                  {name.charAt(0)}
                 </span>
               )}
             </div>
@@ -47,7 +54,7 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
             {/* Bilgiler */}
             <div className="flex-1 space-y-3">
               <h1 className="text-balance text-4xl font-semibold tracking-tight text-primary-hover sm:text-5xl">
-                {expert.name}
+                {name}
               </h1>
               <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
                 {expert.title}
@@ -72,14 +79,17 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
                 </span>
               </div>
 
+              {/* Favori butonu */}
+              <FavoriteButton expertId={expert.id} />
+
               {/* Etiketler */}
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {expert.tags.map((tag) => (
                   <span
-                    key={tag}
+                    key={tag.id}
                     className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
                   >
-                    {tag}
+                    {tag.name}
                   </span>
                 ))}
               </div>
@@ -91,15 +101,22 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
       {/* İçerik */}
       <section className="bg-[#e6f0ee] py-10">
         <div className="page-shell grid gap-6 lg:grid-cols-[1fr_320px]">
-          {/* Sol: Biyografi + belgeler */}
+          {/* Sol: Biyografi + eğitim */}
           <div className="space-y-5">
-            {/* Hakkında */}
             <article className="surface-card !rounded-[2rem] p-6">
               <h2 className="mb-3 text-base font-bold text-primary-hover">Hakkında</h2>
               <p className="text-sm leading-7 text-muted-foreground">{expert.bio}</p>
             </article>
 
-            {/* Belgeler */}
+            {expert.education && (
+              <article className="surface-card !rounded-[2rem] p-6">
+                <h2 className="mb-3 text-base font-bold text-primary-hover">Eğitim</h2>
+                <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
+                  {expert.education}
+                </p>
+              </article>
+            )}
+
             <article className="surface-card !rounded-[2rem] p-6">
               <h2 className="mb-4 text-base font-bold text-primary-hover">Belgeler & Sertifikalar</h2>
               <div className="space-y-3">
@@ -126,9 +143,7 @@ export default function ExpertDetailPage({ params }: ExpertDetailPageProps) {
 
           {/* Sağ: Talep formu */}
           <aside className="space-y-4">
-            <RequestForm expertName={expert.name} expertSlug={expert.slug} />
-
-            {/* Bilgi kartı */}
+            <RequestForm expertName={name} expertSlug={expert.id} />
             <div className="surface-card !rounded-[2rem] p-5 text-center">
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Tüm görüşmeler güvenli, şifreli bağlantı üzerinden gerçekleştirilir.

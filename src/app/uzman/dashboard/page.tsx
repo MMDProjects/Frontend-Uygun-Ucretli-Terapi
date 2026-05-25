@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -8,15 +11,16 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/features/admin/components/page-header";
 import { ProfileStatusBadge } from "@/features/uzman/components/profile-status-badge";
 import {
-  MOCK_UZMAN_PROFILE,
-  MOCK_UZMAN_STATS,
-  MOCK_DANISAN_REQUESTS,
-  MOCK_NOTIFICATIONS,
-} from "@/features/uzman/data/mock-uzman";
+  getMyUzmanProfile,
+  getMyUzmanRequests,
+  getMyUzmanNotifications,
+  type ApiUzmanProfile,
+  type ApiUzmanRequest,
+} from "@/lib/services/uzman.service";
 import { cn } from "@/lib/utils";
-import type { UzmanDanisanRequest } from "@/types/domain";
 
 function StatCard({
   label,
@@ -44,72 +48,104 @@ function StatCard({
   );
 }
 
-function RequestRow({ req }: { req: UzmanDanisanRequest }) {
-  const statusConfig = {
+function RequestRow({ req }: { req: ApiUzmanRequest }) {
+  const statusConfig: Record<string, string> = {
     Beklemede: "bg-amber-50 text-amber-700 border-amber-200",
     Yanıtlandı: "bg-blue-50 text-blue-700 border-blue-200",
     Tamamlandı: "bg-green-50 text-green-700 border-green-200",
-  } as const;
+  };
+
+  const date = new Date(req.createdAt).toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const danisanName = `${req.user.firstName} ${req.user.lastName}`.trim();
 
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border/50 py-3.5 last:border-0">
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
-          <p className="text-sm font-semibold text-foreground">{req.danisanName}</p>
+          <p className="text-sm font-semibold text-foreground">{danisanName}</p>
           <span
             className={cn(
               "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-              statusConfig[req.status]
+              statusConfig[req.status] ?? "bg-muted text-muted-foreground border-border"
             )}
           >
             {req.status}
           </span>
         </div>
         <p className="line-clamp-1 text-xs text-muted-foreground">{req.message}</p>
-        <p className="mt-1 text-[10px] text-muted-foreground">{req.dateLabel}</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">{date}</p>
       </div>
     </div>
   );
 }
 
 export default function UzmanDashboardPage() {
-  const profile = MOCK_UZMAN_PROFILE;
-  const stats = MOCK_UZMAN_STATS;
-  const recentRequests = MOCK_DANISAN_REQUESTS.slice(0, 4);
-  const unreadNotifCount = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
-  const pendingRequestCount = MOCK_DANISAN_REQUESTS.filter(
-    (r) => r.status === "Beklemede"
-  ).length;
+  const [profile, setProfile] = useState<ApiUzmanProfile | null>(null);
+  const [requests, setRequests] = useState<ApiUzmanRequest[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    Promise.all([
+      getMyUzmanProfile(),
+      getMyUzmanRequests(),
+      getMyUzmanNotifications(),
+    ])
+      .then(([p, reqs, notifs]) => {
+        setProfile(p);
+        setRequests(reqs);
+        setUnreadCount(notifs.filter((n) => !n.isRead).length);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const todayLabel = new Date().toLocaleDateString("tr-TR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-48 skeleton rounded-xl" />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 skeleton rounded-2xl" />
+          ))}
+        </div>
+        <div className="h-48 skeleton rounded-2xl" />
+      </div>
+    );
+  }
+
+  if (!profile) return null;
+
+  const pendingCount = requests.filter((r) => r.status === "Beklemede").length;
   const hasAdminNote = profile.status === "pasif" && profile.adminNote;
+  const recentRequests = requests.slice(0, 4);
 
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">
-            Hoş Geldiniz, Dr. Ayşe Kaya
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Bugün {new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ProfileStatusBadge status={profile.status} />
-          {profile.status === "taslak" && (
-            <Link
-              href="/uzman/profil"
-              className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-hover"
-            >
-              Profile Git →
-            </Link>
-          )}
-        </div>
-      </div>
+      <PageHeader title="Kontrol Paneli" description={`Bugün ${todayLabel}`}>
+        <ProfileStatusBadge status={profile.status} />
+        {profile.status === "taslak" && (
+          <Link
+            href="/uzman/profil"
+            className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-hover"
+          >
+            Profile Git
+          </Link>
+        )}
+      </PageHeader>
 
-      {/* Action alerts */}
-      {(hasAdminNote || profile.status === "taslak" || unreadNotifCount > 0 || pendingRequestCount > 0) && (
+      {(hasAdminNote || profile.status === "taslak" || unreadCount > 0 || pendingCount > 0) && (
         <div className="space-y-2">
           {profile.status === "taslak" && (
             <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -126,7 +162,7 @@ export default function UzmanDashboardPage() {
                 href="/uzman/profil"
                 className="shrink-0 text-xs font-semibold text-amber-700 hover:underline"
               >
-                Düzenle →
+                Düzenle
               </Link>
             </div>
           )}
@@ -141,27 +177,27 @@ export default function UzmanDashboardPage() {
             </div>
           )}
 
-          {pendingRequestCount > 0 && (
+          {pendingCount > 0 && (
             <Link
               href="/uzman/talepler"
               className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 transition hover:border-green-300"
             >
               <CheckCircle2 className="size-4 shrink-0 text-green-600" />
               <p className="flex-1 text-sm font-semibold text-green-800">
-                {pendingRequestCount} bekleyen danışan talebi var
+                {pendingCount} bekleyen danışan talebi var
               </p>
               <ArrowRight className="size-4 text-green-600" />
             </Link>
           )}
 
-          {unreadNotifCount > 0 && (
+          {unreadCount > 0 && (
             <Link
               href="/uzman/bildirimler"
               className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 transition hover:border-blue-300"
             >
               <Clock className="size-4 shrink-0 text-blue-600" />
               <p className="flex-1 text-sm font-semibold text-blue-800">
-                {unreadNotifCount} okunmamış bildiriminiz var
+                {unreadCount} okunmamış bildiriminiz var
               </p>
               <ArrowRight className="size-4 text-blue-600" />
             </Link>
@@ -169,51 +205,51 @@ export default function UzmanDashboardPage() {
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Toplam Talep"
-          value={stats.totalRequests}
+          value={requests.length}
           icon={MessageSquare}
           iconClass="bg-primary/10 text-primary"
         />
         <StatCard
           label="Bekleyen"
-          value={stats.pendingRequests}
+          value={pendingCount}
           icon={Clock}
           iconClass="bg-amber-100 text-amber-600"
         />
         <StatCard
           label="Yıldız Puanı"
-          value={`${stats.rating} / 5`}
+          value={`${profile.rating.toFixed(1)} / 5`}
           icon={Star}
           iconClass="bg-yellow-100 text-yellow-600"
         />
         <StatCard
-          label="Değerlendirme"
-          value={stats.reviewCount}
+          label="Tamamlanan"
+          value={requests.filter((r) => r.status === "Tamamlandı").length}
           icon={TrendingUp}
           iconClass="bg-green-100 text-green-600"
         />
       </div>
 
-      {/* Recent requests */}
-      <div className="rounded-2xl border border-border/60 bg-white">
-        <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
-          <h3 className="text-sm font-bold text-foreground">Son Danışan Talepleri</h3>
-          <Link
-            href="/uzman/talepler"
-            className="text-xs font-semibold text-primary hover:underline"
-          >
-            Tümünü Gör →
-          </Link>
+      {recentRequests.length > 0 && (
+        <div className="rounded-2xl border border-border/60 bg-white">
+          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+            <h3 className="text-sm font-bold text-foreground">Son Danışan Talepleri</h3>
+            <Link
+              href="/uzman/talepler"
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Tümünü Gör
+            </Link>
+          </div>
+          <div className="px-5">
+            {recentRequests.map((req) => (
+              <RequestRow key={req.id} req={req} />
+            ))}
+          </div>
         </div>
-        <div className="px-5">
-          {recentRequests.map((req) => (
-            <RequestRow key={req.id} req={req} />
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

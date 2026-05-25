@@ -1,54 +1,53 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { useState } from "react";
+import Image from "next/image";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { loginUzman } from "@/lib/services/auth.service";
 import { siteConfig } from "@/lib/constants/site";
-import Image from "next/image";
+
+const schema = z.object({
+  email: z.string().email("Geçerli bir e-posta girin."),
+  password: z.string().min(1, "Şifre zorunludur."),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export default function UzmanGirisPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { setSession } = useAuthStore();
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const MOCK_UZMANLAR = [
-    { email: "uzman10@gmail.com", password: "uzman10", displayName: "Dr. Ayşe Kaya" },
-  ];
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 700));
-
-    const user = MOCK_UZMANLAR.find(
-      (u) => u.email === email.trim().toLowerCase() && u.password === password
-    );
-
-    if (!user) {
-      setError("E-posta veya şifre hatalı.");
-      setLoading(false);
-      return;
+  async function onSubmit(values: FormValues) {
+    try {
+      await loginUzman(values.email, values.password);
+      toast.success("Giriş başarılı!");
+      router.push("/uzman/dashboard");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Giriş başarısız.";
+      setError("root", { message: msg });
     }
-
-    setSession({ isAuthenticated: true, displayName: user.displayName, role: "uzman" });
-    router.push("/uzman/dashboard");
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted px-5 py-12">
       <div className="w-full max-w-md">
-        {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
@@ -61,14 +60,12 @@ export default function UzmanGirisPage() {
           </Link>
           <div>
             <h1 className="text-xl font-bold text-foreground">Uzman Girişi</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Uzman panelinize erişin
-            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">Uzman panelinize erişin</p>
           </div>
         </div>
 
         <div className="rounded-3xl border border-border bg-white p-8 shadow-sm">
-          <form className="space-y-5" noValidate onSubmit={handleSubmit}>
+          <form className="space-y-5" noValidate onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 E-posta <span className="text-destructive">*</span>
@@ -79,10 +76,11 @@ export default function UzmanGirisPage() {
                 placeholder="doktor@email.com"
                 autoComplete="email"
                 className="h-11 rounded-2xl"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -104,9 +102,7 @@ export default function UzmanGirisPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   className="h-11 rounded-2xl pr-11"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -114,24 +110,23 @@ export default function UzmanGirisPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                 >
-                  {showPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password.message}</p>
+              )}
             </div>
 
-            {error && (
+            {errors.root && (
               <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5">
                 <AlertCircle className="size-4 shrink-0 text-destructive" />
-                <p className="text-xs font-medium text-destructive">{error}</p>
+                <p className="text-xs font-medium text-destructive">{errors.root.message}</p>
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
                 <>
                   <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Giriş yapılıyor…

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
+import { Toaster } from "@/components/ui/sonner";
 import { SiteShell } from "@/components/layout/site-shell";
+import { AuthInitializer } from "@/components/layout/auth-initializer";
 import { siteConfig } from "@/lib/constants/site";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -46,7 +48,9 @@ export default function RootLayout({
         >
           İçeriğe atla
         </a>
+        <AuthInitializer />
         <SiteShell>{children}</SiteShell>
+        <Toaster />
       </body>
     </html>
   );

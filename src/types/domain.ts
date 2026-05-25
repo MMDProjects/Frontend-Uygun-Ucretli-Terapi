@@ -146,6 +146,7 @@ export type DayOfWeek =
 export type TimeSlot = "Sabah" | "Öğleden Sonra" | "Akşam";
 
 export type AvailabilityCell = {
+  id?: string;
   day: DayOfWeek;
   slot: TimeSlot;
   available: boolean;

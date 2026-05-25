@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/constants/site";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { logout } from "@/lib/services/auth.service";
 
 const navItems = [
   { href: "/uzmanlar", label: "Uzmanlar" },
@@ -39,7 +40,7 @@ const linkCls =
   "shrink-0 inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-primary";
 
 function UserAccountMenu() {
-  const { displayName, role, clearSession } = useAuthStore();
+  const { displayName, role } = useAuthStore();
 
   const initials = displayName
     ? displayName
@@ -108,7 +109,7 @@ function UserAccountMenu() {
             <Popover.Close asChild>
               <button
                 type="button"
-                onClick={clearSession}
+                onClick={() => logout()}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-destructive transition hover:bg-destructive/5"
               >
                 <LogOut className="size-4 shrink-0" />
