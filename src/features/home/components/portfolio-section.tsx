@@ -1,9 +1,13 @@
 import { SectionHeading } from "@/components/common/section-heading";
-import { ExpertCard } from "@/features/experts/components/expert-card";
-import { recommendedHomeExperts } from "@/features/shared/data/mock-content";
+import { ExpertCardApi } from "@/features/experts/components/expert-card-api";
+import type { ApiExpertSummary } from "@/lib/services/public.service";
 
-export function PortfolioSection() {
-  if (recommendedHomeExperts.length === 0) {
+type Props = {
+  experts: ApiExpertSummary[];
+};
+
+export function PortfolioSection({ experts }: Props) {
+  if (experts.length === 0) {
     return null;
   }
 
@@ -19,9 +23,9 @@ export function PortfolioSection() {
           titleId="home-recommended-experts-heading"
         />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {recommendedHomeExperts.slice(0, 4).map((expert) => (
-            <ExpertCard
-              key={expert.slug}
+          {experts.slice(0, 4).map((expert) => (
+            <ExpertCardApi
+              key={expert.id}
               expert={expert}
               className="!rounded-[2rem] border-border/60 bg-white shadow-sm"
             />

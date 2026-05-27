@@ -63,10 +63,10 @@ export function ExpertsView() {
     setWarningOpen(true);
   };
 
-  const handleSendWarning = (message: string) => {
+  const handleSendWarning = (message: string, _type: string) => {
     if (!warningExpert) return;
     toast.success(`${warningExpert.fullName} için uyarı kaydedildi (API TODO)`);
-    console.warn("[expert warning stub]", warningExpert.id, message);
+    console.warn("[expert warning stub]", warningExpert.id, message, _type);
     setWarningOpen(false);
     setWarningExpert(null);
   };

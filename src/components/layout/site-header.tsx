@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/constants/site";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { logout } from "@/lib/services/auth.service";
+import { AnnouncementBanner } from "@/components/layout/announcement-banner";
 
 const navItems = [
   { href: "/uzmanlar", label: "Uzmanlar" },
@@ -129,8 +130,9 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 w-full bg-transparent">
-        <div className="page-shell flex min-h-[var(--site-header-height)] items-center justify-between gap-3 py-3 lg:grid lg:grid-cols-[auto_1fr_auto] lg:gap-4 lg:py-2">
+      <header className="fixed inset-x-0 top-0 z-40 w-full">
+        <AnnouncementBanner />
+        <div className="page-shell flex min-h-[4.5rem] items-center justify-between gap-3 bg-transparent py-3 lg:grid lg:grid-cols-[auto_1fr_auto] lg:gap-4 lg:py-2">
 
           {/* Sol: Logo */}
           <div className="flex shrink-0 items-center lg:justify-self-start">

@@ -63,7 +63,7 @@ export default function KonuDetailPage({ params }: PageProps) {
             {thread.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {thread.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-white/70 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  <span key={tag} className="rounded-full bg-[#cce1de] px-2.5 py-0.5 text-xs font-semibold text-[#014a3e]">
                     {tag}
                   </span>
                 ))}

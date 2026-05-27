@@ -8,7 +8,9 @@ import {
   OfferingsShowcaseSection,
   PortfolioSection,
 } from "@/features/home";
+import { ExpertsMarquee } from "@/features/experts/components/experts-marquee";
 import { siteConfig } from "@/lib/constants/site";
+import { getExperts } from "@/lib/services/public.service";
 
 const homeDescription =
   "Online psikolojik danışmanlıkta güvenilir uzmanlar, KVKK uyumu, testler ve şeffaf süreç — tek platformda.";
@@ -24,12 +26,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export const revalidate = 300;
+
+export default async function Home() {
+  let experts: Awaited<ReturnType<typeof getExperts>>["data"] = [];
+  try {
+    const res = await getExperts({ limit: 10 });
+    experts = res.data;
+  } catch {
+    experts = [];
+  }
+
   return (
     <>
       <HeroSection />
+      <ExpertsMarquee experts={experts} />
       <OfferingsShowcaseSection />
-      <PortfolioSection />
+      <PortfolioSection experts={experts} />
       <HomeBentoSection />
       <AboutHomeSection />
       <HomeFaqSection />

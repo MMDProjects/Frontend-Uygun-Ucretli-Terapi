@@ -117,7 +117,8 @@ export type UzmanNotificationType =
   | "admin_message"
   | "profil_reddedildi"
   | "blog_reddedildi"
-  | "sistem";
+  | "sistem"
+  | "danger_panic";
 
 export type UzmanNotification = {
   id: string;

@@ -1,17 +1,24 @@
 import { ExpertsHeroSection } from "@/features/experts/components/experts-hero-section";
 import { ExpertCardApi } from "@/features/experts/components/expert-card-api";
 import { ExpertCardSkeleton } from "@/features/experts/components/expert-card-skeleton";
-import { getExperts } from "@/lib/services/public.service";
+import { getExperts, getPublicPricing } from "@/lib/services/public.service";
 
 export const revalidate = 60;
 
 export default async function ExpertsPage() {
   let experts: Awaited<ReturnType<typeof getExperts>>["data"] = [];
   let error = false;
+  let standardPrice: number | undefined;
+  let discountedPrice: number | undefined;
 
   try {
-    const res = await getExperts({ limit: 20 });
-    experts = res.data;
+    const [expertsRes, pricing] = await Promise.all([
+      getExperts({ limit: 20 }),
+      getPublicPricing(),
+    ]);
+    experts = expertsRes.data;
+    standardPrice = pricing.standardPrice;
+    discountedPrice = pricing.discountedPrice;
   } catch {
     error = true;
   }
@@ -34,6 +41,8 @@ export default async function ExpertsPage() {
               <ExpertCardApi
                 key={expert.id}
                 expert={expert}
+                standardPrice={standardPrice}
+                discountedPrice={discountedPrice}
                 className="!rounded-[2rem] border-border/60 bg-white shadow-sm"
               />
             ))

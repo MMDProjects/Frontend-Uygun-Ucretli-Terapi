@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -8,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { logout } from "@/lib/services/auth.service";
 import { siteConfig } from "@/lib/constants/site";
-import { MOCK_UZMAN_PROFILE, MOCK_NOTIFICATIONS, MOCK_DANISAN_REQUESTS } from "@/features/uzman/data/mock-uzman";
+import { getMyUzmanNotifications } from "@/lib/services/uzman.service";
+import { getMyUzmanRequests } from "@/lib/services/uzman.service";
 
 type NavItem = { label: string; href: string; badge?: number };
 type NavGroup = { title: string; items: NavItem[] };
@@ -46,11 +48,18 @@ interface UzmanSidebarProps {
 export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
   const pathname = usePathname();
   const { displayName } = useAuthStore();
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
-  const unreadNotifCount = MOCK_NOTIFICATIONS.filter((n) => !n.isRead).length;
-  const pendingRequestCount = MOCK_DANISAN_REQUESTS.filter(
-    (r) => r.status === "Beklemede"
-  ).length;
+  useEffect(() => {
+    getMyUzmanNotifications()
+      .then((notifs) => setUnreadNotifCount(notifs.filter((n) => !n.isRead).length))
+      .catch(() => {});
+
+    getMyUzmanRequests()
+      .then((reqs) => setPendingRequestCount(reqs.filter((r) => r.status === "Beklemede").length))
+      .catch(() => {});
+  }, []);
 
   function getBadge(href: string): number {
     if (href === "/uzman/bildirimler") return unreadNotifCount;
@@ -58,7 +67,7 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
     return 0;
   }
 
-  const name = displayName ?? MOCK_UZMAN_PROFILE.name;
+  const name = displayName ?? "Uzman";
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -83,7 +92,7 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Logo — identical to admin sidebar */}
+        {/* Logo */}
         <div className="mb-4 px-4 pt-4">
           <Link href="/uzman/dashboard" className="flex items-center gap-2.5">
             <Image
@@ -102,7 +111,7 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
           </Link>
         </div>
 
-        {/* Nav — identical structure to admin sidebar */}
+        {/* Nav */}
         <nav className="flex flex-1 flex-col overflow-hidden px-4">
           {groups.map((group) => (
             <div key={group.title} className="mt-3 first:mt-0">
@@ -141,7 +150,7 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
           ))}
         </nav>
 
-        {/* Profile row — identical to admin sidebar */}
+        {/* Profile row */}
         <div className="mt-3 border-t border-white/10 px-4 pb-4 pt-3">
           <div className="flex items-center gap-2.5 rounded-md px-2 py-1.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
@@ -151,9 +160,7 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
               <p className="truncate text-sm font-medium leading-tight text-white">
                 {name}
               </p>
-              <p className="truncate text-[10px] text-white/50">
-                {MOCK_UZMAN_PROFILE.title}
-              </p>
+              <p className="truncate text-[10px] text-white/50">Uzman</p>
             </div>
             <div className="flex items-center gap-1">
               <Link

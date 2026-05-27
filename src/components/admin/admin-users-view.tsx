@@ -89,10 +89,10 @@ export function AdminUsersView() {
     setWarningOpen(true);
   };
 
-  const handleSendWarning = (message: string) => {
+  const handleSendWarning = (message: string, _type: string) => {
     if (!warningUser) return;
     toast.success(`${warningUser.fullName} için uyarı kaydedildi (API TODO)`);
-    console.warn("[admin warning stub]", warningUser.id, message);
+    console.warn("[admin warning stub]", warningUser.id, message, _type);
     setWarningOpen(false);
     setWarningUser(null);
   };

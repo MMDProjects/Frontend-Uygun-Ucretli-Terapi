@@ -37,7 +37,7 @@ function mapRequestStatus(s: ApiRequestStatus): ExpertRequestStatus {
 
 function mapNotificationType(t: ApiNotificationType): UzmanNotificationType {
   if (t === "WARNING") return "admin_message";
-  if (t === "DANGER_PANIC") return "profil_reddedildi";
+  if (t === "DANGER_PANIC") return "danger_panic";
   return "sistem";
 }
 
@@ -254,4 +254,23 @@ export async function getMyUzmanNotifications(): Promise<ApiUzmanNotification[]>
 export async function markUzmanNotificationRead(id: string): Promise<void> {
   const token = getAccessToken();
   await apiFetch(`/notifications/${id}/read`, { method: "PATCH", token });
+}
+
+export function subscribeToNotificationStream(
+  onMessage: (data: { type: ApiNotificationType; message: string; id: string }) => void,
+): () => void {
+  const token = getAccessToken();
+  if (!token || typeof window === "undefined") return () => {};
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+  const es = new EventSource(`${apiUrl}/notifications/stream?token=${token}`);
+
+  es.onmessage = (e) => {
+    try {
+      const parsed = JSON.parse(e.data);
+      onMessage(parsed);
+    } catch {}
+  };
+
+  return () => es.close();
 }

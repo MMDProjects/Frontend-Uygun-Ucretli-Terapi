@@ -6,7 +6,6 @@ import { FloatingSupportCluster } from "@/components/common/floating-support-clu
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { FreeConsultationPopup } from "@/features/auth/components/free-consultation-popup";
-import { DevAuthToggle } from "@/features/auth/components/dev-auth-toggle";
 
 const UZMAN_PANEL_PREFIXES = [
   "/uzman/dashboard",
@@ -39,7 +38,6 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <SiteFooter />
       <FloatingSupportCluster />
       <FreeConsultationPopup />
-      <DevAuthToggle />
     </div>
   );
 }

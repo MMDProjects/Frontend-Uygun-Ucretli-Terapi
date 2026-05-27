@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { Star, Award, FileText } from "lucide-react";
+import Link from "next/link";
+import { Star, Award, FileText, MessageSquare, Phone, BookOpen, Calendar } from "lucide-react";
 
-import { getExpert } from "@/lib/services/public.service";
-import { RequestForm } from "@/features/experts/components/request-form";
+import { getExpert, getExpertBlogs } from "@/lib/services/public.service";
 import { FavoriteButton } from "@/features/experts/components/favorite-button";
 
 export const revalidate = 60;
@@ -23,6 +23,8 @@ export default async function ExpertDetailPage({ params }: ExpertDetailPageProps
   }
 
   if (!expert) notFound();
+
+  const blogs = await getExpertBlogs(expert.id).catch(() => []);
 
   const name = `${expert.user.firstName} ${expert.user.lastName}`.trim();
   const fullStars = Math.floor(expert.rating);
@@ -117,33 +119,122 @@ export default async function ExpertDetailPage({ params }: ExpertDetailPageProps
               </article>
             )}
 
+            {blogs.length > 0 && (
+              <article className="surface-card !rounded-[2rem] p-6">
+                <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-primary-hover">
+                  <BookOpen className="size-4" />
+                  Uzmanın Yazıları
+                </h2>
+                <div className="space-y-3">
+                  {blogs.map((blog) => (
+                    <Link
+                      key={blog.id}
+                      href={`/blog/${blog.slug}`}
+                      className="flex flex-col gap-1 rounded-2xl border border-border/60 bg-muted/40 px-4 py-3 transition-colors hover:bg-primary/5"
+                    >
+                      <span className="text-sm font-semibold text-foreground line-clamp-2">
+                        {blog.title}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="size-3" />
+                        {new Date(blog.createdAt).toLocaleDateString("tr-TR", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </article>
+            )}
+
             <article className="surface-card !rounded-[2rem] p-6">
               <h2 className="mb-4 text-base font-bold text-primary-hover">Belgeler & Sertifikalar</h2>
               <div className="space-y-3">
-                {[
-                  { label: "Diploma / Lisans Belgesi", icon: Award },
-                  { label: "Uzmanlık Sertifikası", icon: FileText },
-                  { label: "Özgeçmiş (CV)", icon: FileText },
-                ].map(({ label, icon: Icon }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-3 rounded-[2rem] border border-border/60 bg-muted/40 px-4 py-3"
+                {expert.certificateUrl ? (
+                  <a
+                    href={expert.certificateUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 transition hover:bg-primary/10"
                   >
-                    <Icon className="size-4 shrink-0 text-primary" />
-                    <span className="text-sm font-medium text-foreground">{label}</span>
-                    <span className="ml-auto text-xs font-medium text-muted-foreground">PDF</span>
+                    <Award className="size-4 shrink-0 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Sertifika / Diploma</span>
+                    <span className="ml-auto text-xs font-semibold text-primary">PDF görüntüle →</span>
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/40 px-4 py-3">
+                    <Award className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Sertifika / Diploma</span>
+                    <span className="ml-auto text-xs text-muted-foreground">Bekleniyor</span>
                   </div>
-                ))}
+                )}
+
+                {expert.cvUrl ? (
+                  <>
+                    <a
+                      href={expert.cvUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 transition hover:bg-primary/10"
+                    >
+                      <FileText className="size-4 shrink-0 text-primary" />
+                      <span className="text-sm font-medium text-foreground">Özgeçmiş (CV)</span>
+                      <span className="ml-auto text-xs font-semibold text-primary">PDF görüntüle →</span>
+                    </a>
+                    <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
+                      <div className="flex items-center justify-between border-b border-border/40 px-4 py-2">
+                        <span className="text-xs font-semibold text-muted-foreground">CV Önizleme</span>
+                        <a
+                          href={expert.cvUrl}
+                          download
+                          className="text-xs font-semibold text-primary transition hover:text-primary-hover"
+                        >
+                          İndir
+                        </a>
+                      </div>
+                      <iframe
+                        src={`${expert.cvUrl}#page=1&view=FitH`}
+                        title="CV Önizleme"
+                        className="h-64 w-full border-0"
+                        loading="lazy"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/40 px-4 py-3">
+                    <FileText className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">Özgeçmiş (CV)</span>
+                    <span className="ml-auto text-xs text-muted-foreground">Bekleniyor</span>
+                  </div>
+                )}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Belgeler uzmanlık onayı tamamlandıktan sonra görüntülenebilir.
-              </p>
             </article>
           </div>
 
-          {/* Sağ: Talep formu */}
+          {/* Sağ: İletişim CTA */}
           <aside className="space-y-4">
-            <RequestForm expertName={name} expertSlug={expert.id} />
+            <div className="surface-card !rounded-[2rem] p-6">
+              <h2 className="mb-1 text-base font-bold text-primary-hover">Görüşme Talebi</h2>
+              <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
+                {name} ile görüşmek için iletişim formumuzu kullanın. Ekibimiz sizi en kısa sürede arayacak.
+              </p>
+              <Link
+                href={`/iletisim?konu=randevu&uzman=${encodeURIComponent(name)}`}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-hover"
+              >
+                <MessageSquare className="size-4 shrink-0" />
+                Görüşme Talep Et
+              </Link>
+              <Link
+                href="/iletisim"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+              >
+                <Phone className="size-4 shrink-0" />
+                İletişime Geç
+              </Link>
+            </div>
             <div className="surface-card !rounded-[2rem] p-5 text-center">
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Tüm görüşmeler güvenli, şifreli bağlantı üzerinden gerçekleştirilir.

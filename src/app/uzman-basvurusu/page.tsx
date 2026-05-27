@@ -5,6 +5,7 @@ import { useForm, useFieldArray, type UseFormRegister, type FieldErrors, type Us
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,8 @@ const schema = z.object({
   telefon: z.string().min(10, "Geçerli telefon numarası girin."),
   il: z.string().min(1, "İl zorunludur."),
   ilce: z.string().min(1, "İlçe zorunludur."),
+  sifre: z.string().min(8, "Şifre en az 8 karakter olmalıdır."),
+  unvan: z.string().optional(),
   yas: z.string().optional(),
   cinsiyet: z.string().optional(),
   site: z.string().optional(),
@@ -47,6 +50,8 @@ const schema = z.object({
     ),
   kvkk: z.boolean().refine((v) => v, { message: "KVKK onayı zorunludur." }),
   kosullar: z.boolean().refine((v) => v, { message: "Kullanım koşulları onayı zorunludur." }),
+  sertifika: z.any().optional(),
+  cv: z.any().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -62,7 +67,7 @@ const STEPS = [
 ];
 
 const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
-  1: ["ad", "soyad", "eposta", "telefon", "il", "ilce"],
+  1: ["ad", "soyad", "eposta", "telefon", "il", "ilce", "sifre"],
   2: ["lisansUni", "lisansBolum"],
   3: [],
   4: ["biyografi"],
@@ -188,6 +193,12 @@ function Step1({ register, errors }: BaseStepProps) {
             <option>Erkek</option>
             <option>Belirtmek istemiyorum</option>
           </select>
+        </Field>
+        <Field label="Şifre" required error={errors.sifre?.message}>
+          <Input type="password" placeholder="En az 8 karakter" {...register("sifre")} />
+        </Field>
+        <Field label="Unvan / Ünvan">
+          <Input placeholder="Uzman Klinik Psikolog" {...register("unvan")} />
         </Field>
         <Field label="Kişisel Site">
           <Input placeholder="https://..." {...register("site")} />
@@ -421,6 +432,15 @@ function Step4({
 function Step5({ register, errors }: BaseStepProps) {
   return (
     <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label>Sertifika (PDF) <span className="text-destructive">*</span></Label>
+        <Input type="file" accept=".pdf" {...register("sertifika")} className="h-10 rounded-xl" />
+      </div>
+      <div className="space-y-1.5">
+        <Label>CV / Özgeçmiş (PDF) <span className="text-destructive">*</span></Label>
+        <Input type="file" accept=".pdf" {...register("cv")} className="h-10 rounded-xl" />
+      </div>
+
       <div>
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition hover:bg-muted/30">
           <input
@@ -476,7 +496,8 @@ export default function ExpertApplicationPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       ad: "", soyad: "", eposta: "", telefon: "",
-      il: "", ilce: "", yas: "", cinsiyet: "",
+      il: "", ilce: "", sifre: "", unvan: "",
+      yas: "", cinsiyet: "",
       site: "", instagram: "",
       lisansUni: "", lisansBolum: "", lisansYil: "",
       ylUni: "", ylBolum: "", ylYil: "",
@@ -496,9 +517,39 @@ export default function ExpertApplicationPage() {
     if (valid) setStep((s) => s + 1);
   }
 
-  async function onSubmit(_data: FormValues) {
-    await new Promise((r) => setTimeout(r, 900));
-    alert("Başvurunuz alındı.");
+  async function onSubmit(data: FormValues) {
+    try {
+      const formData = new FormData();
+
+      // Temel alanlar
+      formData.append("firstName", data.ad);
+      formData.append("lastName", data.soyad);
+      formData.append("email", data.eposta);
+      formData.append("phone", data.telefon);
+      formData.append("password", data.sifre ?? "");
+      formData.append("title", data.unvan || "Uzman");
+      formData.append("kvkkConsent", "true");
+
+      // PDF dosyaları
+      if (data.sertifika?.[0]) formData.append("certificate", data.sertifika[0]);
+      if (data.cv?.[0]) formData.append("cv", data.cv[0]);
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
+      const res = await fetch(`${apiUrl}/auth/register/uzman`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { message?: string };
+        throw new Error(Array.isArray(err.message) ? err.message.join(", ") : (err.message ?? "Başvuru gönderilemedi."));
+      }
+
+      toast.success("Başvurunuz alındı! İnceleme sonucunda e-posta ile bilgilendirileceksiniz.");
+      setStep(1); // formu sıfırla
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Başvuru gönderilemedi. Lütfen tekrar deneyin.");
+    }
   }
 
   return (

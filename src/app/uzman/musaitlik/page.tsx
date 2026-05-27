@@ -247,84 +247,113 @@ export default function UzmanMusaitlikPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px] border-collapse">
-            <thead>
-              <tr>
-                <th className="w-36 pb-3 text-left text-xs font-semibold text-muted-foreground">
-                  Zaman Dilimi
-                </th>
-                {DAYS.map((day) => (
-                  <th
+        <div className="overflow-x-auto rounded-xl border border-border/60">
+          {/* Day header row */}
+          <div className="flex border-b-2 border-border/60 bg-[#e6f0ee]">
+            <div className="w-32 shrink-0 border-r border-border/60 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Zaman
+            </div>
+            {DAYS.map((day) => (
+              <div
+                key={day}
+                className="flex-1 border-r border-border/60 py-3 text-center last:border-r-0"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="hidden sm:block">{day.slice(0, 3)}</span>
+                  <span className="block sm:hidden">{day.slice(0, 1)}</span>
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-[#014a3e]">
+                  <span className="hidden sm:block">{day}</span>
+                  <span className="block sm:hidden">{day.slice(0, 3)}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Slot rows */}
+          {SLOTS.map((slot, slotIdx) => (
+            <div
+              key={slot}
+              className={cn(
+                "flex border-b border-border/40 last:border-b-0",
+                "hover:bg-primary/[0.02]"
+              )}
+            >
+              <div className="w-32 shrink-0 border-r border-border/60 bg-[#e6f0ee] px-3 py-4">
+                <p className="text-xs font-semibold text-[#014a3e]">{slot}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{SLOT_TIMES[slot]}</p>
+              </div>
+              {DAYS.map((day) => {
+                const cell = getCell(day, slot);
+                if (!cell) return <div key={day} className="flex-1 border-r border-border/40 last:border-r-0" />;
+                return (
+                  <div
                     key={day}
-                    className="pb-3 text-center text-xs font-semibold text-muted-foreground"
+                    className={cn(
+                      "flex flex-1 items-center justify-center border-r border-border/40 p-2 last:border-r-0",
+                      cell.adminLocked && "bg-red-50/50",
+                    )}
                   >
-                    <span className="hidden sm:block">{day}</span>
-                    <span className="block sm:hidden">{day.slice(0, 3)}</span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {SLOTS.map((slot) => (
-                <tr key={slot} className="border-t border-border/30">
-                  <td className="py-3 pr-4">
-                    <p className="text-xs font-semibold text-foreground">{slot}</p>
-                    <p className="text-[10px] text-muted-foreground">{SLOT_TIMES[slot]}</p>
-                  </td>
-                  {DAYS.map((day) => {
-                    const cell = getCell(day, slot);
-                    if (!cell) return <td key={day} />;
-                    return (
-                      <td key={day} className="px-1 py-3 text-center">
-                        <button
-                          type="button"
-                          onClick={() => toggleCell(day, slot)}
-                          disabled={cell.adminLocked}
-                          title={
-                            cell.adminLocked
-                              ? "Admin tarafından kilitlendi"
-                              : cell.available
-                              ? "Müsait — tıklayarak kaldır"
-                              : "Müsait değil — tıklayarak ekle"
-                          }
-                          className={cn(
-                            "mx-auto flex size-9 items-center justify-center rounded-xl border text-xs font-bold transition",
-                            cell.adminLocked &&
-                              "cursor-not-allowed border-red-200 bg-red-50 text-red-400",
-                            !cell.adminLocked &&
-                              cell.available &&
-                              "border-primary/30 bg-primary text-white hover:bg-primary-hover",
-                            !cell.adminLocked &&
-                              !cell.available &&
-                              "border-border/60 bg-white text-transparent hover:border-primary/30 hover:bg-muted hover:text-muted-foreground"
-                          )}
-                          aria-label={`${day} ${slot} ${cell.available ? "müsait" : "müsait değil"}`}
-                          aria-pressed={cell.available}
-                        >
-                          {cell.adminLocked ? "✕" : cell.available ? "✓" : ""}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <button
+                      type="button"
+                      onClick={() => toggleCell(day, slot)}
+                      disabled={cell.adminLocked}
+                      title={
+                        cell.adminLocked
+                          ? "Admin tarafından kilitlendi"
+                          : cell.available
+                          ? "Müsait — tıklayarak kaldır"
+                          : "Müsait değil — tıklayarak ekle"
+                      }
+                      style={
+                        cell.adminLocked
+                          ? {
+                              backgroundImage:
+                                "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.12) 3px, rgba(220,38,38,0.12) 6px)",
+                            }
+                          : undefined
+                      }
+                      className={cn(
+                        "w-full rounded-lg border py-2.5 text-[10px] font-bold transition-all",
+                        cell.adminLocked &&
+                          "cursor-not-allowed border-red-200 text-red-400",
+                        !cell.adminLocked &&
+                          cell.available &&
+                          "border-primary/40 bg-primary text-white shadow-sm hover:bg-primary-hover active:scale-95",
+                        !cell.adminLocked &&
+                          !cell.available &&
+                          "border-border/50 bg-white text-muted-foreground hover:border-primary/30 hover:bg-[#e6f0ee] hover:text-primary",
+                      )}
+                      aria-label={`${day} ${slot} ${cell.available ? "müsait" : "müsait değil"}`}
+                      aria-pressed={cell.available}
+                    >
+                      {cell.adminLocked ? "Kilitli" : cell.available ? "Müsait" : "Boş"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border/40 pt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="size-4 rounded-md border border-primary/30 bg-primary" />
+            <div className="h-4 w-6 rounded border border-primary/40 bg-primary" />
             Müsait
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="size-4 rounded-md border border-border/60 bg-white" />
+            <div className="h-4 w-6 rounded border border-border/50 bg-white" />
             Müsait Değil
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="size-4 rounded-md border border-red-200 bg-red-50" />
-            Admin Kilitli
+          <div
+            className="flex items-center gap-2 text-xs text-muted-foreground"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.12) 3px, rgba(220,38,38,0.12) 6px)",
+            }}
+          >
+            <div className="h-4 w-6 rounded border border-red-200" />
+            <span>Admin Kilitli</span>
           </div>
         </div>
       </div>

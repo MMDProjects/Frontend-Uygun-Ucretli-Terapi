@@ -21,16 +21,8 @@ export const siteConfig = {
       href: "https://www.instagram.com/",
     },
     {
-      label: "LinkedIn",
-      href: "https://www.linkedin.com/",
-    },
-    {
-      label: "Facebook",
-      href: "https://www.facebook.com/",
-    },
-    {
-      label: "YouTube",
-      href: "https://www.youtube.com/",
+      label: "WhatsApp",
+      href: "https://wa.me/905555555555",
     },
   ],
   navigation: [

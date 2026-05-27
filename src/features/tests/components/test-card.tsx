@@ -1,18 +1,15 @@
 import Link from "next/link";
 
-import type { TestPreview } from "@/types/domain";
+import type { ApiTest } from "@/lib/services/public.service";
 
 type TestCardProps = {
-  test: TestPreview;
+  test: ApiTest;
 };
 
 export function TestCard({ test }: TestCardProps) {
   return (
     <article className="relative flex min-h-[18rem] flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm lg:rounded-[2.25rem]">
       <h3 className="text-lg font-semibold text-primary-hover">{test.title}</h3>
-      <span className="mt-2 w-fit rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover">
-        Ortalama {test.durationMinutes} dk
-      </span>
       <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
         {test.description}
       </p>

@@ -133,7 +133,7 @@ export async function listUsers(
       headers.Authorization = `Bearer ${accessToken}`;
     }
 
-    const res = await fetch(`${base}/users`, {
+    const res = await fetch(`${base}/admin/users`, {
       method: "GET",
       headers,
       credentials: "include",

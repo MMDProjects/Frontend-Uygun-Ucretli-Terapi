@@ -30,13 +30,27 @@ export default function YeniKonuPage() {
       <div className="bg-[#e6f0ee] py-16 !pt-0">
         <div className="page-shell flex justify-center">
           <div className="rounded-[2rem] border border-border/60 bg-white p-10 text-center shadow-sm">
-            <p className="text-lg font-semibold text-primary-hover">Bu sayfaya erişemezsiniz</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Yeni konu açmak için danışan hesabıyla giriş yapmanız gerekiyor.
+            <p className="text-lg font-semibold text-primary-hover">
+              {role === null ? "Soru sormak için kayıt olun" : "Bu sayfaya erişemezsiniz"}
             </p>
-            <Link href="/forum" className="mt-5 inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
-              Forum Ana Sayfası
-            </Link>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {role === null
+                ? "Soru-Cevap bölümünde soru sorabilmek için ücretsiz hesap oluşturmanız gerekiyor."
+                : "Yeni konu açmak için danışan hesabıyla giriş yapmanız gerekiyor."}
+            </p>
+            <div className="mt-5 flex items-center justify-center gap-3">
+              {role === null && (
+                <Link href="/kayit" className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
+                  Ücretsiz Kayıt Ol
+                </Link>
+              )}
+              <Link href="/giris?redirect=/forum/yeni-konu" className="inline-flex h-10 items-center rounded-full border border-border px-5 text-sm font-medium text-muted-foreground transition hover:bg-muted">
+                Giriş Yap
+              </Link>
+              <Link href="/forum" className="inline-flex h-10 items-center rounded-full border border-border px-5 text-sm font-medium text-muted-foreground transition hover:bg-muted">
+                Geri Dön
+              </Link>
+            </div>
           </div>
         </div>
       </div>

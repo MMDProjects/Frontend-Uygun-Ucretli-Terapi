@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { Bell, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/constants/site";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { logout } from "@/lib/services/auth.service";
 
 type NavItem = { label: string; href: string; badge?: number };
 type NavGroup = { title: string; items: NavItem[] };
@@ -24,6 +26,7 @@ const groups: NavGroup[] = [
       { label: "Yeni basvurular", href: "/admin/uzman-onay/basvurular" },
       { label: "Profil onaylari", href: "/admin/uzman-onay/profil-onaylari" },
       { label: "Tum uzmanlar", href: "/admin/uzmanlar" },
+      { label: "Musaitlik yonetimi", href: "/admin/musaitlik" },
     ],
   },
   {
@@ -55,14 +58,17 @@ const groups: NavGroup[] = [
   },
 ];
 
-const MOCK_ADMIN = {
-  name: "Admin",
-  role: "Yonetici",
-  initials: "AD",
-};
-
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { displayName } = useAuthStore();
+
+  const name = displayName ?? "Admin";
+  const initials = name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <div className="flex h-full flex-col bg-[#014a3e] px-4 py-4 text-white">
@@ -127,15 +133,15 @@ export function AdminSidebar() {
         <div className="flex items-center gap-2.5 rounded-md px-2 py-1.5">
           {/* Avatar */}
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-semibold text-white">
-            {MOCK_ADMIN.initials}
+            {initials}
           </div>
 
           {/* Name + role */}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium leading-tight text-white">
-              {MOCK_ADMIN.name}
+              {name}
             </p>
-            <p className="truncate text-[10px] text-white/50">{MOCK_ADMIN.role}</p>
+            <p className="truncate text-[10px] text-white/50">Yönetici</p>
           </div>
 
           {/* Actions */}
@@ -147,13 +153,14 @@ export function AdminSidebar() {
             >
               <Bell className="size-4" />
             </Link>
-            <Link
-              href="/admin/giris?cikis=1"
+            <button
+              type="button"
+              onClick={() => logout()}
               className="rounded-md p-1 text-red-400 transition-colors hover:bg-white/10 hover:text-red-300"
               aria-label="Cikis yap"
             >
               <LogOut className="size-4" />
-            </Link>
+            </button>
           </div>
         </div>
       </div>

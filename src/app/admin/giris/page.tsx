@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setAdminSessionCookies, verifyDemoLogin } from "@/lib/demo-auth";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { loginAdmin } from "@/lib/services/auth.service";
 
 export default function AdminGirisPage() {
   const router = useRouter();
@@ -22,27 +21,16 @@ export default function AdminGirisPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
 
-    const user = verifyDemoLogin(email.trim().toLowerCase(), password);
-    setLoading(false);
-
-    if (!user) {
-      setError("E-posta veya şifre hatalı.");
-      return;
+    try {
+      const data = await loginAdmin(email.trim().toLowerCase(), password);
+      toast.success(`Hoş geldiniz, ${data.user.firstName}`);
+      router.push("/admin/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "E-posta veya şifre hatalı.");
+    } finally {
+      setLoading(false);
     }
-
-    setAdminSessionCookies("user");
-    useAuthStore.getState().setSession({ userId: "demo", displayName: user.name, email: user.email, role: "admin" });
-    toast.success(`Hoş geldiniz, ${user.name}`);
-    router.push("/admin/dashboard");
-  }
-
-  function handleDemoLogin() {
-    setAdminSessionCookies("demo");
-    useAuthStore.getState().setSession({ userId: "demo", displayName: "Admin", email: "", role: "admin" });
-    toast.success("Demo oturumu açıldı.");
-    router.push("/admin/dashboard");
   }
 
   return (
@@ -121,15 +109,6 @@ export default function AdminGirisPage() {
               ) : (
                 "Giriş Yap"
               )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleDemoLogin}
-            >
-              Demo ile giriş yap
             </Button>
           </form>
         </div>
