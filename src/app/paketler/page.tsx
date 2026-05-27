@@ -1,7 +1,8 @@
-import { getPackages } from "@/lib/services/public.service";
+import { getPackages, getSss } from "@/lib/services/public.service";
 import type { ApiPackage } from "@/lib/services/public.service";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { SssSection } from "@/components/common/sss-section";
 
 export const revalidate = 300;
 
@@ -84,10 +85,12 @@ function PackageCardApi({
 
 export default async function PackagesPage() {
   let packages: ApiPackage[] = [];
+  let sssItems: Awaited<ReturnType<typeof getSss>> = [];
   try {
-    packages = await getPackages();
+    [packages, sssItems] = await Promise.all([getPackages(), getSss("PAKETLER")]);
   } catch {
     packages = [];
+    sssItems = [];
   }
 
   const midIndex = Math.floor(packages.length / 2);
@@ -123,6 +126,8 @@ export default async function PackagesPage() {
           </div>
         )}
       </section>
+
+      <SssSection items={sssItems} title="Paketler Hakkında Sıkça Sorulan Sorular" />
     </>
   );
 }

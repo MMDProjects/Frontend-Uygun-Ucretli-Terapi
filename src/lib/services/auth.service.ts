@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api";
-import { setTokens, clearTokens, getRefreshToken } from "@/lib/auth-cookies";
+import { setTokens, clearTokens, getRefreshToken, getAccessToken } from "@/lib/auth-cookies";
 import { useAuthStore, type UserRole } from "@/lib/stores/auth-store";
 
 type AuthResponse = {
@@ -71,6 +71,47 @@ export async function logout(refreshToken?: string): Promise<void> {
   }
   clearTokens();
   useAuthStore.getState().clearSession();
+}
+
+export async function loginAdmin(email: string, password: string): Promise<AuthResponse> {
+  const data = await apiFetch<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: { email, password },
+  });
+  if (data.user.role !== "ADMIN") {
+    throw new Error("Bu hesap admin girişi için yetkili değil.");
+  }
+  applySession(data);
+  return data;
+}
+
+export type UserProfile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export async function getMyProfile(): Promise<UserProfile> {
+  const token = getAccessToken();
+  return apiFetch<UserProfile>("/auth/me", { token });
+}
+
+export async function updateMyProfile(data: {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}): Promise<UserProfile> {
+  const token = getAccessToken();
+  return apiFetch<UserProfile>("/auth/me", {
+    method: "PATCH",
+    body: data,
+    token,
+  });
 }
 
 export async function refreshSession(): Promise<void> {

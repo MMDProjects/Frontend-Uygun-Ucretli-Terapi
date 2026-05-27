@@ -14,6 +14,8 @@ export type ApiExpertSummary = {
 
 export type ApiExpertDetail = ApiExpertSummary & {
   education: string;
+  cvUrl: string | null;
+  certificateUrl: string | null;
   availabilities: { dayOfWeek: number; startTime: string; endTime: string }[];
 };
 
@@ -80,6 +82,18 @@ export async function getExpert(id: string): Promise<ApiExpertDetail> {
   return apiFetch(`/experts/${id}`);
 }
 
+export type ApiExpertBlog = {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  createdAt: string;
+};
+
+export async function getExpertBlogs(expertId: string): Promise<ApiExpertBlog[]> {
+  return apiFetch(`/experts/${expertId}/blogs`);
+}
+
 export async function getTags(): Promise<ApiTag[]> {
   return apiFetch("/admin/tags");
 }
@@ -105,6 +119,26 @@ export async function getSss(page?: "GENEL" | "TESTLER" | "PAKETLER"): Promise<A
 
 export async function getPackages(): Promise<ApiPackage[]> {
   return apiFetch("/packages");
+}
+
+export type ApiPricing = { standardPrice: number; discountedPrice: number };
+
+export async function getPublicPricing(): Promise<ApiPricing> {
+  return apiFetch("/packages/pricing");
+}
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
+
+export type ApiTest = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  isActive: boolean;
+};
+
+export async function getTests(): Promise<ApiTest[]> {
+  return apiFetch("/tests");
 }
 
 // ─── Contact ─────────────────────────────────────────────────────────────────

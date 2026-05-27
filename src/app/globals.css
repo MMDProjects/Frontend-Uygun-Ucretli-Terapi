@@ -305,6 +305,21 @@ select {
   animation: recommended-experts-marquee 20s ease-in-out infinite;
 }
 
+@keyframes experts-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.experts-scroll-track {
+  display: flex;
+  width: max-content;
+  animation: experts-scroll 30s linear infinite;
+}
+
+.experts-scroll-track:hover {
+  animation-play-state: paused;
+}
+
 @keyframes offerings-card-shake {
   0%,
   78%,

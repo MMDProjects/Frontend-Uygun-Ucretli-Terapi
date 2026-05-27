@@ -3,13 +3,14 @@ import Link from "next/link";
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { TestCard } from "@/features/tests";
-import { testsPreview } from "@/features/shared/data/mock-content";
+import { getTests } from "@/lib/services/public.service";
 
 const therapyImageSrc =
   "https://images.unsplash.com/photo-1604881991720-f91add269bed?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0";
 
-export function HomeBentoSection() {
-  const featuredTests = testsPreview.slice(0, 3);
+export async function HomeBentoSection() {
+  const tests = await getTests().catch(() => []);
+  const featuredTests = tests.slice(0, 3);
 
   return (
     <section className="bg-muted py-20" aria-labelledby="home-bento-title">
@@ -46,9 +47,13 @@ export function HomeBentoSection() {
               </p>
             </article>
 
-            {featuredTests.map((test) => (
-              <TestCard key={test.slug} test={test} />
-            ))}
+            {featuredTests.length === 0
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-72 animate-pulse rounded-[2rem] bg-muted-foreground/10" />
+                ))
+              : featuredTests.map((test) => (
+                  <TestCard key={test.id} test={test} />
+                ))}
           </div>
 
           {/* Sağ: fotoğraf + buton + sonuç */}

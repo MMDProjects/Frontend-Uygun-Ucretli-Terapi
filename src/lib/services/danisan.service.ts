@@ -50,6 +50,26 @@ export async function getMyFavorites(): Promise<ApiFavorite[]> {
   return apiFetch("/experts/me/favorites", { token });
 }
 
+// ─── Gönderilen Talepler ──────────────────────────────────────────────────────
+
+export type ApiDanisanRequest = {
+  id: string;
+  message: string;
+  status: "BEKLEMEDE" | "YANITLANDI" | "TAMAMLANDI" | "REDDEDILDI";
+  createdAt: string;
+  expertProfile: {
+    id: string;
+    title: string;
+    avatarUrl: string | null;
+    user: { firstName: string; lastName: string };
+  };
+};
+
+export async function getMyDanisanRequests(): Promise<ApiDanisanRequest[]> {
+  const token = getAccessToken();
+  return apiFetch("/experts/me/sent-requests", { token });
+}
+
 // ─── Test Geçmişi ─────────────────────────────────────────────────────────────
 
 export type ApiTestResult = {

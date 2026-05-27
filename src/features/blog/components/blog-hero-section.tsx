@@ -1,20 +1,33 @@
 "use client";
 
-import * as Popover from "@radix-ui/react-popover";
-import { ArrowDownWideNarrow, Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
-
-const pillIconBtn =
-  "flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-white text-primary shadow-sm transition-colors hover:bg-muted/70 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+import { FilterPopover, filterChip } from "@/components/shared/filter-popover";
+import { SortPopover } from "@/components/shared/sort-popover";
 
 const searchSubmitBtn =
   "flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
+const CATEGORIES = ["Psikoloji", "İlişkiler", "Yaşam", "Kaygı", "Travma", "Aile", "Duygu Düzenleme"];
+
+const SORT_OPTIONS = [
+  { key: "newest", label: "En yeni önce" },
+  { key: "oldest", label: "En eski önce" },
+  { key: "category", label: "Kategoriye göre" },
+];
+
 export function BlogHeroSection() {
   const [query, setQuery] = useState("");
-  const [activeSort, setActiveSort] = useState<"newest" | "oldest" | "category">("newest");
+  const [activeSort, setActiveSort] = useState("newest");
+  const [activeCategories, setActiveCategories] = useState<string[]>([]);
+
+  function toggleCategory(cat: string) {
+    setActiveCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
+    );
+  }
 
   return (
     <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
@@ -67,85 +80,32 @@ export function BlogHeroSection() {
                 </div>
 
                 <div className="flex shrink-0 items-center justify-center gap-2 sm:justify-start">
-                  <Popover.Root modal={false}>
-                    <Popover.Trigger asChild>
-                      <button type="button" className={pillIconBtn} aria-haspopup="dialog" aria-label="Filtrele">
-                        <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                      <Popover.Content
-                        side="bottom"
-                        align="end"
-                        sideOffset={10}
-                        collisionPadding={16}
-                        className="z-[60] w-[min(calc(100vw-2rem),18rem)] rounded-[var(--radius)] border border-border/80 bg-card p-4 shadow-xl outline-none"
-                      >
-                        <div className="space-y-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold text-foreground">Kategoriye göre filtrele</p>
-                            <p className="text-xs text-muted-foreground">İlgilendiğiniz konuyu seçin.</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {["Psikoloji", "İlişkiler", "Yaşam", "Kaygı", "Travma", "Aile", "Duygu Düzenleme"].map((cat) => (
-                              <button
-                                key={cat}
-                                type="button"
-                                className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-primary-hover transition hover:bg-accent/40"
-                              >
-                                {cat}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
+                  <FilterPopover
+                    activeCount={activeCategories.length}
+                    onClear={() => setActiveCategories([])}
+                  >
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-foreground">Kategori</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {CATEGORIES.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => toggleCategory(cat)}
+                            className={filterChip(activeCategories.includes(cat))}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </FilterPopover>
 
-                  <Popover.Root modal={false}>
-                    <Popover.Trigger asChild>
-                      <button type="button" className={pillIconBtn} aria-haspopup="dialog" aria-label="Sırala">
-                        <ArrowDownWideNarrow className="size-5" strokeWidth={2} aria-hidden />
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                      <Popover.Content
-                        side="bottom"
-                        align="end"
-                        sideOffset={10}
-                        collisionPadding={16}
-                        className="z-[60] w-[min(calc(100vw-2rem),18rem)] rounded-[var(--radius)] border border-border/80 bg-card p-4 shadow-xl outline-none"
-                      >
-                        <div className="space-y-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold text-foreground">Sırala</p>
-                            <p className="text-xs text-muted-foreground">Listeleme biçimini seçin.</p>
-                          </div>
-                          <div className="space-y-2">
-                            {[
-                              { key: "newest" as const, label: "En yeni önce" },
-                              { key: "oldest" as const, label: "En eski önce" },
-                              { key: "category" as const, label: "Kategoriye göre" },
-                            ].map((opt) => (
-                              <button
-                                key={opt.key}
-                                type="button"
-                                onClick={() => setActiveSort(opt.key)}
-                                className={cn(
-                                  "w-full rounded-xl border px-3 py-2 text-left text-sm transition",
-                                  activeSort === opt.key
-                                    ? "border-primary bg-muted text-primary-hover"
-                                    : "border-border bg-background text-foreground hover:bg-muted/60",
-                                )}
-                              >
-                                {opt.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
+                  <SortPopover
+                    options={SORT_OPTIONS}
+                    value={activeSort}
+                    onChange={setActiveSort}
+                  />
                 </div>
               </div>
             </form>

@@ -81,7 +81,7 @@ function ThreadCard({ thread }: { thread: ForumThread }) {
   }
 
   return (
-    <article className="overflow-hidden rounded-[2rem] border border-border/60 bg-white shadow-sm transition hover:shadow-md lg:rounded-[2.25rem]">
+    <article className="overflow-hidden rounded-[2rem] border border-border/60 bg-white shadow-sm transition hover:border-primary/30 hover:shadow-md lg:rounded-[2.25rem]">
       <div className="flex items-start gap-3 p-5 pb-4">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f0ee] text-sm font-bold text-primary-hover">
           {getInitials(thread.authorName)}
@@ -107,7 +107,7 @@ function ThreadCard({ thread }: { thread: ForumThread }) {
           {thread.tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {thread.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                <span key={tag} className="rounded-full bg-[#cce1de] px-2.5 py-0.5 text-xs font-semibold text-[#014a3e]">
                   {tag}
                 </span>
               ))}
@@ -126,7 +126,7 @@ function ThreadCard({ thread }: { thread: ForumThread }) {
               )}>
                 {getInitials(reply.authorName)}
               </div>
-              <div className="min-w-0 flex-1 rounded-2xl bg-muted/50 px-3 py-2">
+              <div className="min-w-0 flex-1 rounded-2xl bg-[#e6f0ee] px-3 py-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-sm font-semibold text-foreground">{reply.authorName}</span>
                   {reply.authorRole === "uzman" && (
@@ -286,7 +286,7 @@ export default function ForumPage() {
             {/* Sol: başlık + açıklama + istatistik */}
             <div className="w-full max-w-xl shrink-0 space-y-3">
               <h1 className="text-balance text-4xl font-semibold tracking-tight text-primary-hover sm:text-5xl">
-                Psikoloji Forumu
+                Forum
               </h1>
               <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
                 Danışanların sorularını uzmanların yanıtladığı güvenli alan. Her konu yalnızca konu sahibi ve onaylı uzmanlar arasında gerçekleşir.
@@ -442,8 +442,8 @@ export default function ForumPage() {
                       </Popover.Portal>
                     </Popover.Root>
 
-                    {/* Yeni Konu Aç — sadece danışan */}
-                    {role === "danisan" && (
+                    {/* Yeni Konu Aç — danışan için direkt, misafir için giriş yönlendirmesi */}
+                    {role === "danisan" ? (
                       <Link
                         href="/forum/yeni-konu"
                         className={cn(pillIconBtn, "bg-primary text-white border-primary hover:bg-primary-hover hover:text-white")}
@@ -451,7 +451,15 @@ export default function ForumPage() {
                       >
                         <PenLine className="size-5" strokeWidth={2} aria-hidden />
                       </Link>
-                    )}
+                    ) : role === null ? (
+                      <Link
+                        href="/giris?redirect=/forum/yeni-konu"
+                        className={cn(pillIconBtn, "bg-primary text-white border-primary hover:bg-primary-hover hover:text-white")}
+                        aria-label="Soru sormak için giriş yap"
+                      >
+                        <PenLine className="size-5" strokeWidth={2} aria-hidden />
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               </form>
@@ -518,11 +526,15 @@ export default function ForumPage() {
                 >
                   Filtreleri temizle
                 </button>
-              ) : role === "danisan" && (
+              ) : role === "danisan" ? (
                 <Link href="/forum/yeni-konu" className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
                   İlk konuyu aç
                 </Link>
-              )}
+              ) : role === null ? (
+                <Link href="/giris?redirect=/forum/yeni-konu" className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
+                  Soru sormak için giriş yap
+                </Link>
+              ) : null}
             </div>
           ) : (
             <>

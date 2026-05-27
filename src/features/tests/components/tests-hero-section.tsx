@@ -1,20 +1,33 @@
 "use client";
 
-import * as Popover from "@radix-ui/react-popover";
-import { ArrowDownWideNarrow, Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
-
-const pillIconBtn =
-  "flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-white text-primary shadow-sm transition-colors hover:bg-muted/70 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+import { FilterPopover, filterChip } from "@/components/shared/filter-popover";
+import { SortPopover } from "@/components/shared/sort-popover";
 
 const searchSubmitBtn =
   "flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
+const TAGS = ["Kaygı", "Stres", "Depresyon", "Özgüven", "Öfke", "İlişki"];
+
+const SORT_OPTIONS = [
+  { key: "duration-asc", label: "Süreye göre (kısa → uzun)" },
+  { key: "duration-desc", label: "Süreye göre (uzun → kısa)" },
+  { key: "name-asc", label: "İsme göre (A-Z)" },
+];
+
 export function TestsHeroSection() {
   const [query, setQuery] = useState("");
-  const [activeSort, setActiveSort] = useState<"duration-asc" | "duration-desc" | "name-asc">("duration-asc");
+  const [activeSort, setActiveSort] = useState("duration-asc");
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+
+  function toggleTag(tag: string) {
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
+  }
 
   return (
     <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
@@ -69,85 +82,32 @@ export function TestsHeroSection() {
                 </div>
 
                 <div className="flex shrink-0 items-center justify-center gap-2 sm:justify-start">
-                  <Popover.Root modal={false}>
-                    <Popover.Trigger asChild>
-                      <button type="button" className={pillIconBtn} aria-haspopup="dialog" aria-label="Filtrele">
-                        <SlidersHorizontal className="size-5" strokeWidth={2} aria-hidden />
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                      <Popover.Content
-                        side="bottom"
-                        align="end"
-                        sideOffset={10}
-                        collisionPadding={16}
-                        className="z-[60] w-[min(calc(100vw-2rem),18rem)] rounded-[var(--radius)] border border-border/80 bg-card p-4 shadow-xl outline-none"
-                      >
-                        <div className="space-y-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold text-foreground">Filtrele</p>
-                            <p className="text-xs text-muted-foreground">Konuya göre hızlı filtre seçimi.</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {["Kaygı", "Stres", "Depresyon", "Özgüven", "Öfke", "İlişki"].map((tag) => (
-                              <button
-                                key={tag}
-                                type="button"
-                                className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-medium text-primary-hover transition hover:bg-accent/40"
-                              >
-                                {tag}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
+                  <FilterPopover
+                    activeCount={activeTags.length}
+                    onClear={() => setActiveTags([])}
+                  >
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-foreground">Konu</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {TAGS.map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => toggleTag(tag)}
+                            className={filterChip(activeTags.includes(tag))}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </FilterPopover>
 
-                  <Popover.Root modal={false}>
-                    <Popover.Trigger asChild>
-                      <button type="button" className={pillIconBtn} aria-haspopup="dialog" aria-label="Sırala">
-                        <ArrowDownWideNarrow className="size-5" strokeWidth={2} aria-hidden />
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                      <Popover.Content
-                        side="bottom"
-                        align="end"
-                        sideOffset={10}
-                        collisionPadding={16}
-                        className="z-[60] w-[min(calc(100vw-2rem),18rem)] rounded-[var(--radius)] border border-border/80 bg-card p-4 shadow-xl outline-none"
-                      >
-                        <div className="space-y-3">
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold text-foreground">Sırala</p>
-                            <p className="text-xs text-muted-foreground">Listeleme biçimini seçin.</p>
-                          </div>
-                          <div className="space-y-2">
-                            {[
-                              { key: "duration-asc" as const, label: "Süreye göre (kısa → uzun)" },
-                              { key: "duration-desc" as const, label: "Süreye göre (uzun → kısa)" },
-                              { key: "name-asc" as const, label: "İsme göre (A-Z)" },
-                            ].map((opt) => (
-                              <button
-                                key={opt.key}
-                                type="button"
-                                onClick={() => setActiveSort(opt.key)}
-                                className={cn(
-                                  "w-full rounded-xl border px-3 py-2 text-left text-sm transition",
-                                  activeSort === opt.key
-                                    ? "border-primary bg-muted text-primary-hover"
-                                    : "border-border bg-background text-foreground hover:bg-muted/60",
-                                )}
-                              >
-                                {opt.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
+                  <SortPopover
+                    options={SORT_OPTIONS}
+                    value={activeSort}
+                    onChange={setActiveSort}
+                  />
                 </div>
               </div>
             </form>

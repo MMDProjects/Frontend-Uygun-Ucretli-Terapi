@@ -11,6 +11,8 @@ type ExpertCardProps = {
   showPhoto?: boolean;
   centerCta?: boolean;
   expandContentDesktop?: boolean;
+  standardPrice?: number;
+  discountedPrice?: number;
 };
 
 export function ExpertCard({
@@ -19,6 +21,8 @@ export function ExpertCard({
   showPhoto = true,
   centerCta = false,
   expandContentDesktop = false,
+  standardPrice,
+  discountedPrice,
 }: ExpertCardProps) {
   const initials = expert.name
     .split(" ")
@@ -62,7 +66,21 @@ export function ExpertCard({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 px-6">
+      {/* Fiyat badge (platform geneli, admin'den yönetilir) */}
+      {discountedPrice != null && (
+        <div className="mt-3 px-6">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#014a3e] px-3 py-1 text-xs font-semibold text-white">
+            {standardPrice != null && (
+              <span className="line-through opacity-60">
+                {standardPrice.toLocaleString("tr-TR")} TL
+              </span>
+            )}
+            <span>{discountedPrice.toLocaleString("tr-TR")} TL</span>
+          </span>
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2 px-6">
         <span
           className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-3 py-1 text-xs font-medium tabular-nums text-primary-hover"
           aria-label={`Puan ${expert.rating.toFixed(1)}`}

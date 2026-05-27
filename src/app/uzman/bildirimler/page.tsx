@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, CheckCheck, MessageCircle, AlertCircle, Info } from "lucide-react";
+import { Bell, CheckCheck, MessageCircle, AlertCircle, Info, Siren } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/features/admin/components/page-header";
 import {
@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const TYPE_CONFIG: Record<
   UzmanNotificationType,
-  { icon: React.ElementType; className: string; iconClass: string }
+  { icon: React.ElementType; className: string; iconClass: string; label?: string }
 > = {
   admin_message: {
     icon: MessageCircle,
@@ -36,6 +36,12 @@ const TYPE_CONFIG: Record<
     className: "border-border/60 bg-white",
     iconClass: "bg-muted text-muted-foreground",
   },
+  danger_panic: {
+    icon: Siren,
+    className: "border-red-500 bg-red-50",
+    iconClass: "bg-red-600 text-white animate-pulse",
+    label: "ACİL",
+  },
 };
 
 function NotificationItem({
@@ -47,16 +53,18 @@ function NotificationItem({
 }) {
   const config = TYPE_CONFIG[notif.type];
   const Icon = config.icon;
+  const isDanger = notif.type === "danger_panic";
 
   return (
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border p-4 transition",
         config.className,
-        !notif.isRead && "shadow-sm"
+        !notif.isRead && "shadow-sm",
+        isDanger && "border-l-4 border-l-red-600",
       )}
     >
-      {!notif.isRead && (
+      {!notif.isRead && !isDanger && (
         <div className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-primary" />
       )}
       <div className="flex items-start gap-3 pl-2">
@@ -69,10 +77,16 @@ function NotificationItem({
           <Icon className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
+          {config.label && (
+            <span className="mb-1 inline-flex items-center rounded-full bg-red-600 px-2.5 py-0.5 text-[10px] font-bold tracking-widest text-white">
+              {config.label}
+            </span>
+          )}
           <p
             className={cn(
               "text-sm",
-              notif.isRead ? "text-muted-foreground" : "font-semibold text-foreground"
+              notif.isRead ? "text-muted-foreground" : "font-semibold text-foreground",
+              isDanger && "font-semibold text-red-700",
             )}
           >
             {notif.message}

@@ -1,27 +1,58 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { Button } from "@/components/ui/button";
-import { mockTestResults } from "@/features/shared/data/mock-content";
-import type { TestResultLevel } from "@/types/domain";
+import { getMyTestHistory, type ApiTestResult } from "@/lib/services/danisan.service";
 
-const levelConfig: Record<TestResultLevel, { label: string; color: string; bg: string; bar: string; icon: typeof TrendingUp }> = {
+// scoreSummary backend'den JSON string olarak gelir: {score, level, recommendation}
+// Eğer parse edilemezse fallback değerleri kullanılır
+type ParsedScore = {
+  score: number | null;
+  level: "Yüksek" | "Orta" | "Düşük";
+  recommendation: string;
+};
+
+function parseScore(scoreSummary: string): ParsedScore {
+  try {
+    const parsed = JSON.parse(scoreSummary) as Partial<ParsedScore>;
+    return {
+      score: typeof parsed.score === "number" ? parsed.score : null,
+      level: parsed.level === "Yüksek" || parsed.level === "Orta" || parsed.level === "Düşük"
+        ? parsed.level
+        : "Orta",
+      recommendation: parsed.recommendation ?? scoreSummary,
+    };
+  } catch {
+    return { score: null, level: "Orta", recommendation: scoreSummary };
+  }
+}
+
+const levelConfig = {
   Yüksek: { label: "Yüksek", color: "text-destructive", bg: "bg-destructive/10", bar: "bg-destructive", icon: TrendingUp },
   Orta:   { label: "Orta",   color: "text-warning",     bg: "bg-warning/10",     bar: "bg-warning",     icon: Minus },
   Düşük:  { label: "Düşük",  color: "text-primary",     bg: "bg-primary/10",     bar: "bg-primary",     icon: TrendingDown },
-};
+} as const;
 
 export default function TestlerimPage() {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const [results, setResults] = useState<ApiTestResult[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) router.replace("/giris?redirect=/testlerim");
+    if (!isAuthenticated) {
+      router.replace("/giris?redirect=/testlerim");
+      return;
+    }
+    getMyTestHistory()
+      .then(setResults)
+      .catch(() => setResults([]))
+      .finally(() => setLoading(false));
   }, [isAuthenticated, router]);
 
   if (!isAuthenticated) return null;
@@ -45,7 +76,13 @@ export default function TestlerimPage() {
 
       <section className="bg-[#e6f0ee] py-10">
         <div className="page-shell">
-          {mockTestResults.length === 0 ? (
+          {loading ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-72 animate-pulse rounded-[2rem] bg-muted" />
+              ))}
+            </div>
+          ) : results.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-16 text-center">
               <p className="font-semibold text-foreground">Henüz test çözmediniz</p>
               <p className="text-sm text-muted-foreground">Testler sayfasından başlayabilirsiniz.</p>
@@ -56,8 +93,15 @@ export default function TestlerimPage() {
           ) : (
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {mockTestResults.map((result) => {
-                  const { label, color, bg, bar, icon: Icon } = levelConfig[result.level];
+                {results.map((result) => {
+                  const { score, level, recommendation } = parseScore(result.scoreSummary);
+                  const { label, color, bg, bar, icon: Icon } = levelConfig[level];
+                  const dateLabel = new Date(result.createdAt).toLocaleDateString("tr-TR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  });
+
                   return (
                     <article
                       key={result.id}
@@ -65,36 +109,40 @@ export default function TestlerimPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="text-lg font-semibold leading-snug text-primary-hover">
-                          {result.title}
+                          {result.test.title}
                         </h3>
                       </div>
 
-                      <span className={`mt-2 inline-flex w-fit items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${bg} ${color}`}>
+                      <span
+                        className={`mt-2 inline-flex w-fit items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${bg} ${color}`}
+                      >
                         <Icon className="size-3" />
                         {label}
                       </span>
 
-                      <div className="mt-3 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                          <span>Puan</span>
-                          <span className="font-bold text-foreground">{result.score}/100</span>
+                      {score !== null && (
+                        <div className="mt-3 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                            <span>Puan</span>
+                            <span className="font-bold text-foreground">{score}/100</span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                            <div
+                              className={`h-full rounded-full ${bar} transition-all duration-500`}
+                              style={{ width: `${score}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                          <div
-                            className={`h-full rounded-full ${bar} transition-all duration-500`}
-                            style={{ width: `${result.score}%` }}
-                          />
-                        </div>
-                      </div>
+                      )}
 
                       <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-                        {result.recommendation}
+                        {recommendation}
                       </p>
 
-                      <span className="mt-3 text-xs text-muted-foreground">{result.dateLabel}</span>
+                      <span className="mt-3 text-xs text-muted-foreground">{dateLabel}</span>
 
                       <Link
-                        href={`/testler/${result.slug}`}
+                        href={`/testler/${result.test.slug}`}
                         className="absolute bottom-4 right-4 z-[3] inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-center text-sm font-semibold !text-white shadow-sm transition-colors hover:bg-primary-hover hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 motion-reduce:transition-none"
                       >
                         Tekrar Yap

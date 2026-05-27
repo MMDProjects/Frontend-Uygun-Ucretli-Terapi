@@ -7,6 +7,8 @@ type Props = {
   showPhoto?: boolean;
   centerCta?: boolean;
   expandContentDesktop?: boolean;
+  standardPrice?: number;
+  discountedPrice?: number;
 };
 
 export function ExpertCardApi({ expert, ...rest }: Props) {
