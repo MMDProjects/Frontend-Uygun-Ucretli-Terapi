@@ -1,0 +1,33 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            REPO_DIR=/home/cagri/frontend
+
+            if [ ! -d "$REPO_DIR/.git" ]; then
+              git clone https://github.com/MMDProjects/frontend-Uygun-Ucretli-Terapi.git "$REPO_DIR"
+            fi
+
+            cd "$REPO_DIR"
+            git pull origin main
+
+            sudo docker compose up --build -d
+
+            echo "Frontend deploy tamamlandi"
