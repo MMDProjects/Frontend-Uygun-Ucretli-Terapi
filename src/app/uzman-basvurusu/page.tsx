@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, useFieldArray, type UseFormRegister, type FieldErrors, type UseFormWatch, type UseFormSetValue, type Control } from "react-hook-form";
+import { useForm, useFieldArray, type UseFormRegister, type FieldErrors, type UseFormSetValue, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Plus } from "lucide-react";
@@ -331,19 +331,20 @@ function Step3({ control }: { control: Control<FormValues> }) {
 function Step4({
   register,
   errors,
-  watch,
   setValue,
+  hedefKitle,
+  uzmanlikAlanlari,
+  biyografi,
 }: BaseStepProps & {
-  watch: UseFormWatch<FormValues>;
   setValue: UseFormSetValue<FormValues>;
+  hedefKitle: string[];
+  uzmanlikAlanlari: string[];
+  biyografi: string;
 }) {
-  const hedefKitle = watch("hedefKitle");
-  const uzmanlikAlanlari = watch("uzmanlikAlanlari");
-  const biyografi = watch("biyografi") ?? "";
   const wordCount = biyografi.trim() ? biyografi.trim().split(/\s+/).length : 0;
 
   function toggleChip(field: "hedefKitle" | "uzmanlikAlanlari", val: string) {
-    const current = watch(field);
+    const current = field === "hedefKitle" ? hedefKitle : uzmanlikAlanlari;
     setValue(
       field,
       current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
@@ -508,6 +509,10 @@ export default function ExpertApplicationPage() {
     },
   });
 
+  const hedefKitle = watch("hedefKitle");
+  const uzmanlikAlanlari = watch("uzmanlikAlanlari");
+  const biyografi = watch("biyografi") ?? "";
+
   const [step, setStep] = useState(1);
   const isLast = step === STEPS.length;
 
@@ -605,8 +610,10 @@ export default function ExpertApplicationPage() {
               <Step4
                 register={register}
                 errors={errors}
-                watch={watch}
                 setValue={setValue}
+                hedefKitle={hedefKitle}
+                uzmanlikAlanlari={uzmanlikAlanlari}
+                biyografi={biyografi}
               />
             )}
             {step === 5 && <Step5 register={register} errors={errors} />}
