@@ -15,7 +15,7 @@ type AuthResponse = {
 };
 
 function applySession(data: AuthResponse) {
-  setTokens(data.accessToken, data.refreshToken);
+  setTokens(data.accessToken, data.refreshToken, data.user.role);
   useAuthStore.getState().setSession({
     userId: data.user.id,
     displayName: `${data.user.firstName} ${data.user.lastName}`.trim(),
