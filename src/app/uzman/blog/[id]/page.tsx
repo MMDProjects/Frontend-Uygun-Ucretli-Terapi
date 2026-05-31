@@ -3,11 +3,12 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, ImagePlus, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/features/admin/components/page-header";
-import { getMyUzmanBlogs, updateBlogContent, type ApiUzmanBlog } from "@/lib/services/uzman.service";
+import { getMyUzmanBlogs, updateBlogContent, uploadBlogCover, type ApiUzmanBlog } from "@/lib/services/uzman.service";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -32,8 +33,17 @@ export default function BlogDuzenlePage({ params }: PageProps) {
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [slugManual, setSlugManual] = useState(false);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  }
 
   useEffect(() => {
     getMyUzmanBlogs()
@@ -103,6 +113,9 @@ export default function BlogDuzenlePage({ params }: PageProps) {
     setSubmitting(true);
     try {
       await updateBlogContent(id, { title: title.trim(), slug: slug.trim(), content: content.trim() });
+      if (coverFile) {
+        await uploadBlogCover(id, coverFile).catch(() => {});
+      }
       toast.success(isRejected ? "Yazı düzeltildi ve tekrar gönderildi." : "Yazı güncellendi ve incelemeye gönderildi.");
       router.push("/uzman/blog");
     } catch (err: unknown) {
@@ -176,6 +189,47 @@ export default function BlogDuzenlePage({ params }: PageProps) {
             <p className="flex items-center gap-1 text-xs text-destructive">
               <AlertCircle className="size-3" />{errors.slug}
             </p>
+          )}
+        </div>
+
+        {/* Kapak Resmi */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-foreground">
+            Kapak Resmi
+            <span className="ml-2 text-xs font-normal text-muted-foreground">max 5 MB, JPG/PNG/WEBP</span>
+          </label>
+          {(coverPreview || blog!.coverImageUrl) && !coverFile && !coverPreview ? (
+            <div className="relative aspect-[16/6] w-full overflow-hidden rounded-xl border border-border">
+              <Image src={blog!.coverImageUrl!} alt="Mevcut kapak" fill className="object-cover" />
+              <button
+                type="button"
+                onClick={() => setCoverPreview("remove")}
+                className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+                aria-label="Resmi kaldır"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : coverPreview && coverPreview !== "remove" ? (
+            <div className="relative aspect-[16/6] w-full overflow-hidden rounded-xl border border-border">
+              <Image src={coverPreview} alt="Kapak önizlemesi" fill className="object-cover" />
+              <button
+                type="button"
+                onClick={() => { setCoverFile(null); setCoverPreview(null); }}
+                className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+                aria-label="Resmi kaldır"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 py-8 transition hover:border-primary/40 hover:bg-primary/5">
+              <ImagePlus className="size-8 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {blog!.coverImageUrl && coverPreview !== "remove" ? "Değiştirmek için tıklayın" : "Resim seçmek için tıklayın"}
+              </span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleCoverChange} />
+            </label>
           )}
         </div>
 

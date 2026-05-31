@@ -32,8 +32,8 @@ function BlogCardApi({ post, className }: { post: ApiBlog; className?: string })
     <article className={cn("surface-card relative flex h-full min-h-[21rem] flex-col overflow-hidden", className)}>
       <div className="relative aspect-[16/10] w-full shrink-0 bg-muted">
         <Image
-          src="/images/blog-card-placeholder.svg"
-          alt=""
+          src={post.coverImageUrl || "/images/blog-card-placeholder.svg"}
+          alt={post.title}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 33vw"

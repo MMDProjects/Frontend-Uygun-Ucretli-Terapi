@@ -33,6 +33,7 @@ export type ApiBlog = {
   slug: string;
   title: string;
   content: string;
+  coverImageUrl?: string | null;
   createdAt: string;
   expertProfile: {
     title: string;

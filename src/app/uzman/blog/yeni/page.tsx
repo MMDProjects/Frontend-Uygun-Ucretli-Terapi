@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, ImagePlus, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { PageHeader } from "@/features/admin/components/page-header";
-import { createBlog } from "@/lib/services/uzman.service";
+import { createBlog, uploadBlogCover } from "@/lib/services/uzman.service";
 
 function toSlug(value: string): string {
   return value
@@ -22,9 +23,18 @@ export default function YeniBlogPage() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [slugManual, setSlugManual] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  }
 
   function handleTitleChange(v: string) {
     setTitle(v);
@@ -46,7 +56,10 @@ export default function YeniBlogPage() {
     setErrors({});
     setSubmitting(true);
     try {
-      await createBlog({ title: title.trim(), slug: slug.trim(), content: content.trim() });
+      const created = await createBlog({ title: title.trim(), slug: slug.trim(), content: content.trim() });
+      if (coverFile) {
+        await uploadBlogCover(created.id, coverFile).catch(() => {});
+      }
       toast.success("Taslak kaydedildi.");
       router.push("/uzman/blog");
     } catch (err: unknown) {
@@ -106,6 +119,33 @@ export default function YeniBlogPage() {
             <p className="flex items-center gap-1 text-xs text-destructive">
               <AlertCircle className="size-3" />{errors.slug}
             </p>
+          )}
+        </div>
+
+        {/* Kapak Resmi */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-foreground">
+            Kapak Resmi
+            <span className="ml-2 text-xs font-normal text-muted-foreground">max 5 MB, JPG/PNG/WEBP</span>
+          </label>
+          {coverPreview ? (
+            <div className="relative aspect-[16/6] w-full overflow-hidden rounded-xl border border-border">
+              <Image src={coverPreview} alt="Kapak önizlemesi" fill className="object-cover" />
+              <button
+                type="button"
+                onClick={() => { setCoverFile(null); setCoverPreview(null); }}
+                className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+                aria-label="Resmi kaldır"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 py-8 transition hover:border-primary/40 hover:bg-primary/5">
+              <ImagePlus className="size-8 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Resim seçmek için tıklayın</span>
+              <input type="file" accept="image/*" className="sr-only" onChange={handleCoverChange} />
+            </label>
           )}
         </div>
 

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { getBlog } from "@/lib/services/public.service";
 
@@ -54,6 +55,20 @@ export default async function BlogDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
+
+      {/* Kapak resmi */}
+      {blog.coverImageUrl && (
+        <div className="relative aspect-[21/9] w-full bg-muted">
+          <Image
+            src={blog.coverImageUrl}
+            alt={blog.title}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
+        </div>
+      )}
 
       {/* İçerik */}
       <section className="section-shell">

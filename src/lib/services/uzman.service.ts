@@ -84,6 +84,7 @@ export type ApiUzmanBlog = {
   title: string;
   slug: string;
   content: string;
+  coverImageUrl?: string | null;
   status: UzmanBlogStatus;
   adminNote: string | null;
   createdAt: string;
@@ -245,6 +246,21 @@ export async function updateBlogContent(
   const token = getAccessToken();
   const raw = await apiFetch<RawBlog>(`/blogs/${id}`, { method: "PATCH", body: dto, token });
   return { ...raw, status: mapBlogStatus(raw.status) };
+}
+
+export async function uploadBlogCover(
+  id: string,
+  file: File,
+): Promise<{ coverImageUrl: string }> {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append("cover", file);
+  return apiFetch(`/blogs/${id}/cover`, {
+    method: "POST",
+    body: formData,
+    token,
+    isFormData: true,
+  });
 }
 
 export async function deleteBlog(id: string): Promise<void> {
