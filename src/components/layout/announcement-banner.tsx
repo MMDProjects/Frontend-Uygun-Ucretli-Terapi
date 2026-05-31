@@ -28,12 +28,10 @@ export function AnnouncementBanner() {
     };
   }, []);
 
-  if (items.length === 0) return null;
-
-  const track = [...items, ...items];
+  const track = items.length > 0 ? [...items, ...items] : [];
 
   return (
-    <div className="w-full overflow-hidden bg-[#014a3e] py-2 text-white">
+    <div className={`w-full overflow-hidden bg-[#014a3e] text-white transition-all ${items.length === 0 ? "h-0 py-0" : "py-2"}`}>
       <style>{`
         @keyframes marquee-scroll {
           0%   { transform: translateX(0); }
