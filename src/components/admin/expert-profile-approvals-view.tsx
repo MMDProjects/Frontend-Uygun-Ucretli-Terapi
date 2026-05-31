@@ -225,10 +225,23 @@ export function ExpertProfileApprovalsView() {
                     <dd className="text-xs font-medium">{row.changedFieldsSummary || "—"}</dd>
                   </div>
                 </dl>
-                <div className="rounded-md border bg-muted/20 p-3">
-                  <p className="text-xs font-medium text-muted-foreground">Önizleme (biyografi)</p>
-                  <p className="mt-1 line-clamp-4 text-sm text-foreground">{row.biography}</p>
-                </div>
+                {row.currentBiography && row.currentBiography !== row.biography ? (
+                  <div className="space-y-2">
+                    <div className="rounded-md border bg-muted/20 p-3">
+                      <p className="text-xs font-medium text-muted-foreground">Mevcut (yayındaki) biyografi</p>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.currentBiography}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen yeni biyografi</p>
+                      <p className="mt-1 line-clamp-4 text-sm text-foreground">{row.biography}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs font-medium text-muted-foreground">Biyografi</p>
+                    <p className="mt-1 line-clamp-4 text-sm text-foreground">{row.biography}</p>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {row.keywords.slice(0, 6).map((k) => (
                     <Badge key={k} variant="secondary" className="text-xs font-normal">
@@ -300,10 +313,23 @@ export function ExpertProfileApprovalsView() {
                   <p className="text-xs text-muted-foreground">Değişen alanlar</p>
                   <p className="font-medium">{selected.changedFieldsSummary || "—"}</p>
                 </div>
-                <div className="rounded-md border bg-muted/20 p-3">
-                  <p className="text-xs text-muted-foreground">Önerilen biyografi</p>
-                  <p className="mt-2 whitespace-pre-wrap text-foreground">{selected.biography}</p>
-                </div>
+                {selected.currentBiography && selected.currentBiography !== selected.biography ? (
+                  <>
+                    <div className="rounded-md border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Mevcut (yayındaki) biyografi</p>
+                      <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{selected.currentBiography}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen yeni biyografi</p>
+                      <p className="mt-2 whitespace-pre-wrap text-foreground">{selected.biography}</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Biyografi</p>
+                    <p className="mt-2 whitespace-pre-wrap text-foreground">{selected.biography}</p>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {selected.keywords.map((k) => (
                     <Badge key={k} variant="outline">

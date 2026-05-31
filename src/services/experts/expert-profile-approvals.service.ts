@@ -5,6 +5,9 @@ import type { ExpertProfileApproval } from "@/types/dto/expert-profile-approval"
 interface BackendExpert {
   id: string;
   bio: string;
+  pendingBio: string | null;
+  pendingCertificateUrl: string | null;
+  pendingCvUrl: string | null;
   status: string;
   createdAt: string;
   user: { firstName: string; lastName: string; email: string; phone: string };
@@ -21,6 +24,11 @@ function authHeaders(): HeadersInit {
 }
 
 function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
+  const changedFields: string[] = [];
+  if (expert.pendingBio) changedFields.push("Biyografi");
+  if (expert.pendingCertificateUrl) changedFields.push("Sertifika");
+  if (expert.pendingCvUrl) changedFields.push("CV");
+
   return {
     id: expert.id,
     expertId: expert.id,
@@ -29,9 +37,10 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
     email: expert.user.email,
     submittedAt: expert.createdAt,
     status: "pending",
-    biography: expert.bio,
+    currentBiography: expert.bio,
+    biography: expert.pendingBio ?? expert.bio,
     keywords: expert.tags.map((t) => t.name),
-    changedFieldsSummary: "",
+    changedFieldsSummary: changedFields.join(", ") || "Profil güncelleme",
   };
 }
 
@@ -51,7 +60,7 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
-      .filter((e) => e.status === "ONAY_BEKLIYOR")
+      .filter((e) => e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI")
       .map(mapToApproval);
   } catch {
     return [];

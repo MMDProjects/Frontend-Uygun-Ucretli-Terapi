@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { AlertCircle, Camera, CheckCircle2, Star } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { AlertCircle, Camera, CheckCircle2, Star, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,8 +36,13 @@ export default function UzmanProfilPage() {
   const [bio, setBio] = useState("");
   const [education, setEducation] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const [savingDirect, setSavingDirect] = useState(false);
+  const [savingReview, setSavingReview] = useState(false);
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     Promise.all([getMyUzmanProfile(), getActiveTags()])
@@ -68,21 +73,45 @@ export default function UzmanProfilPage() {
     );
   }
 
-  async function handleSave() {
-    if (!wordCountValid || !keywordsValid) return;
-    setSaving(true);
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  // Direkt güncelleme: unvan, eğitim, etiketler, avatar
+  async function handleSaveDirect() {
+    setSavingDirect(true);
     try {
-      await updateMyUzmanProfile({ title, bio, education, tagIds: selectedTagIds });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-      if (profile) {
-        setProfile((p) => p ? { ...p, status: "onay_bekliyor" } : p);
-      }
-      toast.success("Profil güncellendi, admin onayı bekleniyor.");
+      await updateMyUzmanProfile({
+        title,
+        education,
+        tagIds: selectedTagIds,
+        avatar: avatarFile ?? undefined,
+      });
+      setAvatarFile(null);
+      toast.success("Bilgiler kaydedildi.");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
     } finally {
-      setSaving(false);
+      setSavingDirect(false);
+    }
+  }
+
+  // Admin onayına giden güncelleme: biyografi
+  async function handleSaveBio() {
+    if (!wordCountValid) return;
+    setSavingReview(true);
+    try {
+      await updateMyUzmanProfile({ bio });
+      // Mevcut bio değişmez, pendingBio olarak kaydedildi
+      setProfile((p) => p ? { ...p, status: "onay_bekliyor", pendingBio: bio } : p);
+      toast.success("Yeni biyografi admin onayına gönderildi. Mevcut profiliniz yayında kalmaya devam eder.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
+    } finally {
+      setSavingReview(false);
     }
   }
 
@@ -99,13 +128,11 @@ export default function UzmanProfilPage() {
 
   if (!profile) return null;
 
-  const name = `${profile.userId}`;
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Profilim"
-        description="Her güncelleme sonrası profil onaya gönderilmelidir."
+        description="Unvan, eğitim ve fotoğraf değişiklikleri anında kaydedilir. Biyografi değişikliği admin onayına gider."
       >
         <ProfileStatusBadge status={profile.status} />
       </PageHeader>
@@ -126,7 +153,10 @@ export default function UzmanProfilPage() {
         <div className="flex items-center gap-5">
           <div className="relative">
             <div className="flex size-20 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
-              {profile.avatarUrl ? (
+              {avatarPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarPreview} alt="avatar önizleme" className="size-full object-cover" />
+              ) : profile.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatarUrl} alt="avatar" className="size-full object-cover" />
               ) : (
@@ -135,6 +165,7 @@ export default function UzmanProfilPage() {
             </div>
             <button
               type="button"
+              onClick={() => avatarInputRef.current?.click()}
               className="absolute -bottom-1.5 -right-1.5 flex size-7 items-center justify-center rounded-full border-2 border-white bg-primary text-white shadow-sm transition hover:bg-primary-hover"
               aria-label="Fotoğraf değiştir"
             >
@@ -148,10 +179,18 @@ export default function UzmanProfilPage() {
             </p>
             <button
               type="button"
+              onClick={() => avatarInputRef.current?.click()}
               className="mt-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
             >
-              Dosya Seç
+              {avatarFile ? avatarFile.name : "Dosya Seç"}
             </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={handleAvatarChange}
+            />
           </div>
         </div>
       </div>
@@ -208,7 +247,24 @@ export default function UzmanProfilPage() {
       </div>
 
       {/* Bio */}
-      <div className="rounded-2xl border border-border/60 bg-white p-5">
+      <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-5">
+        {profile.pendingBio ? (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-100 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <Info className="size-3.5 shrink-0 text-amber-700" />
+              <span className="text-xs font-semibold text-amber-800">Admin onayında bekleyen biyografi</span>
+            </div>
+            <p className="text-xs text-amber-700 line-clamp-3">{profile.pendingBio}</p>
+            <p className="mt-1.5 text-[10px] text-amber-600">Onaylanana kadar mevcut biyografiniz sitede görünmeye devam eder.</p>
+          </div>
+        ) : (
+          <div className="mb-3 flex items-center gap-2">
+            <Info className="size-4 shrink-0 text-amber-600" />
+            <p className="text-xs text-amber-700 font-medium">
+              Biyografi değişikliği admin onayına gider. Mevcut biyografiniz onaylanana kadar sitede görünmeye devam eder.
+            </p>
+          </div>
+        )}
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground">
             Tanıtım Yazısı <span className="text-destructive">*</span>
@@ -228,7 +284,7 @@ export default function UzmanProfilPage() {
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={6}
-          className="rounded-xl resize-none"
+          className="rounded-xl resize-none bg-white"
           placeholder="Kendinizi danışanlarınıza tanıtın…"
         />
         {wordCount < MIN_WORDS && (
@@ -241,6 +297,24 @@ export default function UzmanProfilPage() {
             En fazla {MAX_WORDS} kelime olabilir. ({wordCount - MAX_WORDS} kelime fazla)
           </p>
         )}
+        <div className="mt-3 flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSaveBio}
+            disabled={savingReview || !wordCountValid}
+            className="border-amber-300 text-amber-800 hover:bg-amber-50"
+          >
+            {savingReview ? (
+              <>
+                <span className="size-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                Gönderiliyor…
+              </>
+            ) : (
+              "Biyografi Onaya Gönder"
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Tags */}
@@ -295,24 +369,21 @@ export default function UzmanProfilPage() {
           <span className="text-destructive">*</span> zorunlu alan
         </p>
         <div className="flex items-center gap-3">
-          {saved && (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
-              <CheckCircle2 className="size-4" />
-              Kaydedildi
-            </span>
-          )}
           <Button
             size="sm"
-            onClick={handleSave}
-            disabled={saving || !wordCountValid || !keywordsValid}
+            onClick={handleSaveDirect}
+            disabled={savingDirect || !keywordsValid}
           >
-            {saving ? (
+            {savingDirect ? (
               <>
                 <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Kaydediliyor…
               </>
             ) : (
-              "Kaydet & Onaya Gönder"
+              <>
+                <CheckCircle2 className="mr-1.5 size-4" />
+                Bilgileri Kaydet
+              </>
             )}
           </Button>
         </div>

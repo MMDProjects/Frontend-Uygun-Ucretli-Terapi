@@ -6,6 +6,8 @@ import {
   getExpertDetail,
   listExperts,
   sortExpertsByPriority,
+  toggleExpertActive,
+  toggleExpertPublish,
   updateExpertPriorityScore,
 } from "@/services/users/experts-list.service";
 import type { ExpertDetail, ExpertListItem } from "@/types/dto/expert-list";
@@ -16,7 +18,8 @@ interface UseExpertsResult {
   error: string | null;
   refetch: () => Promise<void>;
   updatePriority: (expertId: string, score: number) => Promise<void>;
-  toggleExpertStatus: (expertId: string) => void;
+  toggleExpertStatus: (expertId: string) => Promise<void>;
+  togglePublish: (expertId: string, isPublished: boolean) => Promise<void>;
   detail: ExpertDetail | null;
   detailLoading: boolean;
   openDetail: (expertId: string) => Promise<void>;
@@ -69,21 +72,28 @@ export function useExperts(): UseExpertsResult {
     setDetail((d) => (d?.id === expertId ? { ...d, priorityScore: next } : d));
   }, []);
 
-  const toggleExpertStatus = useCallback((expertId: string) => {
+  const toggleExpertStatus = useCallback(async (expertId: string) => {
+    const current = experts.find((e) => e.id === expertId);
+    const isActive = current?.status !== "active";
+    // Optimistik güncelleme
     setExperts((prev) =>
       sortExpertsByPriority(
-        prev.map((e) => {
-          if (e.id !== expertId) return e;
-          const next = e.status === "active" ? "inactive" : "active";
-          return { ...e, status: next };
-        })
+        prev.map((e) => (e.id === expertId ? { ...e, status: isActive ? "active" : "inactive" } : e))
       )
     );
-    setDetail((d) => {
-      if (!d || d.id !== expertId) return d;
-      const next = d.status === "active" ? "inactive" : "active";
-      return { ...d, status: next };
-    });
+    setDetail((d) => (d?.id === expertId ? { ...d, status: isActive ? "active" : "inactive" } : d));
+    // API çağrısı
+    await toggleExpertActive(expertId, isActive);
+  }, [experts]);
+
+  const togglePublish = useCallback(async (expertId: string, isPublished: boolean) => {
+    await toggleExpertPublish(expertId, isPublished);
+    setExperts((prev) =>
+      sortExpertsByPriority(
+        prev.map((e) => (e.id === expertId ? { ...e, isPublished } : e))
+      )
+    );
+    setDetail((d) => (d?.id === expertId ? { ...d, isPublished } : d));
   }, []);
 
   useEffect(() => {
@@ -97,6 +107,7 @@ export function useExperts(): UseExpertsResult {
     refetch: load,
     updatePriority,
     toggleExpertStatus,
+    togglePublish,
     detail,
     detailLoading,
     openDetail,
