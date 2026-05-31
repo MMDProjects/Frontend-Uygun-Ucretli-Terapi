@@ -3,6 +3,7 @@ import { getBlogs } from "@/lib/services/public.service";
 import type { ApiBlog } from "@/lib/services/public.service";
 import Image from "next/image";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const revalidate = 60;
@@ -40,9 +41,11 @@ function BlogCardApi({ post, className }: { post: ApiBlog; className?: string })
       </div>
       <div className="flex flex-1 flex-col p-6 pb-0">
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-primary">
-            {post.expertProfile.title}
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 font-semibold text-white">
+            <ShieldCheck className="size-3" />
+            Uzman
           </span>
+          <span className="font-medium text-foreground">{authorName}</span>
           <span className="ml-auto text-right">{dateLabel}</span>
         </div>
         <h3 className="mt-3 text-base font-semibold leading-snug text-primary-hover line-clamp-2">
@@ -51,7 +54,6 @@ function BlogCardApi({ post, className }: { post: ApiBlog; className?: string })
         <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground line-clamp-3">
           {excerpt}
         </p>
-        <p className="mt-3 text-xs text-muted-foreground">{authorName}</p>
       </div>
       <div className="p-6 pt-4">
         <Link

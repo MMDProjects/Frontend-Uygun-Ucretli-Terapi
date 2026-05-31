@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { getBlog } from "@/lib/services/public.service";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -39,7 +39,8 @@ export default async function BlogDetailPage({ params }: Props) {
           </Link>
           <div className="max-w-3xl space-y-4">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span className="rounded-full bg-primary px-3 py-0.5 text-sm font-semibold text-white">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-0.5 text-sm font-semibold text-white">
+                <ShieldCheck className="size-3.5" />
                 Uzman
               </span>
               <span>·</span>
