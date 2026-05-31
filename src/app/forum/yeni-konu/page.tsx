@@ -3,25 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { useForumStore } from "@/lib/stores/forum-store";
-
-const SUGGESTED_TAGS = [
-  "Kaygı", "Depresyon", "Stres", "Uyku", "İlişki",
-  "Aile", "Panik Atak", "Tükenmişlik", "Özgüven", "Yas",
-  "Travma", "Öfke", "Motivasyon", "Sosyal Fobi", "Diğer",
-];
+import { createQuestion } from "@/lib/services/forum.service";
 
 export default function YeniKonuPage() {
-  const { role, displayName } = useAuthStore();
-  const { addThread } = useForumStore();
+  const { role } = useAuthStore();
   const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,22 +49,21 @@ export default function YeniKonuPage() {
     );
   }
 
-  function toggleTag(tag: string) {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : prev.length < 3 ? [...prev, tag] : prev
-    );
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (title.trim().length < 10) { setError("Başlık en az 10 karakter olmalıdır."); return; }
-    if (content.trim().length < 30) { setError("Açıklama en az 30 karakter olmalıdır."); return; }
+    if (title.trim().length < 5) { setError("Başlık en az 5 karakter olmalıdır."); return; }
+    if (content.trim().length < 20) { setError("Açıklama en az 20 karakter olmalıdır."); return; }
 
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 500));
-    const id = addThread(title.trim(), content.trim(), selectedTags, displayName ?? "Danışan", displayName ?? "Danışan");
-    router.push(`/forum/konu/${id}`);
+    try {
+      await createQuestion({ title: title.trim(), content: content.trim() });
+      router.push("/forum?submitted=1");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -85,7 +76,7 @@ export default function YeniKonuPage() {
           </Link>
           <div className="max-w-xl space-y-3">
             <h1 className="text-balance text-4xl font-semibold tracking-tight text-primary-hover sm:text-5xl">
-              Yeni Konu Aç
+              Yeni Soru Sor
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
               Sorunuzu açıklayın, uzmanlarımız yanıtlasın
@@ -104,7 +95,7 @@ export default function YeniKonuPage() {
             {/* Başlık */}
             <div className="space-y-1.5">
               <label htmlFor="title" className="block text-sm font-semibold text-primary-hover">
-                Konu Başlığı <span className="text-destructive">*</span>
+                Soru Başlığı <span className="text-destructive">*</span>
               </label>
               <input
                 id="title"
@@ -112,10 +103,10 @@ export default function YeniKonuPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Örn: Sosyal kaygı ile nasıl başa çıkabilirim?"
-                maxLength={120}
+                maxLength={200}
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
-              <p className="text-right text-xs text-muted-foreground">{title.length}/120</p>
+              <p className="text-right text-xs text-muted-foreground">{title.length}/200</p>
             </div>
 
             {/* İçerik */}
@@ -129,42 +120,15 @@ export default function YeniKonuPage() {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Durumunuzu, ne zamandır yaşadığınızı ve neye ihtiyaç duyduğunuzu açıklayın..."
                 rows={6}
-                maxLength={1500}
                 className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
-              <p className="text-right text-xs text-muted-foreground">{content.length}/1500</p>
-            </div>
-
-            {/* Etiketler */}
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-primary-hover">
-                Etiketler <span className="text-xs font-normal text-muted-foreground">(en fazla 3)</span>
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {SUGGESTED_TAGS.map((tag) => {
-                  const active = selectedTags.includes(tag);
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                        active
-                          ? "border-primary bg-primary text-white"
-                          : "border-border bg-muted text-muted-foreground hover:border-primary/40 hover:text-primary"
-                      }`}
-                    >
-                      {tag}
-                      {active && <X className="size-3" />}
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="text-right text-xs text-muted-foreground">{content.length} karakter</p>
             </div>
 
             {/* Gizlilik notu */}
             <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-              <span className="font-semibold text-primary">Gizlilik:</span> Konunuza yalnızca siz ve onaylı uzmanlar yanıt verebilir.
+              <span className="font-semibold text-primary">Gizlilik:</span>{" "}
+              Sorunuz admin onayından geçtikten sonra bir uzmana atanır. Uzman yanıtladığında herkese açık olarak yayınlanır.
             </div>
 
             {error && (
@@ -184,7 +148,7 @@ export default function YeniKonuPage() {
               >
                 {submitting ? (
                   <><span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Gönderiliyor...</>
-                ) : "Konuyu Yayınla"}
+                ) : "Soruyu Gönder"}
               </button>
             </div>
           </div>
