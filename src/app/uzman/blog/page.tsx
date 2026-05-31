@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PenSquare, Plus, AlertCircle, Eye, Trash2 } from "lucide-react";
+import { PenSquare, Plus, AlertCircle, Eye, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { PageHeader } from "@/features/admin/components/page-header";
 import {
   getMyUzmanBlogs,
@@ -115,7 +116,16 @@ function BlogPostRow({
                 <Eye className="size-3.5" />
               </a>
             )}
-            {post.status !== "yayinda" && post.status !== "incelemede" && (
+            {(post.status === "taslak" || post.status === "reddedildi") && (
+              <Link
+                href={`/uzman/blog/${post.id}`}
+                className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+                aria-label="Düzenle"
+              >
+                <Pencil className="size-3.5" />
+              </Link>
+            )}
+            {post.status !== "yayinda" && post.status !== "incelemede" && post.status !== "revize_gonderildi" && (
               <button
                 type="button"
                 disabled={deleting}
@@ -139,15 +149,15 @@ function BlogPostRow({
           </div>
         )}
 
-        {(post.status === "taslak" || post.status === "reddedildi") && (
-          <div className="mt-3 flex items-center justify-end">
+        {post.status === "taslak" && (
+          <div className="mt-3 flex items-center justify-end gap-2">
             <button
               type="button"
               disabled={submitting}
               onClick={handleSubmit}
               className="rounded-xl border border-primary px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-white disabled:opacity-60"
             >
-              {submitting ? "Gönderiliyor…" : post.status === "reddedildi" ? "Düzelt ve Tekrar Gönder" : "İncelemeye Gönder"}
+              {submitting ? "Gönderiliyor…" : "İncelemeye Gönder"}
             </button>
           </div>
         )}
@@ -208,9 +218,11 @@ export default function UzmanBlogPage() {
         title="Blog Yazılarım"
         description="Yazılarınızı yönetin ve yeni içerik oluşturun."
       >
-        <Button size="sm">
-          <Plus className="size-4" />
-          Yeni Yazı
+        <Button size="sm" asChild>
+          <Link href="/uzman/blog/yeni">
+            <Plus className="size-4" />
+            Yeni Yazı
+          </Link>
         </Button>
       </PageHeader>
 

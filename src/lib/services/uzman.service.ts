@@ -230,6 +230,15 @@ export async function submitBlogForReview(id: string): Promise<ApiUzmanBlog> {
   return { ...raw, status: mapBlogStatus(raw.status) };
 }
 
+export async function updateBlogContent(
+  id: string,
+  dto: { title: string; slug: string; content: string },
+): Promise<ApiUzmanBlog> {
+  const token = getAccessToken();
+  const raw = await apiFetch<RawBlog>(`/blogs/${id}`, { method: "PATCH", body: dto, token });
+  return { ...raw, status: mapBlogStatus(raw.status) };
+}
+
 export async function deleteBlog(id: string): Promise<void> {
   const token = getAccessToken();
   await apiFetch(`/blogs/${id}`, { method: "DELETE", token });

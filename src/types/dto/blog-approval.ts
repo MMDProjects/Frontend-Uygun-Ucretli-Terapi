@@ -1,4 +1,4 @@
-export type BlogApprovalStatus = "pending" | "approved" | "rejected";
+export type BlogApprovalStatus = "pending" | "approved" | "rejected" | "revised";
 
 export interface BlogApprovalDto {
   id: string;

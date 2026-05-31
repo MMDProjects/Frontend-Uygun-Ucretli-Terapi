@@ -36,7 +36,7 @@ function mapToBlogApproval(blog: BackendBlog): BlogApprovalDto {
     authorName:
       `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim(),
     submittedAt: blog.createdAt,
-    status: "pending",
+    status: blog.status === "REVIZE_GONDERILDI" ? "revised" : "pending",
   };
 }
 
@@ -56,7 +56,7 @@ export async function listPendingBlogApprovals(): Promise<BlogApprovalDto[]> {
     const payload = (await res.json()) as { data: BackendBlog[] };
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
-      .filter((b) => b.status === "ONAY_BEKLIYOR")
+      .filter((b) => b.status === "ONAY_BEKLIYOR" || b.status === "REVIZE_GONDERILDI")
       .map(mapToBlogApproval);
   } catch {
     return [];
@@ -71,7 +71,7 @@ export async function approveBlogApproval(postId: string): Promise<void> {
   const res = await fetch(`${base}/admin/blogs/${postId}/status`, {
     method: "PATCH",
     headers: authHeaders(),
-    body: JSON.stringify({ status: "AKTIF" }),
+    body: JSON.stringify({ status: "YAYINDA" }),
   });
   if (!res.ok) {
     const err = (await res.json().catch(() => null)) as { message?: string } | null;

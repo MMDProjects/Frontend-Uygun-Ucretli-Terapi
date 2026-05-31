@@ -240,9 +240,12 @@ export function BlogApprovalsView() {
                 <div className="flex items-center justify-between gap-2">
                   <Badge
                     variant="outline"
-                    className="border-[#F2994A]/40 bg-[#F2994A]/10 text-[#F2994A]"
+                    className={item.status === "revised"
+                      ? "border-[#3178C6]/40 bg-[#3178C6]/10 text-[#3178C6]"
+                      : "border-[#F2994A]/40 bg-[#F2994A]/10 text-[#F2994A]"
+                    }
                   >
-                    Onay Bekliyor
+                    {item.status === "revised" ? "Revize Gönderildi" : "Onay Bekliyor"}
                   </Badge>
                   <span className="text-xs text-muted-foreground">{item.submittedAt}</span>
                 </div>
