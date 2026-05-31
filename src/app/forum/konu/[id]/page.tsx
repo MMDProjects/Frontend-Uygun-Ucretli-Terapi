@@ -8,10 +8,10 @@ import { ArrowLeft, Clock, Send, ShieldCheck, MessageCircle } from "lucide-react
 import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   getForumQuestion,
-  getAssignedQuestions,
+  getAssignedQuestionById,
   createAnswer,
   type ForumQuestion,
-  type AssignedQuestion,
+  type AssignedQuestionDetail,
 } from "@/lib/services/forum.service";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +57,7 @@ export default function KonuDetailPage({ params }: PageProps) {
   const { displayName, role } = useAuthStore();
 
   const [question, setQuestion] = useState<ForumQuestion | null>(null);
-  const [assignedQuestion, setAssignedQuestion] = useState<AssignedQuestion | null>(null);
+  const [assignedQuestion, setAssignedQuestion] = useState<AssignedQuestionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFoundPage, setNotFoundPage] = useState(false);
 
@@ -67,28 +67,51 @@ export default function KonuDetailPage({ params }: PageProps) {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    getForumQuestion(id)
-      .then(setQuestion)
-      .catch(async () => {
-        // Public endpoint sadece CEVAPLANDI soruları döndürür.
-        // Uzman ise, kendine atanmış ATANDI soruyu fallback olarak çek.
+    async function load() {
+      try {
+        const q = await getForumQuestion(id);
+        setQuestion(q);
+      } catch {
+        // Public endpoint sadece onaylı cevabı olan CEVAPLANDI soruları döndürür.
+        // Uzman ise atanmış soruyu doğrudan kendi endpoint'inden çek.
         if (role === "uzman") {
           try {
-            const assigned = await getAssignedQuestions();
-            const found = assigned.find((q) => q.id === id);
-            if (found) { setAssignedQuestion(found); return; }
+            const q = await getAssignedQuestionById(id);
+            setAssignedQuestion(q);
+            return;
           } catch {}
         }
         setNotFoundPage(true);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
   }, [id, role]);
 
   if (loading) return <PageSkeleton />;
   if (notFoundPage) notFound();
 
-  // Uzman, henüz public olmayan (ATANDI) soruya bakıyor
+  // Uzman, henüz public olmayan soruya bakıyor (ATANDI veya onay bekleyen CEVAPLANDI)
   if (!question && assignedQuestion) {
+    const alreadyAnswered = assignedQuestion.status === "CEVAPLANDI" || assignedQuestion.answers.length > 0;
+
+    async function handleAssignedSubmit(e: React.FormEvent) {
+      e.preventDefault();
+      if (!text.trim()) return;
+      setSubmitError("");
+      setSubmitting(true);
+      try {
+        await createAnswer(id, text.trim());
+        setText("");
+        setSubmitted(true);
+      } catch (err: unknown) {
+        setSubmitError(err instanceof Error ? err.message : "Bir hata oluştu");
+      } finally {
+        setSubmitting(false);
+      }
+    }
+
     return (
       <div className="bg-[#e6f0ee] !pt-0">
         <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
@@ -98,19 +121,27 @@ export default function KonuDetailPage({ params }: PageProps) {
               Tüm Konular
             </Link>
             <div className="max-w-2xl space-y-3">
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                <Clock className="size-3" /> Yanıt Bekliyor
+              <span className={cn(
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+                alreadyAnswered
+                  ? "border-green-200 bg-green-50 text-green-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700"
+              )}>
+                <Clock className="size-3" />
+                {alreadyAnswered ? "Yanıtlandı — Onay Bekliyor" : "Yanıt Bekliyor"}
               </span>
               <h1 className="text-balance text-3xl font-semibold tracking-tight text-primary-hover sm:text-4xl">
                 {assignedQuestion.title}
               </h1>
-              <div className="text-sm text-muted-foreground">
-                {formatDateShort(assignedQuestion.createdAt)}
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="size-3.5" />{formatDateShort(assignedQuestion.createdAt)}</span>
+                <span className="flex items-center gap-1"><MessageCircle className="size-3.5" />{assignedQuestion.answers.length} yanıt</span>
               </div>
             </div>
           </div>
         </section>
         <div className="page-shell max-w-3xl py-6 space-y-3">
+          {/* Soru */}
           <article className="rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm lg:rounded-[2.25rem]">
             <div className="flex items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f0ee] text-sm font-bold text-primary-hover">
@@ -125,7 +156,38 @@ export default function KonuDetailPage({ params }: PageProps) {
               </div>
             </div>
           </article>
-          {!submitted ? (
+
+          {/* Mevcut cevaplar */}
+          {assignedQuestion.answers.map((ans) => {
+            const expertName = `${ans.expertProfile.user.firstName} ${ans.expertProfile.user.lastName}`.trim();
+            return (
+              <article key={ans.id} className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 shadow-sm lg:rounded-[2.25rem]">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                    {getInitials(expertName)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-semibold text-foreground">{expertName}</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white">
+                        <ShieldCheck className="size-3" />Uzman
+                      </span>
+                      {!ans.isApproved && (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                          Admin Onayı Bekliyor
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">{formatDate(ans.createdAt)}</span>
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-foreground">{ans.content}</p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+          {/* Cevap formu — sadece henüz cevaplanmamışsa */}
+          {!alreadyAnswered && !submitted && (
             <div className="rounded-[2rem] border border-border/60 bg-white p-5 shadow-sm lg:rounded-[2.25rem]">
               <div className="mb-3 flex items-center gap-2">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
@@ -133,21 +195,7 @@ export default function KonuDetailPage({ params }: PageProps) {
                 </div>
                 <p className="text-sm font-semibold text-primary-hover">Uzman Yanıtı</p>
               </div>
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                if (!text.trim()) return;
-                setSubmitError("");
-                setSubmitting(true);
-                try {
-                  await createAnswer(id, text.trim());
-                  setText("");
-                  setSubmitted(true);
-                } catch (err: unknown) {
-                  setSubmitError(err instanceof Error ? err.message : "Bir hata oluştu");
-                } finally {
-                  setSubmitting(false);
-                }
-              }} className="space-y-3">
+              <form onSubmit={handleAssignedSubmit} className="space-y-3">
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -164,12 +212,16 @@ export default function KonuDetailPage({ params }: PageProps) {
                     disabled={submitting || text.trim().length < 20}
                     className="inline-flex h-9 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:opacity-60"
                   >
-                    {submitting ? <><span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Gönderiliyor...</> : <><Send className="size-4" />Gönder</>}
+                    {submitting
+                      ? <><span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Gönderiliyor...</>
+                      : <><Send className="size-4" />Gönder</>}
                   </button>
                 </div>
               </form>
             </div>
-          ) : (
+          )}
+
+          {submitted && (
             <div className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 text-center shadow-sm lg:rounded-[2.25rem]">
               <p className="text-sm font-medium text-primary-hover">Yanıtınız gönderildi. Admin onayından sonra yayınlanacak.</p>
             </div>

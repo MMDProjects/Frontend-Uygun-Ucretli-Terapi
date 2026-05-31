@@ -65,3 +65,27 @@ export async function getAssignedQuestions(): Promise<AssignedQuestion[]> {
   const token = getAccessToken();
   return apiFetch("/forum/me/questions", { token });
 }
+
+export type AssignedQuestionDetail = {
+  id: string;
+  title: string;
+  content: string;
+  status: "ATANDI" | "CEVAPLANDI";
+  createdAt: string;
+  updatedAt: string;
+  answers: {
+    id: string;
+    content: string;
+    isApproved: boolean;
+    createdAt: string;
+    expertProfile: {
+      title: string;
+      user: { firstName: string; lastName: string };
+    };
+  }[];
+};
+
+export async function getAssignedQuestionById(id: string): Promise<AssignedQuestionDetail> {
+  const token = getAccessToken();
+  return apiFetch(`/forum/me/questions/${id}`, { token });
+}
