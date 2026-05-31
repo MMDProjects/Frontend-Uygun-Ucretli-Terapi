@@ -10,8 +10,15 @@ import {
 import * as Popover from "@radix-ui/react-popover";
 
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { getForumQuestions, type ForumQuestion } from "@/lib/services/forum.service";
+import {
+  getForumQuestions,
+  getAssignedQuestions,
+  type ForumQuestion,
+  type AssignedQuestion,
+} from "@/lib/services/forum.service";
 import { cn } from "@/lib/utils";
+
+type ForumTab = "public" | "assigned";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -139,14 +146,63 @@ function QuestionCard({ question }: { question: ForumQuestion }) {
   );
 }
 
+function AssignedQuestionCard({ q }: { q: AssignedQuestion }) {
+  const answered = q.status === "CEVAPLANDI";
+  return (
+    <article className="overflow-hidden rounded-[2rem] border border-border/60 bg-white shadow-sm transition hover:border-primary/30 hover:shadow-md lg:rounded-[2.25rem]">
+      <div className="flex items-start gap-3 p-5 pb-4">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f0ee] text-sm font-bold text-primary-hover">
+          <MessageCircle className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <span className={cn(
+              "rounded-full border px-2 py-0.5 font-semibold text-[10px]",
+              answered
+                ? "border-green-200 bg-green-50 text-green-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+            )}>
+              {answered ? "Yanıtladım" : "Yanıt Bekliyor"}
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              <Clock className="size-3" />
+              {new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", year: "numeric" }).format(new Date(q.createdAt))}
+            </span>
+          </div>
+          <Link href={`/forum/konu/${q.id}`} className="group mt-1 block">
+            <h2 className="font-semibold text-foreground transition group-hover:text-primary">{q.title}</h2>
+          </Link>
+          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{q.content}</p>
+        </div>
+      </div>
+      <div className="border-t border-border/40 px-5 py-3">
+        <Link
+          href={`/forum/konu/${q.id}`}
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:text-primary-hover"
+        >
+          <MessageCircle className="size-3.5" />
+          {answered ? "Cevabı görüntüle" : "Cevapla"}
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export default function ForumPage() {
   const { role } = useAuthStore();
+
+  const [activeTab, setActiveTab] = useState<ForumTab>("public");
 
   const [questions, setQuestions] = useState<ForumQuestion[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+
+  const [assigned, setAssigned] = useState<AssignedQuestion[]>([]);
+  const [assignedLoading, setAssignedLoading] = useState(false);
+  const [assignedError, setAssignedError] = useState("");
 
   const [query, setQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -163,6 +219,16 @@ export default function ForumPage() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [page]);
+
+  useEffect(() => {
+    if (role !== "uzman" || activeTab !== "assigned") return;
+    setAssignedLoading(true);
+    setAssignedError("");
+    getAssignedQuestions()
+      .then(setAssigned)
+      .catch((e: Error) => setAssignedError(e.message))
+      .finally(() => setAssignedLoading(false));
+  }, [role, activeTab]);
 
   const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
 
@@ -201,6 +267,38 @@ export default function ForumPage() {
     <>
       {/* Hero */}
       <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
+        {/* Uzman tab bar */}
+        {role === "uzman" && (
+          <div className="page-shell pt-5 pb-0">
+            <div className="flex gap-1 rounded-lg border border-border/40 bg-white/60 p-1 w-fit mb-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab("public")}
+                className={cn(
+                  "rounded-md px-4 py-1.5 text-sm font-medium transition",
+                  activeTab === "public"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Tüm Sorular
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("assigned")}
+                className={cn(
+                  "rounded-md px-4 py-1.5 text-sm font-medium transition",
+                  activeTab === "assigned"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Bana Atanan
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="page-shell">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
             <div className="w-full max-w-xl shrink-0 space-y-3">
@@ -320,7 +418,43 @@ export default function ForumPage() {
         </div>
       </section>
 
-      {/* Liste */}
+      {/* Bana Atanan — sadece uzman */}
+      {activeTab === "assigned" && (
+        <div className="bg-[#e6f0ee]">
+          <div className="page-shell py-6">
+            {assignedLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => <QuestionCardSkeleton key={i} />)}
+              </div>
+            ) : assignedError ? (
+              <div className="flex flex-col items-center gap-4 py-20 text-center">
+                <p className="font-semibold text-destructive">{assignedError}</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("assigned")}
+                  className="inline-flex h-10 items-center rounded-full border border-border bg-white px-5 text-sm font-semibold text-foreground transition hover:bg-muted"
+                >
+                  Tekrar Dene
+                </button>
+              </div>
+            ) : assigned.length === 0 ? (
+              <div className="flex flex-col items-center gap-4 py-20 text-center">
+                <MessageCircle className="size-12 text-muted-foreground" />
+                <p className="font-semibold">Henüz size atanmış soru yok</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assigned.map((q) => (
+                  <AssignedQuestionCard key={q.id} q={q} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tüm Sorular listesi */}
+      {activeTab === "public" && (
       <div className="bg-[#e6f0ee]">
         <div className="page-shell py-6">
           {hasActiveFilters && !loading && (
@@ -438,6 +572,7 @@ export default function ForumPage() {
           )}
         </div>
       </div>
+      )}
     </>
   );
 }

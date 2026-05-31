@@ -51,3 +51,17 @@ export async function createAnswer(questionId: string, content: string): Promise
     token,
   });
 }
+
+export type AssignedQuestion = {
+  id: string;
+  title: string;
+  content: string;
+  status: "ATANDI" | "CEVAPLANDI";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function getAssignedQuestions(): Promise<AssignedQuestion[]> {
+  const token = getAccessToken();
+  return apiFetch("/forum/me/questions", { token });
+}
