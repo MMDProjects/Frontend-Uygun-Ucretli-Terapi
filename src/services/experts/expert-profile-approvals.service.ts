@@ -66,7 +66,7 @@ export async function approveExpertProfileApproval(approvalId: string): Promise<
   const res = await fetch(`${base}/admin/experts/${approvalId}/status`, {
     method: "PATCH",
     headers: authHeaders(),
-    body: JSON.stringify({ status: "AKTIF" }),
+    body: JSON.stringify({ status: "YAYINDA" }),
   });
   if (!res.ok) {
     const err = (await res.json().catch(() => null)) as { message?: string } | null;
