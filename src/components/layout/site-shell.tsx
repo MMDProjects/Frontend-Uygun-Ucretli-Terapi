@@ -15,6 +15,7 @@ const UZMAN_PANEL_PREFIXES = [
   "/uzman/talepler",
   "/uzman/blog",
   "/uzman/bildirimler",
+  "/uzman/forum",
 ];
 
 function isPanelRoute(pathname: string) {
