@@ -11,6 +11,7 @@ const PANEL_PATHS = [
   "/uzman/talepler",
   "/uzman/blog",
   "/uzman/bildirimler",
+  "/uzman/forum",
 ];
 
 export default function UzmanLayout({ children }: { children: React.ReactNode }) {
