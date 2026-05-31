@@ -23,7 +23,9 @@ function BlogCardApi({ post, className }: { post: ApiBlog; className?: string })
     month: "long",
     year: "numeric",
   });
-  const excerpt = post.content.replace(/<[^>]*>/g, "").slice(0, 140) + "…";
+  const excerpt = post.content
+    ? post.content.replace(/<[^>]*>/g, "").slice(0, 140) + "…"
+    : "";
 
   return (
     <article className={cn("surface-card relative flex h-full min-h-[21rem] flex-col overflow-hidden", className)}>
