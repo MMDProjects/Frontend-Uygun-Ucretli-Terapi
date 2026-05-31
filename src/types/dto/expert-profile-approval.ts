@@ -13,7 +13,9 @@ export interface ExpertProfileApproval {
   email: string;
   submittedAt: string;
   status: ExpertProfileApprovalStatus;
-  /** Proposed biography (word limits enforced on public site) */
+  /** Currently live biography (shown to clients until this revision is approved) */
+  currentBiography: string;
+  /** Proposed new biography awaiting admin approval */
   biography: string;
   keywords: string[];
   /** Human-readable list e.g. "Biyografi, fotoğraf" */

@@ -21,6 +21,7 @@ export function ExpertsView() {
     refetch,
     updatePriority,
     toggleExpertStatus,
+    togglePublish,
     detail,
     detailLoading,
     openDetail,
@@ -71,14 +72,28 @@ export function ExpertsView() {
     setWarningExpert(null);
   };
 
-  const handleStatusToggleRow = (expertId: string) => {
+  const handleStatusToggleRow = async (expertId: string) => {
     const selected = filteredExperts.find((x) => x.id === expertId);
-    toggleExpertStatus(expertId);
-    if (selected) {
-      const next = selected.status === "active" ? "inactive" : "active";
+    try {
+      await toggleExpertStatus(expertId);
+      const next = selected?.status === "active" ? "inactive" : "active";
       toast.success(
-        `${selected.fullName} ${next === "active" ? "aktifleştirildi" : "pasifleştirildi"} (yerel, API TODO)`
+        `${selected?.fullName ?? "Uzman"} ${next === "active" ? "aktifleştirildi" : "askıya alındı"}`
       );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Durum güncellenemedi");
+    }
+  };
+
+  const handleTogglePublish = async (expertId: string, isPublished: boolean) => {
+    const selected = filteredExperts.find((x) => x.id === expertId);
+    try {
+      await togglePublish(expertId, isPublished);
+      toast.success(
+        `${selected?.fullName ?? "Uzman"} ${isPublished ? "yayına alındı" : "yayından kaldırıldı"}`
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Yayın durumu güncellenemedi");
     }
   };
 
@@ -108,6 +123,7 @@ export function ExpertsView() {
         onSavePriority={(expertId, score) => handlePrioritySave(expertId, score)}
         onOpenWarning={handleOpenWarning}
         onStatusToggle={handleStatusToggleRow}
+        onTogglePublish={handleTogglePublish}
       />
 
       <div className="rounded-lg border border-[#3178C6]/25 bg-[#3178C6]/5 px-4 py-3 text-sm text-[#24292E] dark:border-[#3178C6]/40 dark:text-foreground">

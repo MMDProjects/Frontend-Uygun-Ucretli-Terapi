@@ -50,15 +50,19 @@ interface BackendExpert {
   id: string;
   title: string;
   bio: string;
+  pendingBio: string | null;
   education: string;
   certificateUrl: string;
   cvUrl: string;
+  pendingCertificateUrl: string | null;
+  pendingCvUrl: string | null;
   priorityScore: number;
   rating: number;
   status: string;
+  isPublished: boolean;
   adminNote: string | null;
   createdAt: string;
-  user: { firstName: string; lastName: string; email: string; phone: string };
+  user: { firstName: string; lastName: string; email: string; phone: string; isActive: boolean };
   tags: { id: string; name: string; isActive: boolean }[];
 }
 
@@ -73,9 +77,10 @@ function mapToListItem(expert: BackendExpert): ExpertListItem {
     id: expert.id,
     fullName: `${expert.user.firstName} ${expert.user.lastName}`.trim(),
     email: expert.user.email,
-    status: expert.status === "AKTIF" ? "active" : "inactive",
+    status: expert.user.isActive ? "active" : "inactive",
     registeredAt: expert.createdAt,
     priorityScore,
+    isPublished: expert.isPublished ?? false,
   };
 }
 
@@ -88,9 +93,16 @@ function mapToDetail(expert: BackendExpert): ExpertDetail {
   if (expert.cvUrl) {
     docs.push({ id: "cv", name: "CV / Özgeçmiş", type: "CV", uploadedAt: "" });
   }
+  if (expert.pendingCertificateUrl) {
+    docs.push({ id: "cert-pending", name: "Sertifika (Onay Bekliyor)", type: "Sertifika", uploadedAt: "" });
+  }
+  if (expert.pendingCvUrl) {
+    docs.push({ id: "cv-pending", name: "CV (Onay Bekliyor)", type: "CV", uploadedAt: "" });
+  }
   return {
     ...listItem,
     biography: expert.bio,
+    pendingBiography: expert.pendingBio ?? null,
     keywords: expert.tags.map((t) => t.name),
     specialties: expert.tags.map((t) => t.name),
     documents: docs,
@@ -137,6 +149,50 @@ export async function getExpertDetail(expertId: string): Promise<ExpertDetail | 
     return mapToDetail(expert);
   } catch {
     return null;
+  }
+}
+
+export async function toggleExpertActive(
+  expertId: string,
+  isActive: boolean
+): Promise<void> {
+  const base = getOptionalApiBase();
+  if (!base) return;
+
+  const res = await fetch(`${base}/admin/experts/${expertId}/active`, {
+    method: "PATCH",
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ isActive }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Durum güncellenemedi");
+  }
+}
+
+export async function toggleExpertPublish(
+  expertId: string,
+  isPublished: boolean
+): Promise<void> {
+  const base = getOptionalApiBase();
+  if (!base) return;
+
+  const res = await fetch(`${base}/admin/experts/${expertId}/publish`, {
+    method: "PATCH",
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ isPublished }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Yayın durumu güncellenemedi");
   }
 }
 

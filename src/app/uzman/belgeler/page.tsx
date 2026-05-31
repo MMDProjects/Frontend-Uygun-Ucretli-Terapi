@@ -5,95 +5,28 @@ import {
   FileText,
   Upload,
   Download,
-  Trash2,
   CheckCircle2,
   AlertCircle,
+  Info,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/features/admin/components/page-header";
+import { updateMyUzmanProfile } from "@/lib/services/uzman.service";
 import { cn } from "@/lib/utils";
-
-type UploadedFile = {
-  id: string;
-  name: string;
-  sizeLabel: string;
-  uploadedAt: string;
-  type: "cv" | "sertifika";
-};
-
-const MOCK_FILES: UploadedFile[] = [
-  {
-    id: "file-001",
-    name: "ozgecmis_ayse_kaya.pdf",
-    sizeLabel: "1.2 MB",
-    uploadedAt: "15 Mart 2026",
-    type: "cv",
-  },
-  {
-    id: "file-002",
-    name: "psikoloji_lisans_diplomasi.pdf",
-    sizeLabel: "845 KB",
-    uploadedAt: "15 Mart 2026",
-    type: "sertifika",
-  },
-  {
-    id: "file-003",
-    name: "cbt_sertifikasi_2022.pdf",
-    sizeLabel: "623 KB",
-    uploadedAt: "15 Mart 2026",
-    type: "sertifika",
-  },
-];
-
-function FileRow({
-  file,
-  onDelete,
-}: {
-  file: UploadedFile;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-white p-4">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-50">
-        <FileText className="size-5 text-red-500" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{file.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {file.sizeLabel} · {file.uploadedAt}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-primary/30 hover:text-primary"
-          aria-label="İndir"
-        >
-          <Download className="size-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(file.id)}
-          className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive"
-          aria-label="Sil"
-        >
-          <Trash2 className="size-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function DropZone({
   label,
   hint,
   onFile,
   required,
+  currentFileName,
 }: {
   label: string;
   hint: string;
   onFile: (file: File) => void;
   required?: boolean;
+  currentFileName?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -133,9 +66,15 @@ function DropZone({
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
       </div>
-      <span className="rounded-xl border border-border/60 px-4 py-1.5 text-xs font-semibold text-muted-foreground">
-        Dosya Seç
-      </span>
+      {currentFileName ? (
+        <span className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
+          {currentFileName} seçildi
+        </span>
+      ) : (
+        <span className="rounded-xl border border-border/60 px-4 py-1.5 text-xs font-semibold text-muted-foreground">
+          Dosya Seç
+        </span>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -148,37 +87,28 @@ function DropZone({
 }
 
 export default function UzmanBelgelerPage() {
-  const [files, setFiles] = useState<UploadedFile[]>(MOCK_FILES);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [certFile, setCertFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const cvFile = files.find((f) => f.type === "cv");
-  const sertifikalar = files.filter((f) => f.type === "sertifika");
+  const hasSelection = cvFile !== null || certFile !== null;
 
-  function handleDelete(id: string) {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
-  }
-
-  function handleFileUpload(type: "cv" | "sertifika") {
-    return (file: File) => {
-      const newFile: UploadedFile = {
-        id: `file-${Date.now()}`,
-        name: file.name,
-        sizeLabel: `${(file.size / 1024).toFixed(0)} KB`,
-        uploadedAt: new Date().toLocaleDateString("tr-TR", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-        type,
-      };
-      if (type === "cv") {
-        setFiles((prev) => prev.filter((f) => f.type !== "cv").concat(newFile));
-      } else {
-        setFiles((prev) => [...prev, newFile]);
-      }
-      setUploadSuccess(true);
-      setTimeout(() => setUploadSuccess(false), 3000);
-    };
+  async function handleUpload() {
+    if (!hasSelection) return;
+    setUploading(true);
+    try {
+      await updateMyUzmanProfile({
+        cv: cvFile ?? undefined,
+        certificate: certFile ?? undefined,
+      });
+      toast.success("Belgeler admin onayına gönderildi. Onaylanana kadar profiliniz yayından kaldırılmıştır.");
+      setCvFile(null);
+      setCertFile(null);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Yükleme başarısız.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -188,14 +118,15 @@ export default function UzmanBelgelerPage() {
         description="CV ve sertifikalarınızı yükleyin. Danışanlar tarafından görülebilir."
       />
 
-      {uploadSuccess && (
-        <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4">
-          <CheckCircle2 className="size-4 shrink-0 text-green-600" />
-          <p className="text-sm font-semibold text-green-800">
-            Dosya başarıyla yüklendi.
+      <div className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4">
+        <Info className="mt-0.5 size-4 shrink-0 text-amber-600" />
+        <div>
+          <p className="text-sm font-semibold text-amber-800">Belge güncellemesi admin onayı gerektirir</p>
+          <p className="mt-0.5 text-xs text-amber-700">
+            Yeni belge yüklediğinizde profiliniz admin onayına gönderilir. Onaylanana kadar profiliniz yayından kaldırılır.
           </p>
         </div>
-      )}
+      </div>
 
       {/* CV */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
@@ -211,60 +142,79 @@ export default function UzmanBelgelerPage() {
           {cvFile ? (
             <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
               <CheckCircle2 className="size-4" />
-              Yüklendi
+              Seçildi
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-destructive">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <AlertCircle className="size-4" />
-              Yüklenmedi
+              Seçilmedi
             </span>
           )}
         </div>
 
-        {cvFile ? (
-          <FileRow file={cvFile} onDelete={handleDelete} />
-        ) : (
-          <DropZone
-            label="CV Yükle"
-            hint="Yalnızca PDF · Maksimum 10 MB"
-            onFile={handleFileUpload("cv")}
-            required
-          />
-        )}
-
-        {cvFile && (
-          <div className="mt-3">
-            <DropZone
-              label="CV Güncelle"
-              hint="Yeni PDF yükleyerek mevcut CV'yi değiştirin"
-              onFile={handleFileUpload("cv")}
-            />
-          </div>
-        )}
+        <DropZone
+          label="CV Yükle / Güncelle"
+          hint="Yalnızca PDF · Maksimum 10 MB"
+          onFile={setCvFile}
+          required
+          currentFileName={cvFile?.name}
+        />
       </div>
 
-      {/* Sertifikalar */}
+      {/* Sertifika */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
-        <div className="mb-4">
-          <h3 className="text-sm font-bold text-foreground">Sertifikalar</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Eğitim ve yetkinlik belgelerinizi ekleyin. Danışanlar tarafından görülebilir.
-          </p>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Sertifika</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Eğitim ve yetkinlik belgelerinizi ekleyin. Danışanlar tarafından görülebilir.
+            </p>
+          </div>
+          {certFile && (
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
+              <CheckCircle2 className="size-4" />
+              Seçildi
+            </span>
+          )}
         </div>
 
-        {sertifikalar.length > 0 && (
-          <div className="mb-4 space-y-2">
-            {sertifikalar.map((f) => (
-              <FileRow key={f.id} file={f} onDelete={handleDelete} />
-            ))}
-          </div>
-        )}
-
         <DropZone
-          label="Sertifika Ekle"
+          label="Sertifika Yükle / Güncelle"
           hint="PDF · Diplomalar, kurs sertifikaları, akreditasyon belgeleri"
-          onFile={handleFileUpload("sertifika")}
+          onFile={setCertFile}
+          currentFileName={certFile?.name}
         />
+      </div>
+
+      {/* Mevcut belgeler notu */}
+      <div className="flex items-start gap-3 rounded-2xl border border-border/40 bg-muted/30 p-4">
+        <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <div>
+          <p className="text-xs text-muted-foreground">
+            Mevcut belgelerinizi görmek için uzman profilinizi ziyaret edebilirsiniz.
+            Yeni dosya yükleyerek mevcut belgenin üzerine yazabilirsiniz.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          onClick={handleUpload}
+          disabled={uploading || !hasSelection}
+        >
+          {uploading ? (
+            <>
+              <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Yükleniyor…
+            </>
+          ) : (
+            <>
+              <Upload className="mr-1.5 size-4" />
+              Belgeleri Yükle & Onaya Gönder
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

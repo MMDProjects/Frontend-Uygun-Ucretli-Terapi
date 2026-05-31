@@ -50,6 +50,7 @@ export type ApiUzmanProfile = {
   userId: string;
   title: string;
   bio: string;
+  pendingBio: string | null;
   education: string | null;
   avatarUrl: string | null;
   phone: string | null;
@@ -104,6 +105,7 @@ type RawProfile = {
   userId: string;
   title: string;
   bio: string;
+  pendingBio: string | null;
   education: string | null;
   avatarUrl: string | null;
   phone: string | null;
@@ -126,13 +128,19 @@ export async function updateMyUzmanProfile(data: {
   bio?: string;
   education?: string;
   tagIds?: string[];
+  avatar?: File;
+  certificate?: File;
+  cv?: File;
 }): Promise<{ message: string }> {
   const token = getAccessToken();
   const formData = new FormData();
   if (data.title) formData.append("title", data.title);
   if (data.bio) formData.append("bio", data.bio);
-  if (data.education) formData.append("education", data.education);
+  if (data.education !== undefined) formData.append("education", data.education);
   data.tagIds?.forEach((id) => formData.append("tagIds", id));
+  if (data.avatar) formData.append("avatar", data.avatar);
+  if (data.certificate) formData.append("certificate", data.certificate);
+  if (data.cv) formData.append("cv", data.cv);
 
   return apiFetch("/experts/me", {
     method: "PATCH",

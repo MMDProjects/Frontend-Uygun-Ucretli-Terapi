@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Eye } from "lucide-react";
+import { AlertTriangle, Eye, Globe, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -97,7 +97,8 @@ interface ExpertsTableProps {
   onOpenDetail: (expertId: string) => void;
   onSavePriority: (expertId: string, score: number) => Promise<void>;
   onOpenWarning: (expert: ExpertListItem) => void;
-  onStatusToggle: (expertId: string) => void;
+  onStatusToggle: (expertId: string) => Promise<void>;
+  onTogglePublish: (expertId: string, isPublished: boolean) => Promise<void>;
 }
 
 export function ExpertsTable({
@@ -109,6 +110,7 @@ export function ExpertsTable({
   onSavePriority,
   onOpenWarning,
   onStatusToggle,
+  onTogglePublish,
 }: ExpertsTableProps) {
   return (
     <Card>
@@ -163,10 +165,36 @@ export function ExpertsTable({
                       />
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge variant="outline" className={statusBadgeClass(expert.status)}>
-                        {expert.status === "active" ? "Aktif" : "Pasif"}
-                      </Badge>
                       <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={statusBadgeClass(expert.status)}>
+                          {expert.status === "active" ? "Aktif" : "Pasif"}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={
+                            expert.isPublished
+                              ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30"
+                              : "border-gray-200 bg-gray-50 text-gray-500 dark:bg-gray-900/30"
+                          }
+                        >
+                          {expert.isPublished ? "Yayında" : "Yayında Değil"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant={expert.isPublished ? "outline" : "default"}
+                          size="sm"
+                          title={expert.isPublished ? "Yayından kaldır" : "Yayına al"}
+                          className={expert.isPublished ? "text-destructive" : "bg-[#016a59] text-white hover:bg-[#014a3e]"}
+                          onClick={() => void onTogglePublish(expert.id, !expert.isPublished)}
+                        >
+                          {expert.isPublished ? (
+                            <><EyeOff className="mr-1 size-3.5" />Kaldır</>
+                          ) : (
+                            <><Globe className="mr-1 size-3.5" />Yayına Al</>
+                          )}
+                        </Button>
                         <Button
                           type="button"
                           variant="outline"
@@ -207,6 +235,7 @@ export function ExpertsTable({
                     <TableHead>Email</TableHead>
                     <TableHead>Öncelik</TableHead>
                     <TableHead>Durum</TableHead>
+                    <TableHead>Yayın</TableHead>
                     <TableHead>Kayıt Tarihi</TableHead>
                     <TableHead className="text-right">İşlemler</TableHead>
                   </TableRow>
@@ -236,6 +265,25 @@ export function ExpertsTable({
                         <Badge variant="outline" className={statusBadgeClass(expert.status)}>
                           {expert.status === "active" ? "Aktif" : "Pasif"}
                         </Badge>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={expert.isPublished ? "outline" : "default"}
+                          className={
+                            expert.isPublished
+                              ? "border-destructive/40 text-destructive hover:bg-destructive/10"
+                              : "bg-[#016a59] text-white hover:bg-[#014a3e]"
+                          }
+                          onClick={() => void onTogglePublish(expert.id, !expert.isPublished)}
+                        >
+                          {expert.isPublished ? (
+                            <><EyeOff className="mr-1 size-3.5" />Yayından Kaldır</>
+                          ) : (
+                            <><Globe className="mr-1 size-3.5" />Yayına Al</>
+                          )}
+                        </Button>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {expert.registeredAt ?? "-"}

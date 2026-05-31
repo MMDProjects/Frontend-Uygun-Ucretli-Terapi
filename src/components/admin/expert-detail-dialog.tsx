@@ -58,6 +58,12 @@ export function ExpertDetailDialog({
                 <p className="rounded-md border bg-muted/30 p-3 text-muted-foreground">
                   {expert.biography || "Biyografi bilgisi yok."}
                 </p>
+                {expert.pendingBiography && (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 space-y-1">
+                    <p className="text-xs font-semibold text-amber-800">Onay bekleyen biyografi</p>
+                    <p className="text-sm text-amber-700">{expert.pendingBiography}</p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
