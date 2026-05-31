@@ -267,38 +267,6 @@ export default function ForumPage() {
     <>
       {/* Hero */}
       <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
-        {/* Uzman tab bar */}
-        {role === "uzman" && (
-          <div className="page-shell pt-5 pb-0">
-            <div className="flex gap-1 rounded-lg border border-border/40 bg-white/60 p-1 w-fit mb-1">
-              <button
-                type="button"
-                onClick={() => setActiveTab("public")}
-                className={cn(
-                  "rounded-md px-4 py-1.5 text-sm font-medium transition",
-                  activeTab === "public"
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Tüm Sorular
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("assigned")}
-                className={cn(
-                  "rounded-md px-4 py-1.5 text-sm font-medium transition",
-                  activeTab === "assigned"
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Bana Atanan
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="page-shell">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
             <div className="w-full max-w-xl shrink-0 space-y-3">
@@ -415,6 +383,36 @@ export default function ForumPage() {
               )}
             </div>
           </div>
+
+          {/* Uzman sekme bar — hero altı */}
+          {role === "uzman" && (
+            <div className="mt-6 flex gap-1 rounded-full border border-white/40 bg-white/30 p-1 w-fit backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={() => setActiveTab("public")}
+                className={cn(
+                  "rounded-full px-5 py-1.5 text-sm font-medium transition",
+                  activeTab === "public"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-primary-hover hover:bg-white/50"
+                )}
+              >
+                Tüm Sorular
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("assigned")}
+                className={cn(
+                  "rounded-full px-5 py-1.5 text-sm font-medium transition",
+                  activeTab === "assigned"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-primary-hover hover:bg-white/50"
+                )}
+              >
+                Bana Atanan
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
