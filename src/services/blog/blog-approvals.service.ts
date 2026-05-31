@@ -106,10 +106,10 @@ export async function submitAdminBlogRevision(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/blogs/${postId}/status`, {
+  const res = await fetch(`${base}/admin/blogs/${postId}/content`, {
     method: "PATCH",
     headers: authHeaders(),
-    body: JSON.stringify({ status: "ONAY_BEKLIYOR" }),
+    body: JSON.stringify({ title: body.title, content: body.content }),
   });
   if (!res.ok) {
     const err = (await res.json().catch(() => null)) as { message?: string } | null;
