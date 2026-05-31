@@ -26,7 +26,7 @@ export default async function BlogDetailPage({ params }: Props) {
   });
 
   return (
-    <div className="bg-white">
+    <div className="bg-white !pt-0">
       {/* Hero */}
       <section className="section-shell border-b border-border/70 bg-[#cce1de]">
         <div className="page-shell">
@@ -39,8 +39,8 @@ export default async function BlogDetailPage({ params }: Props) {
           </Link>
           <div className="max-w-3xl space-y-4">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span className="rounded-full bg-white/70 px-3 py-0.5 font-medium text-primary">
-                {blog.expertProfile.title}
+              <span className="rounded-full bg-primary px-3 py-0.5 text-sm font-semibold text-white">
+                Uzman
               </span>
               <span>·</span>
               <span>{authorName}</span>
@@ -65,27 +65,6 @@ export default async function BlogDetailPage({ params }: Props) {
                 </p>
               ) : null
             )}
-          </div>
-
-          {/* Yazar kutusu */}
-          <div className="mt-12 flex items-center gap-4 rounded-2xl border border-border/60 bg-[#e6f0ee] p-6">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
-              {authorName.charAt(0)}
-            </div>
-            <div>
-              <p className="font-semibold text-foreground">{authorName}</p>
-              <p className="text-sm text-muted-foreground">{blog.expertProfile.title}</p>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-primary/30 hover:text-primary"
-            >
-              <ArrowLeft className="size-4" />
-              Tüm Yazılara Dön
-            </Link>
           </div>
         </div>
       </section>
