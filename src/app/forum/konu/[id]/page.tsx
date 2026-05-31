@@ -6,7 +6,13 @@ import Link from "next/link";
 import { ArrowLeft, Clock, Send, ShieldCheck, MessageCircle } from "lucide-react";
 
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { getForumQuestion, createAnswer, type ForumQuestion } from "@/lib/services/forum.service";
+import {
+  getForumQuestion,
+  getAssignedQuestions,
+  createAnswer,
+  type ForumQuestion,
+  type AssignedQuestion,
+} from "@/lib/services/forum.service";
 import { cn } from "@/lib/utils";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -51,6 +57,7 @@ export default function KonuDetailPage({ params }: PageProps) {
   const { displayName, role } = useAuthStore();
 
   const [question, setQuestion] = useState<ForumQuestion | null>(null);
+  const [assignedQuestion, setAssignedQuestion] = useState<AssignedQuestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFoundPage, setNotFoundPage] = useState(false);
 
@@ -62,12 +69,116 @@ export default function KonuDetailPage({ params }: PageProps) {
   useEffect(() => {
     getForumQuestion(id)
       .then(setQuestion)
-      .catch(() => setNotFoundPage(true))
+      .catch(async () => {
+        // Public endpoint sadece CEVAPLANDI soruları döndürür.
+        // Uzman ise, kendine atanmış ATANDI soruyu fallback olarak çek.
+        if (role === "uzman") {
+          try {
+            const assigned = await getAssignedQuestions();
+            const found = assigned.find((q) => q.id === id);
+            if (found) { setAssignedQuestion(found); return; }
+          } catch {}
+        }
+        setNotFoundPage(true);
+      })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, role]);
 
   if (loading) return <PageSkeleton />;
   if (notFoundPage) notFound();
+
+  // Uzman, henüz public olmayan (ATANDI) soruya bakıyor
+  if (!question && assignedQuestion) {
+    return (
+      <div className="bg-[#e6f0ee] !pt-0">
+        <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
+          <div className="page-shell">
+            <Link href="/forum" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-primary">
+              <ArrowLeft className="size-4" />
+              Tüm Konular
+            </Link>
+            <div className="max-w-2xl space-y-3">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                <Clock className="size-3" /> Yanıt Bekliyor
+              </span>
+              <h1 className="text-balance text-3xl font-semibold tracking-tight text-primary-hover sm:text-4xl">
+                {assignedQuestion.title}
+              </h1>
+              <div className="text-sm text-muted-foreground">
+                {formatDateShort(assignedQuestion.createdAt)}
+              </div>
+            </div>
+          </div>
+        </section>
+        <div className="page-shell max-w-3xl py-6 space-y-3">
+          <article className="rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm lg:rounded-[2.25rem]">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f0ee] text-sm font-bold text-primary-hover">
+                <MessageCircle className="size-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">Danışan</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(assignedQuestion.createdAt)}</span>
+                </div>
+                <p className="mt-3 text-base leading-7 text-foreground">{assignedQuestion.content}</p>
+              </div>
+            </div>
+          </article>
+          {!submitted ? (
+            <div className="rounded-[2rem] border border-border/60 bg-white p-5 shadow-sm lg:rounded-[2.25rem]">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                  {displayName ? getInitials(displayName) : "U"}
+                </div>
+                <p className="text-sm font-semibold text-primary-hover">Uzman Yanıtı</p>
+              </div>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!text.trim()) return;
+                setSubmitError("");
+                setSubmitting(true);
+                try {
+                  await createAnswer(id, text.trim());
+                  setText("");
+                  setSubmitted(true);
+                } catch (err: unknown) {
+                  setSubmitError(err instanceof Error ? err.message : "Bir hata oluştu");
+                } finally {
+                  setSubmitting(false);
+                }
+              }} className="space-y-3">
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Profesyonel yanıtınızı yazın... (min 20 karakter)"
+                  rows={4}
+                  maxLength={2000}
+                  className="w-full resize-none rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-ring/25"
+                />
+                {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{text.length}/2000</span>
+                  <button
+                    type="submit"
+                    disabled={submitting || text.trim().length < 20}
+                    className="inline-flex h-9 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {submitting ? <><span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Gönderiliyor...</> : <><Send className="size-4" />Gönder</>}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 text-center shadow-sm lg:rounded-[2.25rem]">
+              <p className="text-sm font-medium text-primary-hover">Yanıtınız gönderildi. Admin onayından sonra yayınlanacak.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!question) notFound();
 
   const isUzman = role === "uzman";
