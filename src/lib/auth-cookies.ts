@@ -24,6 +24,10 @@ export function setTokens(
   }
 }
 
+export function getRole(): string | undefined {
+  return Cookies.get(ROLE_KEY);
+}
+
 export function clearTokens(): void {
   Cookies.remove(ACCESS_TOKEN_KEY);
   Cookies.remove(REFRESH_TOKEN_KEY);
