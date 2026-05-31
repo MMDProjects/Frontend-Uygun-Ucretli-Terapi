@@ -177,13 +177,25 @@ export default function UzmanProfilPage() {
             <p className="mt-0.5 text-xs text-muted-foreground">
               Minimum 400×400px, kurumsal fotoğraf. JPG veya PNG.
             </p>
-            <button
-              type="button"
-              onClick={() => avatarInputRef.current?.click()}
-              className="mt-2 rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
-            >
-              {avatarFile ? avatarFile.name : "Dosya Seç"}
-            </button>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+              >
+                {avatarFile ? avatarFile.name : "Dosya Seç"}
+              </button>
+              {avatarFile && (
+                <button
+                  type="button"
+                  onClick={handleSaveDirect}
+                  disabled={savingDirect}
+                  className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#014a3e] disabled:opacity-50"
+                >
+                  {savingDirect ? "Kaydediliyor…" : "Fotoğrafı Kaydet"}
+                </button>
+              )}
+            </div>
             <input
               ref={avatarInputRef}
               type="file"
@@ -372,7 +384,7 @@ export default function UzmanProfilPage() {
           <Button
             size="sm"
             onClick={handleSaveDirect}
-            disabled={savingDirect || !keywordsValid}
+            disabled={savingDirect || (selectedTagIds.length > 0 && !keywordsValid)}
           >
             {savingDirect ? (
               <>

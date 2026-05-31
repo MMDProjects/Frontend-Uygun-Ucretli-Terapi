@@ -1,4 +1,4 @@
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "@/lib/auth-cookies";
+import { getAccessToken, getRefreshToken, getRole, setTokens, clearTokens } from "@/lib/auth-cookies";
 
 const BASE = () => {
   const url = process.env.NEXT_PUBLIC_API_URL;
@@ -57,7 +57,8 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
     }
     clearTokens();
     if (typeof window !== "undefined") {
-      window.location.href = "/admin/giris";
+      const role = getRole();
+      window.location.href = role === "uzman" ? "/uzman/giris" : role === "admin" ? "/admin/giris" : "/giris";
     }
     throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın");
   }

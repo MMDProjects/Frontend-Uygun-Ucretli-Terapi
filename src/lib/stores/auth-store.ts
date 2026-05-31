@@ -4,6 +4,7 @@ export type UserRole = "danisan" | "uzman" | "admin";
 
 type AuthState = {
   isAuthenticated: boolean;
+  isLoading: boolean;
   userId: string | null;
   displayName: string | null;
   email: string | null;
@@ -17,12 +18,14 @@ type AuthState = {
     role: UserRole;
   }) => void;
   clearSession: () => void;
+  setLoading: (loading: boolean) => void;
   markFreeConsultSeen: () => void;
   markMusaitlikSet: () => void;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
+  isLoading: true,
   userId: null,
   displayName: null,
   email: null,
@@ -32,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setSession: (payload) =>
     set({
       isAuthenticated: true,
+      isLoading: false,
       userId: payload.userId,
       displayName: payload.displayName,
       email: payload.email,
@@ -41,12 +45,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearSession: () =>
     set({
       isAuthenticated: false,
+      isLoading: false,
       userId: null,
       displayName: null,
       email: null,
       role: null,
       hasSetMusaitlik: false,
     }),
+  setLoading: (loading) => set({ isLoading: loading }),
   markFreeConsultSeen: () => set({ hasSeenFreeConsultPopup: true }),
   markMusaitlikSet: () => set({ hasSetMusaitlik: true }),
 }));
