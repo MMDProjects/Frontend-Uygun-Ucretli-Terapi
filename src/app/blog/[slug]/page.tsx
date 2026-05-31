@@ -28,6 +28,20 @@ export default async function BlogDetailPage({ params }: Props) {
 
   return (
     <div className="bg-white !pt-0">
+      {/* Kapak resmi — en üstte */}
+      {blog.coverImageUrl && (
+        <div className="relative aspect-[21/9] w-full bg-muted">
+          <Image
+            src={blog.coverImageUrl}
+            alt={blog.title}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
+        </div>
+      )}
+
       {/* Hero */}
       <section className="section-shell border-b border-border/70 bg-[#cce1de]">
         <div className="page-shell">
@@ -55,20 +69,6 @@ export default async function BlogDetailPage({ params }: Props) {
           </div>
         </div>
       </section>
-
-      {/* Kapak resmi */}
-      {blog.coverImageUrl && (
-        <div className="relative aspect-[21/9] w-full bg-muted">
-          <Image
-            src={blog.coverImageUrl}
-            alt={blog.title}
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-        </div>
-      )}
 
       {/* İçerik */}
       <section className="section-shell">
