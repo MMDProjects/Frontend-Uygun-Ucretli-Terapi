@@ -37,6 +37,7 @@ const groups: NavGroup[] = [
       { label: "Blog yazilari", href: "/admin/icerik/blog" },
       { label: "Sayfa / sabit icerik", href: "/admin/icerik/sayfalar" },
       { label: "SSS Yayinla", href: "/admin/icerik/sss" },
+      { label: "Paketler", href: "/admin/icerik/paketler" },
       { label: "Forum sorulari", href: "/admin/icerik/forum-sorulari" },
     ],
   },
