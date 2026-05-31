@@ -96,7 +96,7 @@ function AssignDialog({
             <Label htmlFor="expert-select">Uzman seç</Label>
             <Select
               value={selectedExpert}
-              onValueChange={setSelectedExpert}
+              onValueChange={(v) => setSelectedExpert(v ?? "")}
               disabled={submitting}
             >
               <SelectTrigger id="expert-select">
