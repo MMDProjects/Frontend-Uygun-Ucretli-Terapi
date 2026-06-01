@@ -30,25 +30,22 @@ export default function GelenTaleplerPage() {
         description="İletişim formları ve uzman görüşme taleplerini buradan yönetin."
       />
 
-      {/* Underline tab stili */}
-      <div className="border-b border-border/60">
-        <nav className="flex gap-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setActiveTab(tab.value)}
-              className={cn(
-                "px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
-                activeTab === tab.value
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+      <div className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1 w-fit">
+        {TABS.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setActiveTab(tab.value)}
+            className={cn(
+              "rounded-md px-4 py-1.5 text-sm transition-colors",
+              activeTab === tab.value
+                ? "bg-white font-medium text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {activeTab === "bireysel" && (
