@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { getOptionalApiBase } from "@/lib/http-client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/features/admin/components/page-header";
 import {
@@ -38,7 +36,6 @@ function emptyForm(): SavePsychometricTestPayload {
 }
 
 export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boolean } = {}) {
-  const router = useRouter();
   const [form, setForm] = useState<SavePsychometricTestPayload>(emptyForm);
   const [saving, setSaving] = useState(false);
 
@@ -70,14 +67,8 @@ export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boole
     setSaving(true);
     try {
       await saveTest(form);
-      const api = getOptionalApiBase();
-      toast.success(
-        api
-          ? "Test kaydedildi"
-          : "Test kaydedildi (bellek içi; sayfa yenilenince örnek verilerle sıfırlanabilir)"
-      );
+      toast.success("Test kaydedildi");
       setForm(emptyForm());
-      router.push("/formlar/testler");
     } catch (errUnknown) {
       toast.error(
         errUnknown instanceof Error ? errUnknown.message : "Kayıt başarısız"

@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Users, RotateCcw
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { getTestBySlug, type ApiTestWithDefinition } from "@/lib/services/public.service";
 import { saveTestResult } from "@/lib/services/danisan.service";
 import { computePsychometricScores } from "@/lib/psychometric-scoring";
@@ -26,8 +27,7 @@ function ResultScreen({
   definition: PsychometricTestDefinition;
   answers: TestAnswersMap;
   onRetry: () => void;
-}) {
-  const { isAuthenticated } = useAuthStore();
+) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -43,13 +43,13 @@ function ResultScreen({
     : `Toplam Puan: ${scores.totalScore}`;
 
   useEffect(() => {
-    if (!isAuthenticated || saved) return;
+    if (saved) return;
     setSaving(true);
     saveTestResult(test.id, summaryText)
       .then(() => setSaved(true))
       .catch(() => {})
       .finally(() => setSaving(false));
-  }, [isAuthenticated, test.id, summaryText, saved]);
+  }, [test.id, summaryText, saved]);
 
   const subscaleNames = Object.fromEntries(
     definition.subscales.map((s) => [s.id, s.name])
@@ -109,23 +109,9 @@ function ResultScreen({
       )}
 
       {/* Kaydetme durumu */}
-      {isAuthenticated ? (
-        <p className="text-center text-xs text-muted-foreground">
-          {saving ? "Sonuç kaydediliyor…" : saved ? "✓ Sonuç hesabınıza kaydedildi" : ""}
-        </p>
-      ) : (
-        <div className="surface-card !rounded-[2rem] p-5 text-center space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Sonucu kaydetmek ve geçmişini görmek için giriş yapın.
-          </p>
-          <Link
-            href={`/giris?redirect=/testler/${test.slug}`}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-hover"
-          >
-            Giriş Yap
-          </Link>
-        </div>
-      )}
+      <p className="text-center text-xs text-muted-foreground">
+        {saving ? "Sonuç kaydediliyor…" : saved ? "✓ Sonuç hesabınıza kaydedildi" : ""}
+      </p>
 
       {/* Uzman önerisi CTA (R02) */}
       <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-6 text-center space-y-3">
@@ -170,6 +156,8 @@ function ResultScreen({
 export default function TestDetailPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
 
   const [test, setTest] = useState<ApiTestWithDefinition | null>(null);
   const [loading, setLoading] = useState(true);
@@ -178,11 +166,15 @@ export default function TestDetailPage() {
   const [finished, setFinished] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace(`/giris?redirect=/testler/${slug}`);
+      return;
+    }
     getTestBySlug(slug)
       .then(setTest)
       .catch(() => setTest(null))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, isAuthenticated, router]);
 
   if (loading) {
     return (
