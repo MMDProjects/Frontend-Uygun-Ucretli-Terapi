@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { computePsychometricScores } from "@/lib/psychometric-scoring";
 import { getTest } from "@/services/tests/psychometric-tests.service";
-import { getAccessToken } from "@/lib/auth-cookies";
+
 import type {
   PsychometricTestDefinition,
   TestResultSubmission,
@@ -48,8 +48,7 @@ export function TestResultDetailDialog({
     }
     let cancelled = false;
     void (async () => {
-      const token = getAccessToken();
-      const def = await getTest(submission.testId, token ?? null);
+      const def = await getTest(submission.testId);
       if (!cancelled) setDefinition(def);
     })();
     return () => {
