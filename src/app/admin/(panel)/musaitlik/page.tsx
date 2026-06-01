@@ -93,6 +93,9 @@ export default function AdminMusaitlikPage() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  }
+
+  function selectView(id: string) {
     setViewId(id);
   }
 
@@ -204,26 +207,32 @@ export default function AdminMusaitlikPage() {
                 const isChecked = selectedIds.has(expert.id);
                 const isViewing = viewId === expert.id;
                 return (
-                  <button
+                  <div
                     key={expert.id}
-                    type="button"
-                    onClick={() => toggleSelect(expert.id)}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-xl border-[1.5px] px-3 py-2 text-left transition",
+                      "flex items-center gap-2.5 rounded-xl border-[1.5px] px-3 py-2 transition cursor-pointer",
                       isViewing ? "border-primary/30 bg-primary/7 text-[#014a3e]" : "border-transparent hover:bg-[#e6f0ee]",
                     )}
+                    onClick={() => selectView(expert.id)}
                   >
-                    {isChecked
-                      ? <CheckSquare className="size-4 shrink-0 text-primary" />
-                      : <Square className="size-4 shrink-0 text-muted-foreground/40" />
-                    }
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(expert.id); }}
+                      className="shrink-0 flex items-center justify-center"
+                      aria-label={isChecked ? "Seçimi kaldır" : "Seç"}
+                    >
+                      {isChecked
+                        ? <CheckSquare className="size-4 text-primary" />
+                        : <Square className="size-4 text-muted-foreground/40" />
+                      }
+                    </button>
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#4d978b] text-[10px] font-bold text-white">
                       {initials(expert)}
                     </div>
                     <p className="truncate text-xs font-semibold text-foreground">
                       {expert.user.firstName} {expert.user.lastName}
                     </p>
-                  </button>
+                  </div>
                 );
               })
             )}
