@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { Filter, RefreshCw } from "lucide-react";
 import { IncomingRequestsView } from "@/components/admin/incoming-requests-view";
 import { PageHeader } from "@/features/admin/components/page-header";
@@ -25,14 +25,6 @@ const TABS: { label: string; value: Tab }[] = [
   { label: "İletişim Formları", value: "bireysel" },
   { label: "Kurumsal Formlar", value: "kurumsal" },
 ];
-
-function LoadingFallback() {
-  return (
-    <div className="flex items-center justify-center py-16">
-      <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-hidden />
-    </div>
-  );
-}
 
 export default function GelenTaleplerPage() {
   const [activeTab, setActiveTab] = useState<Tab>("bireysel");
@@ -117,23 +109,19 @@ export default function GelenTaleplerPage() {
       </div>
 
       {activeTab === "bireysel" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <IncomingRequestsView
-            isCorporate={false}
-            searchQuery={searchQuery}
-            selectedStatuses={selectedStatuses}
-          />
-        </Suspense>
+        <IncomingRequestsView
+          isCorporate={false}
+          searchQuery={searchQuery}
+          selectedStatuses={selectedStatuses}
+        />
       )}
 
       {activeTab === "kurumsal" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <IncomingRequestsView
-            isCorporate={true}
-            searchQuery={searchQuery}
-            selectedStatuses={selectedStatuses}
-          />
-        </Suspense>
+        <IncomingRequestsView
+          isCorporate={true}
+          searchQuery={searchQuery}
+          selectedStatuses={selectedStatuses}
+        />
       )}
     </div>
   );

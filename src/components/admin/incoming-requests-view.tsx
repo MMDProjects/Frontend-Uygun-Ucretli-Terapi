@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { getAccessToken } from "@/lib/auth-cookies";
 import { getOptionalApiBase } from "@/lib/http-client";
@@ -14,7 +12,6 @@ import type {
 } from "@/types/dto/incoming-request";
 import { IncomingRequestMessageDialog } from "./incoming-request-message-dialog";
 import { IncomingRequestsTable } from "./incoming-requests-table";
-import { useState } from "react";
 
 interface IncomingRequestsViewProps {
   isCorporate?: boolean;
@@ -27,11 +24,11 @@ export function IncomingRequestsView({
   searchQuery,
   selectedStatuses,
 }: IncomingRequestsViewProps) {
-  const searchParams = useSearchParams();
-  const danisanFilterId = searchParams.get("danisan");
-
   const { requests: allRequests, setRequests: setAllRequests, loading, error, refetch } =
     useIncomingRequests();
+
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [messageRequest, setMessageRequest] = useState<IncomingRequest | null>(null);
 
   const requests = useMemo(
     () => allRequests.filter((r) =>
@@ -40,21 +37,9 @@ export function IncomingRequestsView({
     [allRequests, isCorporate]
   );
 
-  const setRequests: React.Dispatch<React.SetStateAction<IncomingRequest[]>> = (updater) => {
-    setAllRequests((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      return prev.map((r) => next.find((n) => n.id === r.id) ?? r);
-    });
-  };
-
-  const [messageOpen, setMessageOpen] = useState(false);
-  const [messageRequest, setMessageRequest] = useState<IncomingRequest | null>(null);
-
   const filteredRequests = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return requests.filter((req) => {
-      if (danisanFilterId && req.danisanId !== danisanFilterId) return false;
-
       const matchSearch =
         q.length === 0 ||
         req.fullName.toLowerCase().includes(q) ||
@@ -68,17 +53,24 @@ export function IncomingRequestsView({
 
       return matchSearch && matchStatus;
     });
-  }, [requests, searchQuery, selectedStatuses, danisanFilterId]);
+  }, [requests, searchQuery, selectedStatuses]);
+
+  const setRequests = (updater: (prev: IncomingRequest[]) => IncomingRequest[]) => {
+    setAllRequests((prev) => {
+      const next = updater(prev);
+      return prev.map((r) => next.find((n) => n.id === r.id) ?? r);
+    });
+  };
 
   const handleStatusChangeRow = async (id: string, status: IncomingRequestStatus) => {
-    const previous = requests;
+    const previous = [...requests];
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     try {
       await updateIncomingRequestStatus(id, status, getAccessToken() ?? null);
       const hasApi = getOptionalApiBase() !== null;
       toast.success(hasApi ? "Durum güncellendi" : "Durum güncellendi (yerel)");
     } catch (e) {
-      setRequests(previous);
+      setRequests(() => previous);
       toast.error(e instanceof Error ? e.message : "Durum güncellenemedi");
       void refetch();
     }
@@ -86,17 +78,6 @@ export function IncomingRequestsView({
 
   return (
     <div className="space-y-4">
-      {danisanFilterId && (
-        <p className="text-sm">
-          <Link
-            href="/formlar/talepler"
-            className="text-[#3178C6] underline-offset-4 hover:underline active:opacity-80"
-          >
-            Tüm talepleri göster
-          </Link>
-        </p>
-      )}
-
       <IncomingRequestsTable
         requests={filteredRequests}
         loading={loading}
