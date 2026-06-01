@@ -14,40 +14,39 @@ type NavGroup = { title: string; items: NavItem[] };
 
 const groups: NavGroup[] = [
   {
-    title: "Kullanici yonetimi",
+    title: "Kullanıcı Yönetimi",
     items: [
-      { label: "Danisanlar", href: "/admin/kullanicilar/danisanlar" },
+      { label: "Danışanlar", href: "/admin/kullanicilar/danisanlar" },
       { label: "Admin / Personel", href: "/admin/kullanicilar/adminler" },
     ],
   },
   {
-    title: "Uzman ve onay",
+    title: "Uzman ve Onay",
     items: [
-      { label: "Yeni basvurular", href: "/admin/uzman-onay/basvurular" },
-      { label: "Profil onaylari", href: "/admin/uzman-onay/profil-onaylari" },
-      { label: "Tum uzmanlar", href: "/admin/uzmanlar" },
-      { label: "Musaitlik yonetimi", href: "/admin/musaitlik" },
+      { label: "Yeni Başvurular", href: "/admin/uzman-onay/basvurular" },
+      { label: "Profil Onayları", href: "/admin/uzman-onay/profil-onaylari" },
+      { label: "Tüm Uzmanlar", href: "/admin/uzmanlar" },
+      { label: "Müsaitlik Yönetimi", href: "/admin/musaitlik" },
     ],
   },
   {
-    title: "Icerik",
+    title: "İçerik",
     items: [
-      { label: "Icerik yayinla", href: "/admin/icerik/yayinla" },
-      { label: "Blog yonetimi", href: "/admin/icerik/blog" },
-      { label: "Sayfa / sabit icerik", href: "/admin/icerik/sayfalar" },
-      { label: "SSS Yayinla", href: "/admin/icerik/sss" },
+      { label: "Blog Yönetimi", href: "/admin/icerik/blog" },
+      { label: "Sayfa / Sabit İçerik", href: "/admin/icerik/sayfalar" },
+      { label: "SSS Yönetimi", href: "/admin/icerik/sss" },
       { label: "Paketler", href: "/admin/icerik/paketler" },
-      { label: "Forum sorulari", href: "/admin/icerik/forum-sorulari" },
-      { label: "Gelen talepler", href: "/admin/formlar/talepler" },
-      { label: "Test yonetimi", href: "/admin/formlar/testler" },
+      { label: "Forum Soruları", href: "/admin/icerik/forum-sorulari" },
+      { label: "Gelen Talepler", href: "/admin/formlar/talepler" },
+      { label: "Test Yönetimi", href: "/admin/formlar/testler" },
     ],
   },
   {
     title: "Sistem",
     items: [
-      { label: "Genel ayarlar", href: "/admin/ayarlar/genel" },
-      { label: "Filtre / kategori", href: "/admin/ayarlar/kategoriler" },
-      { label: "E-posta sablonlari", href: "/admin/ayarlar/email-sablonlari" },
+      { label: "Genel Ayarlar", href: "/admin/ayarlar/genel" },
+      { label: "Filtre / Kategori", href: "/admin/ayarlar/kategoriler" },
+      { label: "E-posta Şablonları", href: "/admin/ayarlar/email-sablonlari" },
     ],
   },
 ];

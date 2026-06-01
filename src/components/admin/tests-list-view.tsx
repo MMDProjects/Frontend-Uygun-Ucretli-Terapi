@@ -34,9 +34,16 @@ function formatUpdated(iso?: string): string {
   }
 }
 
-export function TestsListView({ hideHeader }: { hideHeader?: boolean } = {}) {
+interface TestsListViewProps {
+  hideHeader?: boolean;
+  externalSearch?: string;
+  onRefresh?: () => void;
+}
+
+export function TestsListView({ hideHeader, externalSearch, onRefresh }: TestsListViewProps = {}) {
   const { tests, loading, error, refetch } = usePsychometricTests();
-  const [search, setSearch] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
+  const search = externalSearch ?? internalSearch;
   const [detail, setDetail] = useState<PsychometricTestDefinition | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -56,29 +63,23 @@ export function TestsListView({ hideHeader }: { hideHeader?: boolean } = {}) {
   };
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-4">
       {!hideHeader && (
-        <PageHeader title="Mevcut testler" description="Sistemde tanımlı psikometrik testlerin listesi ve özeti." />
+        <PageHeader title="Mevcut testler" description="Sistemde tanımlı psikometrik testlerin listesi ve özeti.">
+          <Input
+            placeholder="Test ara…"
+            value={internalSearch}
+            onChange={(e) => setInternalSearch(e.target.value)}
+            className="w-full sm:w-[280px]"
+            aria-label="Test ara"
+          />
+          <Button type="button" variant="outline" disabled={loading}
+            className="shrink-0" onClick={() => void refetch()}>
+            <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+            Yenile
+          </Button>
+        </PageHeader>
       )}
-      <div className="flex flex-wrap gap-2 justify-end">
-        <Input
-          placeholder="Test ara…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-[280px]"
-          aria-label="Test ara"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          disabled={loading}
-          className="shrink-0 transition-colors hover:bg-muted/80 active:scale-[0.98]"
-          onClick={() => void refetch()}
-        >
-          <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
-          Yenile
-        </Button>
-      </div>
 
       <Card className="shadow-[0_4px_6px_rgba(0,0,0,0.05)] rounded-lg">
         <CardHeader>

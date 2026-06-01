@@ -36,10 +36,28 @@ function formatWhen(iso: string): string {
   }
 }
 
-export function TestResultsView({ hideHeader }: { hideHeader?: boolean } = {}) {
+interface TestResultsViewProps {
+  hideHeader?: boolean;
+  externalTestFilter?: string;
+  onTestFilterChange?: (v: string) => void;
+  externalSearch?: string;
+  onSearchChange?: (v: string) => void;
+}
+
+export function TestResultsView({
+  hideHeader,
+  externalTestFilter,
+  onTestFilterChange,
+  externalSearch,
+  onSearchChange,
+}: TestResultsViewProps = {}) {
   const { tests } = usePsychometricTests();
-  const [testFilter, setTestFilter] = useState<string>("__all__");
-  const [search, setSearch] = useState("");
+  const [internalFilter, setInternalFilter] = useState<string>("__all__");
+  const [internalSearch, setInternalSearch] = useState("");
+  const testFilter = externalTestFilter ?? internalFilter;
+  const search = externalSearch ?? internalSearch;
+  const setTestFilter = onTestFilterChange ?? setInternalFilter;
+  const setSearch = onSearchChange ?? setInternalSearch;
 
   const filters = useMemo(
     () => ({
@@ -60,44 +78,23 @@ export function TestResultsView({ hideHeader }: { hideHeader?: boolean } = {}) {
   };
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-4">
       {!hideHeader && (
-        <PageHeader title="Test sonuçları" description="Testleri tamamlayan kullanıcıların gönderimleri." />
+        <PageHeader title="Test sonuçları" description="Testleri tamamlayan kullanıcıların gönderimleri.">
+          <Select value={testFilter} onValueChange={(v) => setTestFilter(v ?? "__all__")}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Tüm testler" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Tüm testler</SelectItem>
+              {tests.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Input placeholder="İsim veya e-posta..." value={internalSearch}
+            onChange={(e) => setInternalSearch(e.target.value)} className="w-[220px]" />
+          <Button type="button" variant="outline" disabled={loading} onClick={() => void refetch()}>
+            <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />Yenile
+          </Button>
+        </PageHeader>
       )}
-      <div className="flex flex-wrap gap-2 justify-end">
-        <Select
-          value={testFilter}
-          onValueChange={(v) => setTestFilter(v ?? "__all__")}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Tüm testler" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">Tüm testler</SelectItem>
-            {tests.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                {t.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="İsim veya e-posta..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-[220px]"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          disabled={loading}
-          className="transition-colors hover:bg-muted/80 active:scale-[0.98]"
-          onClick={() => void refetch()}
-        >
-          <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
-          Yenile
-        </Button>
-      </div>
 
       <Card className="shadow-[0_4px_6px_rgba(0,0,0,0.05)] rounded-lg">
         <CardHeader>
