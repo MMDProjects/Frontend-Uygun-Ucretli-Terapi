@@ -94,7 +94,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-1 flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+      <nav className="flex flex-1 flex-col overflow-y-auto scrollbar-dark">
         {groups.map((group) => (
           <div key={group.title} className="mt-3 first:mt-0">
             <p className="mb-1 px-2 text-[10px] font-medium uppercase tracking-wider text-white/40">

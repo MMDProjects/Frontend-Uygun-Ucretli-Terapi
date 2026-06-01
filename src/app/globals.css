@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+.scrollbar-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+.scrollbar-dark::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 9999px;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
 :root {
   --site-header-height: 4.5rem;
   --background: #ffffff;
