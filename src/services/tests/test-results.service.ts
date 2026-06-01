@@ -253,7 +253,7 @@ export async function getTestResult(
     if (!isRecord(row)) {
       return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
     }
-    return mapSubmissionRow(row as Record<string, unknown>);
+    return mapBackendResult(row as BackendTestResult);
   } catch {
     return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
   }
