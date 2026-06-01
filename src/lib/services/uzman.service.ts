@@ -135,8 +135,8 @@ export async function updateMyUzmanProfile(data: {
 }): Promise<{ message: string }> {
   const token = getAccessToken();
   const formData = new FormData();
-  if (data.title) formData.append("title", data.title);
-  if (data.bio) formData.append("bio", data.bio);
+  if (data.title !== undefined) formData.append("title", data.title);
+  if (data.bio !== undefined) formData.append("bio", data.bio);
   if (data.education !== undefined) formData.append("education", data.education);
   data.tagIds?.forEach((id) => formData.append("tagIds", id));
   if (data.avatar) formData.append("avatar", data.avatar);
