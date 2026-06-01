@@ -5,7 +5,11 @@ import type { ExpertProfileApproval } from "@/types/dto/expert-profile-approval"
 interface BackendExpert {
   id: string;
   bio: string;
+  title: string;
+  education: string;
   pendingBio: string | null;
+  pendingTitle: string | null;
+  pendingEducation: string | null;
   pendingCertificateUrl: string | null;
   pendingCvUrl: string | null;
   status: string;
@@ -25,6 +29,8 @@ function authHeaders(): HeadersInit {
 
 function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
   const changedFields: string[] = [];
+  if (expert.pendingTitle) changedFields.push("Unvan");
+  if (expert.pendingEducation) changedFields.push("Eğitim");
   if (expert.pendingBio) changedFields.push("Biyografi");
   if (expert.pendingCertificateUrl) changedFields.push("Sertifika");
   if (expert.pendingCvUrl) changedFields.push("CV");
@@ -39,6 +45,10 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
     status: "pending",
     currentBiography: expert.bio,
     biography: expert.pendingBio ?? expert.bio,
+    currentTitle: expert.title,
+    pendingTitle: expert.pendingTitle ?? null,
+    currentEducation: expert.education,
+    pendingEducation: expert.pendingEducation ?? null,
     keywords: expert.tags.map((t) => t.name),
     changedFieldsSummary: changedFields.join(", ") || "Profil güncelleme",
   };
