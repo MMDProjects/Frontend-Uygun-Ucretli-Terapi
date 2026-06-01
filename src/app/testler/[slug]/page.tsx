@@ -27,7 +27,7 @@ function ResultScreen({
   definition: PsychometricTestDefinition;
   answers: TestAnswersMap;
   onRetry: () => void;
-) {
+}) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
