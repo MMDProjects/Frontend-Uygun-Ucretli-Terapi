@@ -39,6 +39,7 @@ const corporateSubjectOptions = [
 ] as const;
 
 type GeneralSubject = (typeof subjectOptions)[number]["value"];
+type CorporateSubject = (typeof corporateSubjectOptions)[number]["value"];
 type SubjectEnum = ContactPayload["subject"];
 
 const subjectMap: Record<GeneralSubject, SubjectEnum> = {
@@ -46,6 +47,14 @@ const subjectMap: Record<GeneralSubject, SubjectEnum> = {
   randevu: "RANDEVU_OLUSTURUN",
   oneri: "ONERI",
   sikayet: "SIKAYET",
+  diger: "DIGER",
+};
+
+const corporateSubjectMap: Record<CorporateSubject, SubjectEnum> = {
+  "kurumsal-danismanlik": "KURUMSAL_DANISMANLIK",
+  "calisan-destek-programi": "CALISAN_DESTEK_PROGRAMI",
+  "egitim-ve-atolye": "EGITIM_VE_ATOLYE",
+  "teklif-talebi": "TEKLIF_TALEBI",
   diger: "DIGER",
 };
 
@@ -90,11 +99,12 @@ export function ContactForm({
           fullName: v.authorizedPerson,
           email: v.email,
           phone: v.phone,
-          subject: "DIGER",
+          subject: corporateSubjectMap[v.subject as CorporateSubject],
           message: v.message,
           isCorporate: true,
           companyName: v.companyName,
           employeeCount: v.employeeCount,
+          kvkkApproved: v.kvkkApproved,
         };
       } else {
         const v = values as ContactFormValues;
@@ -105,6 +115,7 @@ export function ContactForm({
           subject: subjectMap[v.subject as GeneralSubject],
           message: v.message,
           isCorporate: false,
+          kvkkApproved: v.kvkkApproved,
         };
       }
 

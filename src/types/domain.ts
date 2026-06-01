@@ -69,7 +69,7 @@ export type TestResult = {
   recommendation: string;
 };
 
-export type ExpertRequestStatus = "Beklemede" | "Yanıtlandı" | "Tamamlandı";
+export type ExpertRequestStatus = "Beklemede" | "Yanıtlandı" | "Tamamlandı" | "Reddedildi";
 
 export type ExpertRequest = {
   id: string;

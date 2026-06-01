@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MessageSquare, Mail, CheckCircle2, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MessageSquare, Mail, CheckCircle2, Clock, ChevronDown, ChevronUp, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/features/admin/components/page-header";
 import {
@@ -17,9 +17,10 @@ const STATUS_TABS: { label: string; value: ExpertRequestStatus | "Tümü" }[] = 
   { label: "Beklemede", value: "Beklemede" },
   { label: "Yanıtlandı", value: "Yanıtlandı" },
   { label: "Tamamlandı", value: "Tamamlandı" },
+  { label: "Reddedildi", value: "Reddedildi" },
 ];
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<ExpertRequestStatus, { className: string; icon: React.ElementType }> = {
   Beklemede: {
     className: "bg-amber-50 text-amber-700 border-amber-200",
     icon: Clock,
@@ -32,18 +33,22 @@ const STATUS_CONFIG = {
     className: "bg-green-50 text-green-700 border-green-200",
     icon: CheckCircle2,
   },
-} as const;
+  Reddedildi: {
+    className: "bg-red-50 text-red-700 border-red-200",
+    icon: XCircle,
+  },
+};
 
 function RequestCard({
   req,
   onStatusChange,
 }: {
   req: ApiUzmanRequest;
-  onStatusChange: (id: string, status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI") => Promise<void>;
+  onStatusChange: (id: string, status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "REDDEDILDI") => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const config = STATUS_CONFIG[req.status];
+  const config = STATUS_CONFIG[req.status] ?? STATUS_CONFIG.Beklemede;
   const StatusIcon = config.icon;
   const danisanName = `${req.user.firstName} ${req.user.lastName}`.trim();
 
@@ -53,7 +58,7 @@ function RequestCard({
     year: "numeric",
   });
 
-  async function handleAction(status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI") {
+  async function handleAction(status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "REDDEDILDI") {
     setUpdating(true);
     try {
       await onStatusChange(req.id, status);
@@ -112,14 +117,24 @@ function RequestCard({
             )}
 
             {req.status === "Beklemede" && (
-              <button
-                type="button"
-                disabled={updating}
-                onClick={() => handleAction("UZMANA_YONLENDIRILDI")}
-                className="rounded-xl bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
-              >
-                {updating ? "…" : "Yanıtla"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleAction("UZMANA_YONLENDIRILDI")}
+                  className="rounded-xl bg-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-hover disabled:opacity-60"
+                >
+                  {updating ? "…" : "Yanıtla"}
+                </button>
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleAction("REDDEDILDI")}
+                  className="rounded-xl bg-red-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
+                >
+                  {updating ? "…" : "Reddet"}
+                </button>
+              </>
             )}
             {req.status === "Yanıtlandı" && (
               <button
@@ -152,11 +167,14 @@ export default function UzmanTaleplerPage() {
 
   async function handleStatusChange(
     id: string,
-    status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI",
+    status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "REDDEDILDI",
   ) {
     try {
       await updateUzmanRequestStatus(id, status);
-      const label = status === "UZMANA_YONLENDIRILDI" ? "Yanıtlandı" : "Tamamlandı";
+      const label =
+        status === "UZMANA_YONLENDIRILDI" ? "Yanıtlandı"
+        : status === "TAMAMLANDI" ? "Tamamlandı"
+        : "Reddedildi";
       setRequests((prev) =>
         prev.map((r) => (r.id === id ? { ...r, status: label as ExpertRequestStatus } : r))
       );
@@ -174,6 +192,7 @@ export default function UzmanTaleplerPage() {
     Beklemede: requests.filter((r) => r.status === "Beklemede").length,
     Yanıtlandı: requests.filter((r) => r.status === "Yanıtlandı").length,
     Tamamlandı: requests.filter((r) => r.status === "Tamamlandı").length,
+    Reddedildi: requests.filter((r) => r.status === "Reddedildi").length,
   };
 
   if (loading) {

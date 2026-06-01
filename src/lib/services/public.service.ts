@@ -150,11 +150,21 @@ export type ContactPayload = {
   fullName: string;
   email: string;
   phone: string;
-  subject: "SORU_SORUN" | "RANDEVU_OLUSTURUN" | "ONERI" | "SIKAYET" | "DIGER";
+  subject:
+    | "SORU_SORUN"
+    | "RANDEVU_OLUSTURUN"
+    | "ONERI"
+    | "SIKAYET"
+    | "DIGER"
+    | "KURUMSAL_DANISMANLIK"
+    | "CALISAN_DESTEK_PROGRAMI"
+    | "EGITIM_VE_ATOLYE"
+    | "TEKLIF_TALEBI";
   message: string;
   isCorporate?: boolean;
   companyName?: string;
   employeeCount?: string;
+  kvkkApproved?: boolean;
 };
 
 export async function submitContact(payload: ContactPayload): Promise<{ message: string; id: string }> {

@@ -13,6 +13,9 @@ interface BackendContactForm {
   subject: string;
   message: string;
   isCorporate: boolean;
+  companyName?: string;
+  kvkkApproved: boolean;
+  status: "YENI" | "ISLEMDE" | "COZULDU";
   createdAt: string;
 }
 
@@ -31,6 +34,22 @@ const SUBJECT_LABELS: Record<string, string> = {
   ONERI: "Öneri",
   SIKAYET: "Şikayet",
   DIGER: "Diğer",
+  KURUMSAL_DANISMANLIK: "Kurumsal Danışmanlık",
+  CALISAN_DESTEK_PROGRAMI: "Çalışan Destek Programı",
+  EGITIM_VE_ATOLYE: "Eğitim ve Atölye",
+  TEKLIF_TALEBI: "Teklif Talebi",
+};
+
+const STATUS_MAP: Record<string, IncomingRequestStatus> = {
+  YENI: "new",
+  ISLEMDE: "in_progress",
+  COZULDU: "resolved",
+};
+
+const STATUS_MAP_REVERSE: Record<IncomingRequestStatus, string> = {
+  new: "YENI",
+  in_progress: "ISLEMDE",
+  resolved: "COZULDU",
 };
 
 function mapContactForm(form: BackendContactForm): IncomingRequest {
@@ -40,9 +59,9 @@ function mapContactForm(form: BackendContactForm): IncomingRequest {
     email: form.email,
     subject: SUBJECT_LABELS[form.subject] ?? form.subject,
     message: form.message,
-    kvkkAccepted: true,
+    kvkkAccepted: form.kvkkApproved,
     createdAt: form.createdAt,
-    status: "new",
+    status: STATUS_MAP[form.status] ?? "new",
   };
 }
 
@@ -55,9 +74,6 @@ export function mapIncomingRequestsFromResponse(
   return arr.map(mapContactForm);
 }
 
-/**
- * GET /admin/contact-forms
- */
 export async function listIncomingRequests(
   accessToken?: string | null
 ): Promise<IncomingRequest[]> {
@@ -76,20 +92,30 @@ export async function listIncomingRequests(
     });
     if (!res.ok) return [];
     const payload: unknown = await res.json();
-    const list = mapIncomingRequestsFromResponse(payload);
-    return list;
+    return mapIncomingRequestsFromResponse(payload);
   } catch {
     return [];
   }
 }
 
-/**
- * Contact forms are read-only in the backend — status changes are local UI only.
- */
 export async function updateIncomingRequestStatus(
-  _id: string,
-  _status: IncomingRequestStatus,
-  _accessToken?: string | null
+  id: string,
+  status: IncomingRequestStatus,
+  accessToken?: string | null
 ): Promise<void> {
-  // Contact form status is managed client-side only (no backend PATCH endpoint)
+  const base = getOptionalApiBase();
+  if (!base) return;
+
+  const headers = authHeaders();
+  if (accessToken) {
+    (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+  }
+
+  const res = await fetch(`${base}/admin/contact-forms/${id}/status`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ status: STATUS_MAP_REVERSE[status] }),
+  });
+
+  if (!res.ok) throw new Error("Durum güncellenemedi");
 }

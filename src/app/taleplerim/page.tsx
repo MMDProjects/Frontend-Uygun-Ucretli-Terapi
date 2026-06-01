@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { getMyDanisanRequests, type ApiDanisanRequest } from "@/lib/services/danisan.service";
 
 const statusConfig = {
-  BEKLEMEDE:  { label: "Beklemede",  color: "text-warning",          bg: "bg-warning/10",  icon: Clock },
-  YANITLANDI: { label: "Yanıtlandı", color: "text-primary",          bg: "bg-primary/10",  icon: MessageCircle },
-  TAMAMLANDI: { label: "Tamamlandı", color: "text-muted-foreground", bg: "bg-muted",        icon: CheckCircle },
-  REDDEDILDI: { label: "Reddedildi", color: "text-destructive",      bg: "bg-destructive/10", icon: XCircle },
+  BEKLEMEDE:             { label: "Beklemede",  color: "text-warning",          bg: "bg-warning/10",     icon: Clock },
+  UZMANA_YONLENDIRILDI:  { label: "Yanıtlandı", color: "text-primary",          bg: "bg-primary/10",     icon: MessageCircle },
+  TAMAMLANDI:            { label: "Tamamlandı", color: "text-muted-foreground", bg: "bg-muted",           icon: CheckCircle },
+  REDDEDILDI:            { label: "Reddedildi", color: "text-destructive",      bg: "bg-destructive/10", icon: XCircle },
 } as const;
 
 export default function TaleplerimPage() {

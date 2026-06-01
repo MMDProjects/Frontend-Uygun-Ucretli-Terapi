@@ -55,7 +55,7 @@ export async function getMyFavorites(): Promise<ApiFavorite[]> {
 export type ApiDanisanRequest = {
   id: string;
   message: string;
-  status: "BEKLEMEDE" | "YANITLANDI" | "TAMAMLANDI" | "REDDEDILDI";
+  status: "BEKLEMEDE" | "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "REDDEDILDI";
   createdAt: string;
   expertProfile: {
     id: string;

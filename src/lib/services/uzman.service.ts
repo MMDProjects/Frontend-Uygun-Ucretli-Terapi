@@ -11,7 +11,7 @@ import type {
 
 type ApiProfileStatus = "TASLAK" | "ONAY_BEKLIYOR" | "YAYINDA" | "REDDEDILDI" | "REVIZE_GONDERILDI";
 type ApiBlogStatus = "TASLAK" | "ONAY_BEKLIYOR" | "YAYINDA" | "REDDEDILDI" | "REVIZE_GONDERILDI";
-type ApiRequestStatus = "BEKLEMEDE" | "UZMANA_YONLENDIRILDI" | "TAMAMLANDI";
+type ApiRequestStatus = "BEKLEMEDE" | "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "REDDEDILDI";
 type ApiNotificationType = "INFO" | "WARNING" | "DANGER_PANIC";
 
 function mapProfileStatus(s: ApiProfileStatus): UzmanProfileStatus {
@@ -32,6 +32,7 @@ function mapBlogStatus(s: ApiBlogStatus): UzmanBlogStatus {
 function mapRequestStatus(s: ApiRequestStatus): ExpertRequestStatus {
   if (s === "UZMANA_YONLENDIRILDI") return "Yanıtlandı";
   if (s === "TAMAMLANDI") return "Tamamlandı";
+  if (s === "REDDEDILDI") return "Reddedildi";
   return "Beklemede";
 }
 
@@ -194,7 +195,7 @@ export async function getMyUzmanRequests(): Promise<ApiUzmanRequest[]> {
 
 export async function updateUzmanRequestStatus(
   id: string,
-  status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI",
+  status: "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "REDDEDILDI",
 ): Promise<void> {
   const token = getAccessToken();
   await apiFetch(`/experts/me/requests/${id}/status`, {
