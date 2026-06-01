@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { getAccessToken } from "@/lib/auth-cookies";
+
 import { getOptionalApiBase } from "@/lib/http-client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/features/admin/components/page-header";
@@ -69,8 +69,7 @@ export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boole
     }
     setSaving(true);
     try {
-      const token = getAccessToken();
-      await saveTest(form, token ?? null);
+      await saveTest(form);
       const api = getOptionalApiBase();
       toast.success(
         api

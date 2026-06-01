@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth-cookies";
 import { listTests } from "@/services/tests/psychometric-tests.service";
 import type { PsychometricTestDefinition } from "@/types/dto/psychometric-test";
 
@@ -21,8 +20,7 @@ export function usePsychometricTests(): UsePsychometricTestsResult {
     setLoading(true);
     setError(null);
     try {
-      const token = getAccessToken();
-      const data = await listTests(token ?? null);
+      const data = await listTests();
       setTests(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yükleme hatası");

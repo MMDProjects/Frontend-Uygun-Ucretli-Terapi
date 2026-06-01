@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth-cookies";
 import { listTestResults } from "@/services/tests/test-results.service";
 import type {
   TestResultSubmission,
@@ -26,8 +25,7 @@ export function useTestResults(
     setLoading(true);
     setError(null);
     try {
-      const token = getAccessToken();
-      const data = await listTestResults(filters, token ?? null);
+      const data = await listTestResults(filters);
       setSubmissions(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yükleme hatası");
