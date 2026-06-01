@@ -163,8 +163,13 @@ export default function KonuDetailPage({ params }: PageProps) {
             return (
               <article key={ans.id} className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 shadow-sm lg:rounded-[2.25rem]">
                 <div className="flex items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                    {getInitials(expertName)}
+                  <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white">
+                    {ans.expertProfile.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={ans.expertProfile.avatarUrl} alt={expertName} className="size-full object-cover" />
+                    ) : (
+                      getInitials(expertName)
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -300,8 +305,13 @@ export default function KonuDetailPage({ params }: PageProps) {
               className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 shadow-sm lg:rounded-[2.25rem]"
             >
               <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                  {getInitials(expertName)}
+                <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white">
+                  {answer.expertProfile.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={answer.expertProfile.avatarUrl} alt={expertName} className="size-full object-cover" />
+                  ) : (
+                    getInitials(expertName)
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-sm">

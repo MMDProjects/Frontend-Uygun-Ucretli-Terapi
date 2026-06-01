@@ -6,6 +6,7 @@ export type ForumAnswer = {
   createdAt: string;
   expertProfile: {
     title: string;
+    avatarUrl: string | null;
     user: { firstName: string; lastName: string };
   };
 };
@@ -80,6 +81,7 @@ export type AssignedQuestionDetail = {
     createdAt: string;
     expertProfile: {
       title: string;
+      avatarUrl: string | null;
       user: { firstName: string; lastName: string };
     };
   }[];

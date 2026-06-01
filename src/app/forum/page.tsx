@@ -97,8 +97,13 @@ function QuestionCard({ question }: { question: ForumQuestion }) {
             const expertName = `${answer.expertProfile.user.firstName} ${answer.expertProfile.user.lastName}`.trim();
             return (
               <div key={i} className="flex items-start gap-2.5">
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                  {getInitials(expertName)}
+                <div className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-bold text-white">
+                  {answer.expertProfile.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={answer.expertProfile.avatarUrl} alt={expertName} className="size-full object-cover" />
+                  ) : (
+                    getInitials(expertName)
+                  )}
                 </div>
                 <div className="min-w-0 flex-1 rounded-2xl bg-[#e6f0ee] px-3 py-2">
                   <div className="flex flex-wrap items-center gap-1.5">
