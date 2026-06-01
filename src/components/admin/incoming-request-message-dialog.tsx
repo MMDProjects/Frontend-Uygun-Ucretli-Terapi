@@ -44,7 +44,19 @@ export function IncomingRequestMessageDialog({
           <div>
             <span className="font-medium text-foreground">{request.fullName}</span>
             <span className="text-muted-foreground"> · {request.email}</span>
+            {request.phone && (
+              <span className="text-muted-foreground"> · {request.phone}</span>
+            )}
           </div>
+
+          {request.isCorporate && request.companyName && (
+            <p className="text-muted-foreground">
+              <span className="font-medium text-foreground">Şirket:</span>{" "}
+              {request.companyName}
+              {request.employeeCount && ` (${request.employeeCount} çalışan)`}
+            </p>
+          )}
+
           <p className="text-muted-foreground">
             <span className="font-medium text-foreground">Konu:</span>{" "}
             {request.subject}

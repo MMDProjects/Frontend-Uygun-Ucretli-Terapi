@@ -16,12 +16,26 @@ import { IncomingRequestMessageDialog } from "./incoming-request-message-dialog"
 import { IncomingRequestsTable } from "./incoming-requests-table";
 import { IncomingRequestsToolbar } from "./incoming-requests-toolbar";
 
-export function IncomingRequestsView() {
+export function IncomingRequestsView({ isCorporate }: { isCorporate?: boolean }) {
   const searchParams = useSearchParams();
   const danisanFilterId = searchParams.get("danisan");
 
-  const { requests, setRequests, loading, error, refetch } =
+  const { requests: allRequests, setRequests: setAllRequests, loading, error, refetch } =
     useIncomingRequests();
+
+  const requests = useMemo(
+    () => allRequests.filter((r) =>
+      isCorporate === undefined ? true : r.isCorporate === isCorporate
+    ),
+    [allRequests, isCorporate]
+  );
+
+  const setRequests: React.Dispatch<React.SetStateAction<IncomingRequest[]>> = (updater) => {
+    setAllRequests((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      return prev.map((r) => next.find((n) => n.id === r.id) ?? r);
+    });
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<
     IncomingRequestStatus[]
@@ -129,6 +143,7 @@ export function IncomingRequestsView() {
         onRefresh={refetch}
         onOpenMessage={handleOpenMessage}
         onStatusChange={handleStatusChangeRow}
+        isCorporate={isCorporate}
       />
 
       <div className="rounded-lg border border-[#3178C6]/25 bg-[#3178C6]/5 px-4 py-3 text-sm text-[#24292E] dark:border-[#3178C6]/40 dark:text-foreground">

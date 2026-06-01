@@ -3,65 +3,65 @@
 import { Suspense, useState } from "react";
 import { IncomingRequestsView } from "@/components/admin/incoming-requests-view";
 import { ExpertRequestsAdminView } from "@/components/admin/expert-requests-admin-view";
+import { PageHeader } from "@/features/admin/components/page-header";
 import { cn } from "@/lib/utils";
 
-type Tab = "iletisim" | "uzman";
+type Tab = "bireysel" | "kurumsal" | "uzman";
 
-const TABS: { label: string; value: Tab; description: string }[] = [
-  {
-    label: "İletişim Formları",
-    value: "iletisim",
-    description: "Ziyaretçilerden gelen genel iletişim talepleri",
-  },
-  {
-    label: "Uzman Talepleri",
-    value: "uzman",
-    description: "Danışanların uzmanlara gönderdiği görüşme talepleri",
-  },
+const TABS: { label: string; value: Tab }[] = [
+  { label: "İletişim Formları", value: "bireysel" },
+  { label: "Kurumsal Formlar", value: "kurumsal" },
+  { label: "Uzman Talepleri", value: "uzman" },
 ];
 
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center py-16">
-      <div
-        className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent"
-        aria-hidden
-      />
+      <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-hidden />
     </div>
   );
 }
 
 export default function GelenTaleplerPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("iletisim");
+  const [activeTab, setActiveTab] = useState<Tab>("bireysel");
 
   return (
     <div className="space-y-6">
-      {/* Sekme başlıkları */}
-      <div className="flex flex-wrap gap-2 border-b border-border/60 pb-4">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setActiveTab(tab.value)}
-            className={cn(
-              "rounded-xl px-4 py-2 text-sm font-semibold transition",
-              activeTab === tab.value
-                ? "bg-primary text-white"
-                : "border border-border/60 bg-white text-muted-foreground hover:border-primary/30 hover:text-primary"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <PageHeader
+        title="Gelen Talepler"
+        description="İletişim formları ve uzman görüşme taleplerini buradan yönetin."
+      />
+
+      {/* Underline tab stili */}
+      <div className="border-b border-border/60">
+        <nav className="flex gap-0">
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setActiveTab(tab.value)}
+              className={cn(
+                "px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+                activeTab === tab.value
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      <p className="text-sm text-muted-foreground -mt-2">
-        {TABS.find((t) => t.value === activeTab)?.description}
-      </p>
-
-      {activeTab === "iletisim" && (
+      {activeTab === "bireysel" && (
         <Suspense fallback={<LoadingFallback />}>
-          <IncomingRequestsView />
+          <IncomingRequestsView isCorporate={false} />
+        </Suspense>
+      )}
+
+      {activeTab === "kurumsal" && (
+        <Suspense fallback={<LoadingFallback />}>
+          <IncomingRequestsView isCorporate={true} />
         </Suspense>
       )}
 

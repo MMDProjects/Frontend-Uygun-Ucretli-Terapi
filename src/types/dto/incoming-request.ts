@@ -4,11 +4,14 @@ export interface IncomingRequest {
   id: string;
   fullName: string;
   email: string;
+  phone: string;
   subject: string;
   message: string;
   kvkkAccepted: boolean;
   createdAt: string;
   status: IncomingRequestStatus;
-  /** Optional link to a danışan user for deep links from admin. */
+  isCorporate: boolean;
+  companyName?: string;
+  employeeCount?: string;
   danisanId?: string;
 }

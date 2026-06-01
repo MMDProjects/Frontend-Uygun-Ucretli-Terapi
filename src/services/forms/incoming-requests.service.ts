@@ -14,6 +14,7 @@ interface BackendContactForm {
   message: string;
   isCorporate: boolean;
   companyName?: string;
+  employeeCount?: string;
   kvkkApproved: boolean;
   status: "YENI" | "ISLEMDE" | "COZULDU";
   createdAt: string;
@@ -57,11 +58,15 @@ function mapContactForm(form: BackendContactForm): IncomingRequest {
     id: form.id,
     fullName: form.fullName,
     email: form.email,
+    phone: form.phone,
     subject: SUBJECT_LABELS[form.subject] ?? form.subject,
     message: form.message,
     kvkkAccepted: form.kvkkApproved,
     createdAt: form.createdAt,
     status: STATUS_MAP[form.status] ?? "new",
+    isCorporate: form.isCorporate,
+    companyName: form.companyName,
+    employeeCount: form.employeeCount,
   };
 }
 
