@@ -23,34 +23,34 @@ const DAYS: DayOfWeek[] = [
 ];
 const SLOTS: TimeSlot[] = ["Sabah", "Öğleden Sonra", "Akşam"];
 
-// dayOfWeek 0 = Pazartesi ... 6 = Pazar
+// dayOfWeek: 1=Pazartesi ... 6=Cumartesi, 0=Pazar (uzman/musaitlik sayfasıyla aynı)
 const DAY_INDEX_MAP: Record<number, DayOfWeek> = {
-  0: "Pazartesi",
-  1: "Salı",
-  2: "Çarşamba",
-  3: "Perşembe",
-  4: "Cuma",
-  5: "Cumartesi",
-  6: "Pazar",
+  1: "Pazartesi",
+  2: "Salı",
+  3: "Çarşamba",
+  4: "Perşembe",
+  5: "Cuma",
+  6: "Cumartesi",
+  0: "Pazar",
 };
 
 const DAY_TO_INDEX: Record<DayOfWeek, number> = {
-  "Pazartesi": 0, "Salı": 1, "Çarşamba": 2, "Perşembe": 3,
-  "Cuma": 4, "Cumartesi": 5, "Pazar": 6,
+  "Pazartesi": 1, "Salı": 2, "Çarşamba": 3, "Perşembe": 4,
+  "Cuma": 5, "Cumartesi": 6, "Pazar": 0,
 };
 
-// startTime → zaman dilimi
+// startTime → zaman dilimi (uzman/musaitlik sayfasıyla aynı saatler)
 const SLOT_TIME_MAP: Record<TimeSlot, { startTime: string; endTime: string }> = {
   "Sabah":          { startTime: "09:00", endTime: "12:00" },
-  "Öğleden Sonra": { startTime: "13:00", endTime: "17:00" },
-  "Akşam":          { startTime: "18:00", endTime: "21:00" },
+  "Öğleden Sonra": { startTime: "12:00", endTime: "17:00" },
+  "Akşam":          { startTime: "17:00", endTime: "21:00" },
 };
 
-function startTimeToSlot(startTime: string): TimeSlot {
-  const h = parseInt(startTime.split(":")[0], 10);
-  if (h < 12) return "Sabah";
-  if (h < 17) return "Öğleden Sonra";
-  return "Akşam";
+function startTimeToSlot(startTime: string): TimeSlot | null {
+  if (startTime === "09:00") return "Sabah";
+  if (startTime === "12:00") return "Öğleden Sonra";
+  if (startTime === "17:00") return "Akşam";
+  return null;
 }
 
 function buildEmptyCells(): AvailabilityCell[] {
@@ -87,6 +87,7 @@ export function MusaitlikModal() {
           const day = DAY_INDEX_MAP[a.dayOfWeek];
           if (!day) return;
           const slot = startTimeToSlot(a.startTime);
+          if (!slot) return;
           const key = cellKey(day, slot);
           idMap.set(key, a.id);
 
