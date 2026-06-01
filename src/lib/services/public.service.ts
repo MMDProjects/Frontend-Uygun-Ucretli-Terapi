@@ -132,6 +132,8 @@ export async function getPublicPricing(): Promise<ApiPricing> {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
+import type { PsychometricTestDefinition } from "@/types/dto/psychometric-test";
+
 export type ApiTest = {
   id: string;
   title: string;
@@ -140,8 +142,20 @@ export type ApiTest = {
   isActive: boolean;
 };
 
+export type ApiTestWithDefinition = ApiTest & {
+  definition?: PsychometricTestDefinition | null;
+};
+
 export async function getTests(): Promise<ApiTest[]> {
   return apiFetch("/tests");
+}
+
+export async function getTestBySlug(slug: string): Promise<ApiTestWithDefinition | null> {
+  try {
+    return await apiFetch<ApiTestWithDefinition>(`/tests/${slug}`);
+  } catch {
+    return null;
+  }
 }
 
 // ─── Contact ─────────────────────────────────────────────────────────────────

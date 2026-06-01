@@ -70,6 +70,20 @@ export async function getMyDanisanRequests(): Promise<ApiDanisanRequest[]> {
   return apiFetch("/experts/me/sent-requests", { token });
 }
 
+// ─── Test Sonucu Kaydet ───────────────────────────────────────────────────────
+
+export async function saveTestResult(
+  testId: string,
+  scoreSummary: string,
+): Promise<{ id: string }> {
+  const token = getAccessToken();
+  return apiFetch("/tests/results", {
+    method: "POST",
+    body: { testId, scoreSummary },
+    token,
+  });
+}
+
 // ─── Test Geçmişi ─────────────────────────────────────────────────────────────
 
 export type ApiTestResult = {

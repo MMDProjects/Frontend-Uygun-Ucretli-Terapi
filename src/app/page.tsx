@@ -9,6 +9,7 @@ import {
   PortfolioSection,
 } from "@/features/home";
 import { ExpertsMarquee } from "@/features/experts/components/experts-marquee";
+import { TestsCtaSection } from "@/features/home/components/tests-cta-section";
 import { siteConfig } from "@/lib/constants/site";
 import { getExperts } from "@/lib/services/public.service";
 
@@ -43,6 +44,7 @@ export default async function Home() {
       <ExpertsMarquee experts={experts} />
       <OfferingsShowcaseSection />
       <PortfolioSection experts={experts} />
+      <TestsCtaSection />
       <HomeBentoSection />
       <AboutHomeSection />
       <HomeFaqSection />

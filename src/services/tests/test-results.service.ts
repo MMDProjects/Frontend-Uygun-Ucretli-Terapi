@@ -127,28 +127,50 @@ function responseLooksSuccessful(payload: unknown): boolean {
   if (!isRecord(payload)) return false;
   if (payload.success === true) return true;
   if (payload.status === "success") return true;
+  // Backend'imiz { data: [...], total, page, limit } döndürüyor
+  if (Array.isArray(payload.data)) return true;
   return false;
 }
 
-function mapSubmissionRow(row: Record<string, unknown>): TestResultSubmission | null {
-  const id = String(row.id ?? "");
-  if (!id) return null;
-  return row as unknown as TestResultSubmission;
+function parseScoreSummary(summary: string): { totalScore: number; matchedBandTitle: string } {
+  const scoreMatch = summary.match(/Puan:\s*(\d+)/);
+  const totalScore = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
+  const matchedBandTitle = summary.split(":")[0]?.trim() ?? summary;
+  return { totalScore, matchedBandTitle };
+}
+
+interface BackendTestResult {
+  id: string;
+  testId: string;
+  userId: string;
+  scoreSummary: string;
+  createdAt: string;
+  user: { firstName: string; lastName: string; email: string };
+  test: { title: string; slug: string };
+}
+
+function mapBackendResult(row: BackendTestResult): TestResultSubmission {
+  const { totalScore, matchedBandTitle } = parseScoreSummary(row.scoreSummary);
+  return {
+    id: row.id,
+    testId: row.testId,
+    testTitle: row.test?.title ?? "",
+    userId: row.userId,
+    userName: `${row.user?.firstName ?? ""} ${row.user?.lastName ?? ""}`.trim(),
+    userEmail: row.user?.email ?? "",
+    submittedAt: row.createdAt,
+    answers: {},
+    totalScore,
+    subscaleScores: {},
+    matchedBandTitle,
+  };
 }
 
 function mapResultsFromResponse(payload: unknown): TestResultSubmission[] {
   if (!isRecord(payload)) return [];
-  const data = isRecord(payload.data) ? payload.data : null;
-  if (!data) return [];
-  const raw =
-    (Array.isArray(data.submissions) ? data.submissions : null) ??
-    (Array.isArray(data.results) ? data.results : null) ??
-    (Array.isArray(data.test_results) ? data.test_results : null);
-  if (!raw) return [];
-  return raw
-    .filter(isRecord)
-    .map(mapSubmissionRow)
-    .filter((s): s is TestResultSubmission => s !== null);
+  // { data: BackendTestResult[], total, page, limit }
+  const raw = Array.isArray(payload.data) ? payload.data : [];
+  return (raw as BackendTestResult[]).map(mapBackendResult);
 }
 
 export async function listTestResults(
@@ -166,17 +188,15 @@ export async function listTestResults(
     if (filters.search) params.set("search", filters.search);
     const qs = params.toString();
     const path = `${base}/admin/test-results${qs ? `?${qs}` : ""}`;
+    const token = accessToken ?? (typeof window !== "undefined" ? (await import("@/lib/auth-cookies")).getAccessToken() : undefined);
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
     const res = await fetch(path, {
       method: "GET",
       headers,
-      credentials: "include",
     });
     if (!res.ok) {
       console.warn("[listTestResults] HTTP", res.status, "- using store");
