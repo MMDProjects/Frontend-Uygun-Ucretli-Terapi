@@ -21,16 +21,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export function BlogPostsView() {
+export function BlogPostsView({ hideHeader }: { hideHeader?: boolean } = {}) {
   const { posts, loading, error, refetch } = useBlogPosts();
   const [selectedPost, setSelectedPost] = useState<BlogPostDto | null>(null);
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Uzman blog yazıları"
-        description="Uzmanların yayınladığı bloglar listelenir. Tam içerik sadece 'Detay Gör' ile açılır."
-      />
+      {!hideHeader && (
+        <PageHeader
+          title="Uzman blog yazıları"
+          description="Uzmanların yayınladığı bloglar listelenir. Tam içerik sadece 'Detay Gör' ile açılır."
+        />
+      )}
 
       {loading ? (
         <Card>

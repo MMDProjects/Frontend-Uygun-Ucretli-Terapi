@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { INCOMING_STATUS_LABELS } from "@/lib/incoming-request-meta";
-import { PageHeader } from "@/features/admin/components/page-header";
 import type { IncomingRequestStatus } from "@/types/dto/incoming-request";
 import { cn } from "@/lib/utils";
 
@@ -38,16 +37,11 @@ export function IncomingRequestsToolbar({
   onClearFilters,
   onRefresh,
   loading,
-  danisanFilterId,
 }: IncomingRequestsToolbarProps) {
   const filterCount = selectedStatuses.length;
 
-  const description = danisanFilterId
-    ? `Web sitesi iletisim formundan gelen mesajlar. Danisan filtresi: #${danisanFilterId}`
-    : "Web sitesi iletisim formundan gelen mesajlari inceleyin ve durum yonetimi yapin.";
-
   return (
-    <PageHeader title="Gelen talepler" description={description}>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-end">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Ara (ad, e-posta, konu)..."
@@ -111,6 +105,6 @@ export function IncomingRequestsToolbar({
           Yenile
         </Button>
       </div>
-    </PageHeader>
+    </div>
   );
 }

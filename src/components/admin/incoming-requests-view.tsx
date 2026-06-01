@@ -122,7 +122,7 @@ export function IncomingRequestsView({ isCorporate }: { isCorporate?: boolean })
         onClearFilters={() => setSelectedStatuses([])}
         onRefresh={refetch}
         loading={loading}
-        danisanFilterId={danisanFilterId}
+        danisanFilterId={danisanFilterId ?? null}
       />
 
       {danisanFilterId ? (

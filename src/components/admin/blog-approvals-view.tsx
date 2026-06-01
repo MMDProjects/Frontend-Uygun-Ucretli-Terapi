@@ -120,7 +120,7 @@ function RejectBlogDialog({ post, open, onOpenChange, onReject }: RejectBlogDial
   );
 }
 
-export function BlogApprovalsView() {
+export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {}) {
   const {
     approvals,
     loading,
@@ -189,10 +189,12 @@ export function BlogApprovalsView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Blog onayları"
-        description="Uzmanların gönderdiği yazıları inceleyin. Detayda başlık ve içeriği düzenleyip revizyon kaydedebilir; reddederken revize notu isteğe bağlıdır."
-      />
+      {!hideHeader && (
+        <PageHeader
+          title="Blog onayları"
+          description="Uzmanların gönderdiği yazıları inceleyin. Detayda başlık ve içeriği düzenleyip revizyon kaydedebilir; reddederken revize notu isteğe bağlıdır."
+        />
+      )}
 
       {loading ? (
         <Card>
