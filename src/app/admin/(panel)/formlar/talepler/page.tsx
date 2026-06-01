@@ -2,16 +2,14 @@
 
 import { Suspense, useState } from "react";
 import { IncomingRequestsView } from "@/components/admin/incoming-requests-view";
-import { ExpertRequestsAdminView } from "@/components/admin/expert-requests-admin-view";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { cn } from "@/lib/utils";
 
-type Tab = "bireysel" | "kurumsal" | "uzman";
+type Tab = "bireysel" | "kurumsal";
 
 const TABS: { label: string; value: Tab }[] = [
   { label: "İletişim Formları", value: "bireysel" },
   { label: "Kurumsal Formlar", value: "kurumsal" },
-  { label: "Uzman Talepleri", value: "uzman" },
 ];
 
 function LoadingFallback() {
@@ -65,11 +63,6 @@ export default function GelenTaleplerPage() {
         </Suspense>
       )}
 
-      {activeTab === "uzman" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <ExpertRequestsAdminView />
-        </Suspense>
-      )}
     </div>
   );
 }

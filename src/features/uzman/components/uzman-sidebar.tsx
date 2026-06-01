@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { logout } from "@/lib/services/auth.service";
 import { siteConfig } from "@/lib/constants/site";
-import { getMyUzmanNotifications, getMyUzmanRequests } from "@/lib/services/uzman.service";
+import { getMyUzmanNotifications } from "@/lib/services/uzman.service";
 import { getAssignedQuestions } from "@/lib/services/forum.service";
 
 type NavItem = { label: string; href: string; badge?: number };
@@ -28,7 +28,6 @@ const groups: NavGroup[] = [
     title: "Danisanlar",
     items: [
       { label: "Musaitlik", href: "/uzman/musaitlik" },
-      { label: "Talepler", href: "/uzman/talepler" },
       { label: "Forum Soruları", href: "/uzman/forum" },
     ],
   },
@@ -50,15 +49,11 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
   const pathname = usePathname();
   const { displayName } = useAuthStore();
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
-  const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const [pendingForumCount, setPendingForumCount] = useState(0);
 
   useEffect(() => {
     getMyUzmanNotifications()
       .then((notifs) => setUnreadNotifCount(notifs.filter((n) => !n.isRead).length))
-      .catch(() => {});
-    getMyUzmanRequests()
-      .then((reqs) => setPendingRequestCount(reqs.filter((r) => r.status === "Beklemede").length))
       .catch(() => {});
     getAssignedQuestions()
       .then((qs) => setPendingForumCount(qs.filter((q) => q.status === "ATANDI").length))
@@ -67,7 +62,6 @@ export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
 
   function getBadge(href: string): number {
     if (href === "/uzman/bildirimler") return unreadNotifCount;
-    if (href === "/uzman/talepler") return pendingRequestCount;
     if (href === "/uzman/forum") return pendingForumCount;
     return 0;
   }

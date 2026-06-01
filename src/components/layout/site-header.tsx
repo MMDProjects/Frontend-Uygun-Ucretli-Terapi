@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, LogOut, User, ClipboardList, FlaskConical, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, User, FlaskConical, LayoutDashboard } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,6 @@ function UserAccountMenu() {
 
   const danisanMenuItems = [
     { href: "/profilim", label: "Profilim", icon: User },
-    { href: "/taleplerim", label: "Taleplerim", icon: ClipboardList },
     { href: "/testlerim", label: "Testlerim", icon: FlaskConical },
   ];
 
@@ -242,13 +241,6 @@ export function SiteHeader() {
                   className="block border-t border-border/50 px-5 py-3 text-sm font-medium text-primary transition hover:bg-muted"
                 >
                   Profilim
-                </Link>
-                <Link
-                  href="/taleplerim"
-                  onClick={() => setMobileOpen(false)}
-                  className="block border-b border-border/50 px-5 py-3 text-sm font-medium text-primary transition hover:bg-muted"
-                >
-                  Taleplerim
                 </Link>
                 <Link
                   href="/testlerim"
