@@ -12,6 +12,9 @@ export type Expert = {
   tags: string[];
   /** Profil fotoğrafı; yoksa kartta baş harf placeholder kullanılır. */
   photoUrl?: string;
+  /** Uzmana özel fiyat; null ise global platform fiyatı kullanılır. */
+  standardPrice?: number | null;
+  discountedPrice?: number | null;
 };
 
 export type PackagePlan = {

@@ -25,4 +25,6 @@ export interface ExpertDetail extends ExpertListItem {
   keywords: string[];
   specialties: string[];
   documents: ExpertDocument[];
+  standardPrice: number | null;
+  discountedPrice: number | null;
 }

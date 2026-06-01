@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Save, Tag, Info, Megaphone, Plus, Trash2 } from "lucide-react";
+import { Save, Tag, Info, Megaphone, Plus, Trash2, Dices } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
+
+type WheelSegment = { label: string; description: string };
 
 type Settings = {
   id: string;
   standardPrice: string | number;
   discountedPrice: string | number;
   announcementItems?: string[];
+  wheelSegments?: WheelSegment[];
 };
 
 export default function AyarlarGenelPage() {
@@ -21,6 +24,8 @@ export default function AyarlarGenelPage() {
   const [discountedPrice, setDiscountedPrice] = useState("");
   const [items, setItems] = useState<string[]>([]);
   const [newItem, setNewItem] = useState("");
+  const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
+  const [savingWheel, setSavingWheel] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingBanner, setSavingBanner] = useState(false);
@@ -33,6 +38,7 @@ export default function AyarlarGenelPage() {
         setStandardPrice(String(Number(s.standardPrice)));
         setDiscountedPrice(String(Number(s.discountedPrice)));
         setItems(s.announcementItems ?? []);
+        setWheelSegments(s.wheelSegments ?? []);
       })
       .catch(() => toast.error("Ayarlar yüklenemedi."))
       .finally(() => setLoading(false));
@@ -76,6 +82,23 @@ export default function AyarlarGenelPage() {
       toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
     } finally {
       setSavingBanner(false);
+    }
+  }
+
+  async function handleSaveWheel() {
+    setSavingWheel(true);
+    try {
+      const token = getAccessToken();
+      await apiFetch("/admin/settings", {
+        method: "PUT",
+        token,
+        body: { wheelSegments },
+      });
+      toast.success("Şans çarkı kaydedildi.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
+    } finally {
+      setSavingWheel(false);
     }
   }
 
@@ -239,6 +262,72 @@ export default function AyarlarGenelPage() {
             >
               {savingBanner ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Save className="size-4" />}
               {savingBanner ? "Kaydediliyor…" : "Şeridi Kaydet"}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Şans Çarkı Dilimleri */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-5 flex items-center gap-2">
+            <Dices className="size-4 text-primary" />
+            <h2 className="text-sm font-bold text-primary-hover">Şans Çarkı Dilimleri</h2>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Min 2, maks 8 dilim. Kısa etiket (maks 8 karakter) ve açıklama girin.
+          </p>
+
+          <div className="space-y-2">
+            {wheelSegments.map((seg, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={seg.label}
+                  maxLength={10}
+                  onChange={(e) => setWheelSegments((prev) => prev.map((s, idx) => idx === i ? { ...s, label: e.target.value } : s))}
+                  placeholder="Etiket"
+                  className="w-28 shrink-0 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
+                />
+                <input
+                  type="text"
+                  value={seg.description}
+                  onChange={(e) => setWheelSegments((prev) => prev.map((s, idx) => idx === i ? { ...s, description: e.target.value } : s))}
+                  placeholder="Açıklama"
+                  className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
+                />
+                <button
+                  type="button"
+                  disabled={wheelSegments.length <= 2}
+                  onClick={() => setWheelSegments((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive disabled:opacity-30"
+                  aria-label="Kaldır"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {wheelSegments.length < 8 && (
+            <button
+              type="button"
+              onClick={() => setWheelSegments((prev) => [...prev, { label: "", description: "" }])}
+              className="mt-3 flex items-center gap-1.5 rounded-xl border border-dashed border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+            >
+              <Plus className="size-4" />
+              Dilim Ekle
+            </button>
+          )}
+
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveWheel}
+              disabled={savingWheel || wheelSegments.length < 2}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:opacity-60"
+            >
+              {savingWheel ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Save className="size-4" />}
+              {savingWheel ? "Kaydediliyor…" : "Çarkı Kaydet"}
             </button>
           </div>
         </CardContent>
