@@ -178,11 +178,20 @@ export default function AdminMusaitlikPage() {
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 <Users className="size-3.5" /> Uzmanlar
               </p>
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={selectAll} className="text-[10px] text-primary hover:underline">Tümü</button>
-                <span className="text-muted-foreground text-[10px]">·</span>
-                <button type="button" onClick={clearAll} className="text-[10px] text-muted-foreground hover:underline">Sıfırla</button>
-              </div>
+              <button
+                type="button"
+                onClick={selectedIds.size === experts.length ? clearAll : selectAll}
+                className="flex items-center justify-center rounded p-0.5 transition hover:bg-white/60"
+                aria-label={selectedIds.size === experts.length ? "Seçimi kaldır" : "Tümünü seç"}
+                title={selectedIds.size === experts.length ? "Seçimi kaldır" : "Tümünü seç"}
+              >
+                {selectedIds.size === experts.length && experts.length > 0
+                  ? <CheckSquare className="size-4 text-primary" />
+                  : selectedIds.size > 0
+                    ? <CheckSquare className="size-4 text-primary/50" />
+                    : <Square className="size-4 text-muted-foreground/50" />
+                }
+              </button>
             </div>
           </div>
           <div className="flex flex-col gap-1 p-2 max-h-[60vh] overflow-y-auto">
