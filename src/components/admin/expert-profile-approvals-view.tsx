@@ -225,6 +225,33 @@ export function ExpertProfileApprovalsView() {
                     <dd className="text-xs font-medium">{row.changedFieldsSummary || "—"}</dd>
                   </div>
                 </dl>
+                {/* Unvan değişikliği */}
+                {row.pendingTitle && row.pendingTitle !== row.currentTitle && (
+                  <div className="space-y-1">
+                    <div className="rounded-md border bg-muted/20 p-2">
+                      <p className="text-xs text-muted-foreground">Mevcut unvan</p>
+                      <p className="text-sm font-medium">{row.currentTitle}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen unvan</p>
+                      <p className="text-sm text-foreground">{row.pendingTitle}</p>
+                    </div>
+                  </div>
+                )}
+                {/* Eğitim değişikliği */}
+                {row.pendingEducation && row.pendingEducation !== row.currentEducation && (
+                  <div className="space-y-1">
+                    <div className="rounded-md border bg-muted/20 p-2">
+                      <p className="text-xs text-muted-foreground">Mevcut eğitim</p>
+                      <p className="text-sm font-medium line-clamp-2">{row.currentEducation}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen eğitim</p>
+                      <p className="text-sm text-foreground line-clamp-2">{row.pendingEducation}</p>
+                    </div>
+                  </div>
+                )}
+                {/* Biyografi değişikliği */}
                 {row.currentBiography && row.currentBiography !== row.biography ? (
                   <div className="space-y-2">
                     <div className="rounded-md border bg-muted/20 p-3">
@@ -313,6 +340,30 @@ export function ExpertProfileApprovalsView() {
                   <p className="text-xs text-muted-foreground">Değişen alanlar</p>
                   <p className="font-medium">{selected.changedFieldsSummary || "—"}</p>
                 </div>
+                {selected.pendingTitle && selected.pendingTitle !== selected.currentTitle && (
+                  <>
+                    <div className="rounded-md border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Mevcut unvan</p>
+                      <p className="mt-1 font-medium">{selected.currentTitle}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen unvan</p>
+                      <p className="mt-1 text-foreground">{selected.pendingTitle}</p>
+                    </div>
+                  </>
+                )}
+                {selected.pendingEducation && selected.pendingEducation !== selected.currentEducation && (
+                  <>
+                    <div className="rounded-md border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Mevcut eğitim</p>
+                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{selected.currentEducation}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen eğitim</p>
+                      <p className="mt-1 whitespace-pre-wrap text-foreground">{selected.pendingEducation}</p>
+                    </div>
+                  </>
+                )}
                 {selected.currentBiography && selected.currentBiography !== selected.biography ? (
                   <>
                     <div className="rounded-md border bg-muted/20 p-3">
