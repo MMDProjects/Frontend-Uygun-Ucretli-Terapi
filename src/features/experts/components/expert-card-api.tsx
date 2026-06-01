@@ -22,6 +22,8 @@ export function ExpertCardApi({ expert, ...rest }: Props) {
         rating: expert.rating,
         tags: expert.tags.map((t) => t.name),
         photoUrl: expert.avatarUrl || undefined,
+        standardPrice: expert.standardPrice ? Number(expert.standardPrice) : null,
+        discountedPrice: expert.discountedPrice ? Number(expert.discountedPrice) : null,
       }}
       {...rest}
     />

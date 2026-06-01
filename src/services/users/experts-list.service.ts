@@ -58,6 +58,8 @@ interface BackendExpert {
   pendingCvUrl: string | null;
   priorityScore: number;
   rating: number;
+  standardPrice: string | null;
+  discountedPrice: string | null;
   status: string;
   isPublished: boolean;
   adminNote: string | null;
@@ -106,6 +108,8 @@ function mapToDetail(expert: BackendExpert): ExpertDetail {
     keywords: expert.tags.map((t) => t.name),
     specialties: expert.tags.map((t) => t.name),
     documents: docs,
+    standardPrice: expert.standardPrice ? Number(expert.standardPrice) : null,
+    discountedPrice: expert.discountedPrice ? Number(expert.discountedPrice) : null,
   };
 }
 
@@ -149,6 +153,26 @@ export async function getExpertDetail(expertId: string): Promise<ExpertDetail | 
     return mapToDetail(expert);
   } catch {
     return null;
+  }
+}
+
+export async function updateExpertPricing(
+  expertId: string,
+  standardPrice: number | null,
+  discountedPrice: number | null
+): Promise<void> {
+  const base = getOptionalApiBase();
+  if (!base) return;
+
+  const res = await fetch(`${base}/admin/experts/${expertId}/pricing`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ standardPrice, discountedPrice }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Fiyat güncellenemedi");
   }
 }
 

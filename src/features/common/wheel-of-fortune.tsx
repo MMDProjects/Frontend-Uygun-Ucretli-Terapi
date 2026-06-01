@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { X, PartyPopper } from "lucide-react";
 import { siteConfig } from "@/lib/constants/site";
 
-const SEGMENTS = [
+const SEGMENT_COLORS = ["#016a59", "#014a3e", "#4d978b", "#01352d", "#016a59", "#99c3bd", "#4d978b", "#014a3e"];
+
+type Segment = { label: string; description: string; color: string };
+
+const DEFAULT_SEGMENTS: Segment[] = [
   { label: "Ön Görüş.", description: "Ücretsiz ön görüşme hakkı — 20 dk WhatsApp görüşmesi", color: "#016a59" },
   { label: "%10 İnd.",  description: "İlk seansta %10 indirim fırsatı",                      color: "#014a3e" },
   { label: "Tekrar!",   description: "Bu sefer olmadı — bir daha dene!",                      color: "#4d978b" },
@@ -14,29 +18,28 @@ const SEGMENTS = [
   { label: "Sürpriz!",  description: "Özel sürpriz ödül — WhatsApp'tan talep et",            color: "#99c3bd" },
 ];
 
-const TOTAL = SEGMENTS.length;
-const ANGLE = 360 / TOTAL;
-
-function WheelSVG() {
+function WheelSVG({ segments }: { segments: Segment[] }) {
   const cx = 150, cy = 150, r = 140;
+  const total = segments.length;
+  const angle = 360 / total;
 
-  const segments = SEGMENTS.map((seg, i) => {
-    const startAngle = ((i * ANGLE - 90) * Math.PI) / 180;
-    const endAngle   = (((i + 1) * ANGLE - 90) * Math.PI) / 180;
+  const computed = segments.map((seg, i) => {
+    const startAngle = ((i * angle - 90) * Math.PI) / 180;
+    const endAngle   = (((i + 1) * angle - 90) * Math.PI) / 180;
     const x1 = cx + r * Math.cos(startAngle);
     const y1 = cy + r * Math.sin(startAngle);
     const x2 = cx + r * Math.cos(endAngle);
     const y2 = cy + r * Math.sin(endAngle);
-    const midAngle   = (((i + 0.5) * ANGLE - 90) * Math.PI) / 180;
+    const midAngle   = (((i + 0.5) * angle - 90) * Math.PI) / 180;
     const tx = cx + r * 0.67 * Math.cos(midAngle);
     const ty = cy + r * 0.67 * Math.sin(midAngle);
     const d  = [`M ${cx} ${cy}`, `L ${x1} ${y1}`, `A ${r} ${r} 0 0 1 ${x2} ${y2}`, "Z"].join(" ");
-    return { ...seg, d, tx, ty, textRotation: (i + 0.5) * ANGLE };
+    return { ...seg, d, tx, ty, textRotation: (i + 0.5) * angle };
   });
 
   return (
     <svg viewBox="0 0 300 300" className="size-full">
-      {segments.map((seg, i) => (
+      {computed.map((seg, i) => (
         <g key={i}>
           <path d={seg.d} fill={seg.color} stroke="white" strokeWidth="2" />
           <text
@@ -57,17 +60,39 @@ function WheelSVG() {
 }
 
 export function WheelOfFortune({ onClose }: { onClose: () => void }) {
+  const [segments, setSegments]               = useState<Segment[]>(DEFAULT_SEGMENTS);
   const [spinning, setSpinning]               = useState(false);
-  const [result, setResult]                   = useState<(typeof SEGMENTS)[number] | null>(null);
+  const [result, setResult]                   = useState<Segment | null>(null);
   const [currentRotation, setCurrentRotation] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) return;
+    fetch(`${apiUrl}/settings`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.wheelSegments) && data.wheelSegments.length >= 2) {
+          setSegments(
+            data.wheelSegments.map((s: { label: string; description: string }, i: number) => ({
+              label: s.label,
+              description: s.description,
+              color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   function spin() {
     if (spinning || result) return;
     setSpinning(true);
-    const winIndex   = Math.floor(Math.random() * TOTAL);
+    const total = segments.length;
+    const angle = 360 / total;
+    const winIndex   = Math.floor(Math.random() * total);
     const extraSpins = 5 + Math.floor(Math.random() * 3);
-    const target     = currentRotation + extraSpins * 360 + (360 - winIndex * ANGLE - ANGLE / 2);
+    const target     = currentRotation + extraSpins * 360 + (360 - winIndex * angle - angle / 2);
 
     if (wheelRef.current) {
       wheelRef.current.style.transition = "transform 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)";
@@ -75,7 +100,7 @@ export function WheelOfFortune({ onClose }: { onClose: () => void }) {
     }
     setTimeout(() => {
       setCurrentRotation(target % 360);
-      setResult(SEGMENTS[winIndex]);
+      setResult(segments[winIndex]);
       setSpinning(false);
     }, 3600);
   }
@@ -113,7 +138,7 @@ export function WheelOfFortune({ onClose }: { onClose: () => void }) {
                 className="size-72"
                 style={{ transform: `rotate(${currentRotation}deg)` }}
               >
-                <WheelSVG />
+                <WheelSVG segments={segments} />
               </div>
             </div>
 

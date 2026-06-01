@@ -1,7 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { updateExpertPricing } from "@/services/users/experts-list.service";
 import type { ExpertDetail } from "@/types/dto/expert-list";
 
 interface ExpertDetailDialogProps {
@@ -9,6 +15,7 @@ interface ExpertDetailDialogProps {
   loading: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPricingUpdated?: (expertId: string, standardPrice: number | null, discountedPrice: number | null) => void;
 }
 
 export function ExpertDetailDialog({
@@ -16,7 +23,51 @@ export function ExpertDetailDialog({
   loading,
   open,
   onOpenChange,
+  onPricingUpdated,
 }: ExpertDetailDialogProps) {
+  const [standardPrice, setStandardPrice] = useState("");
+  const [discountedPrice, setDiscountedPrice] = useState("");
+  const [savingPrice, setSavingPrice] = useState(false);
+
+  useEffect(() => {
+    if (expert) {
+      setStandardPrice(expert.standardPrice != null ? String(expert.standardPrice) : "");
+      setDiscountedPrice(expert.discountedPrice != null ? String(expert.discountedPrice) : "");
+    }
+  }, [expert]);
+
+  async function handleSavePricing() {
+    if (!expert) return;
+    setSavingPrice(true);
+    try {
+      const std = standardPrice.trim() ? Number(standardPrice) : null;
+      const disc = discountedPrice.trim() ? Number(discountedPrice) : null;
+      await updateExpertPricing(expert.id, std, disc);
+      toast.success("Fiyat güncellendi");
+      onPricingUpdated?.(expert.id, std, disc);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fiyat güncellenemedi");
+    } finally {
+      setSavingPrice(false);
+    }
+  }
+
+  async function handleResetPricing() {
+    if (!expert) return;
+    setSavingPrice(true);
+    try {
+      await updateExpertPricing(expert.id, null, null);
+      setStandardPrice("");
+      setDiscountedPrice("");
+      toast.success("Global fiyata döndürüldü");
+      onPricingUpdated?.(expert.id, null, null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fiyat sıfırlanamadı");
+    } finally {
+      setSavingPrice(false);
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -53,6 +104,48 @@ export function ExpertDetailDialog({
                 </div>
               </div>
 
+              {/* Fiyat Yönetimi */}
+              <div className="space-y-3 rounded-md border p-3">
+                <p className="font-semibold">Fiyat Yönetimi</p>
+                <p className="text-xs text-muted-foreground">
+                  Boş bırakırsanız global platform fiyatı kullanılır.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Standart Fiyat (TL)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={standardPrice}
+                      onChange={(e) => setStandardPrice(e.target.value)}
+                      placeholder="Global fiyat"
+                      className="h-8"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">İndirimli Fiyat (TL)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={discountedPrice}
+                      onChange={(e) => setDiscountedPrice(e.target.value)}
+                      placeholder="Global fiyat"
+                      className="h-8"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleSavePricing} disabled={savingPrice}>
+                    {savingPrice ? "Kaydediliyor…" : "Kaydet"}
+                  </Button>
+                  {(expert.standardPrice != null || expert.discountedPrice != null) && (
+                    <Button size="sm" variant="outline" onClick={handleResetPricing} disabled={savingPrice}>
+                      Globale Döndür
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <p className="font-semibold">Biyografi</p>
                 <p className="rounded-md border bg-muted/30 p-3 text-muted-foreground">
@@ -80,24 +173,6 @@ export function ExpertDetailDialog({
                     ))
                   ) : (
                     <span className="text-muted-foreground">Anahtar kelime yok.</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-semibold">Uzmanlık alanları</p>
-                <div className="flex flex-wrap gap-2">
-                  {expert.specialties.length > 0 ? (
-                    expert.specialties.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-md bg-[#3178C6]/10 px-2 py-1 text-xs text-[#3178C6]"
-                      >
-                        {item}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground">Uzmanlık alanı yok.</span>
                   )}
                 </div>
               </div>

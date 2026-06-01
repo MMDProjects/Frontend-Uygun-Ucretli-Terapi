@@ -8,6 +8,8 @@ export type ApiExpertSummary = {
   avatarUrl: string;
   bio: string;
   rating: number;
+  standardPrice: string | null;
+  discountedPrice: string | null;
   tags: { id: string; name: string }[];
   user: { firstName: string; lastName: string };
 };
