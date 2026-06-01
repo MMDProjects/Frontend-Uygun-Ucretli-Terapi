@@ -3,11 +3,10 @@ import type { Metadata } from "next";
 import {
   AboutHomeSection,
   HeroSection,
-  HomeBentoSection,
   HomeFaqSection,
   OfferingsShowcaseSection,
-  PortfolioSection,
 } from "@/features/home";
+import { ExpertsMarquee } from "@/features/experts/components/experts-marquee";
 import { TestsCtaSection } from "@/features/home/components/tests-cta-section";
 import { siteConfig } from "@/lib/constants/site";
 import { getExperts } from "@/lib/services/public.service";
@@ -40,8 +39,8 @@ export default async function Home() {
   return (
     <>
       <HeroSection />
+      <ExpertsMarquee experts={experts} />
       <OfferingsShowcaseSection />
-      <PortfolioSection experts={experts} />
       <TestsCtaSection />
       <AboutHomeSection />
       <HomeFaqSection />
