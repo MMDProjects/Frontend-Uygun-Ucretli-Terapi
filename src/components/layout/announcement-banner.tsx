@@ -6,8 +6,15 @@ import { Megaphone } from "lucide-react";
 const BANNER_HEIGHT_CSS = "7rem";
 const DEFAULT_HEIGHT_CSS = "4.5rem";
 
+const FALLBACK_ITEMS = [
+  "Admin onaylı, sertifikalı uzman profilleri",
+  "Ücretsiz ön görüşme imkânı — WhatsApp üzerinden hemen başla",
+  "KVKK uyumlu, güvenli ve gizli platformdur",
+  "Her uzman belgelerini danışanlarıyla şeffaf paylaşır",
+];
+
 export function AnnouncementBanner() {
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(FALLBACK_ITEMS);
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_URL;
@@ -31,7 +38,7 @@ export function AnnouncementBanner() {
   const track = items.length > 0 ? [...items, ...items] : [];
 
   return (
-    <div className={`w-full overflow-hidden bg-[#014a3e] text-white transition-all ${items.length === 0 ? "h-0 py-0" : "py-2"}`}>
+    <div className="w-full overflow-hidden bg-[#014a3e] py-2 text-white">
       <style>{`
         @keyframes marquee-scroll {
           0%   { transform: translateX(0); }
