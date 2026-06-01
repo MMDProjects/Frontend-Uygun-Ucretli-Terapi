@@ -37,7 +37,7 @@ function emptyForm(): SavePsychometricTestPayload {
   };
 }
 
-export function PsychometricTestBuilderView() {
+export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boolean } = {}) {
   const router = useRouter();
   const [form, setForm] = useState<SavePsychometricTestPayload>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -90,20 +90,12 @@ export function PsychometricTestBuilderView() {
 
   return (
     <form onSubmit={handleSubmit} className="flex-1 space-y-6">
-      <PageHeader
-        title="Test oluşturucu"
-        description="Soru başına şıkları ve puanları tanımlayın; alt ölçek ve yorum bantları isteğe bağlıdır."
-      >
-        <Link
-          href="/formlar/testler"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "transition-colors hover:bg-muted/80 active:scale-[0.98]"
-          )}
-        >
-          Mevcut testlere git
-        </Link>
-      </PageHeader>
+      {!hideHeader && (
+        <PageHeader
+          title="Test oluşturucu"
+          description="Soru başına şıkları ve puanları tanımlayın; alt ölçek ve yorum bantları isteğe bağlıdır."
+        />
+      )}
 
       <Card className="shadow-[0_4px_6px_rgba(0,0,0,0.05)] rounded-lg">
         <CardHeader>

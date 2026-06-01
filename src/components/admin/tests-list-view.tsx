@@ -34,7 +34,7 @@ function formatUpdated(iso?: string): string {
   }
 }
 
-export function TestsListView() {
+export function TestsListView({ hideHeader }: { hideHeader?: boolean } = {}) {
   const { tests, loading, error, refetch } = usePsychometricTests();
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState<PsychometricTestDefinition | null>(null);
@@ -57,7 +57,10 @@ export function TestsListView() {
 
   return (
     <div className="flex-1 space-y-6">
-      <PageHeader title="Mevcut testler" description="Sistemde tanımlı psikometrik testlerin listesi ve özeti.">
+      {!hideHeader && (
+        <PageHeader title="Mevcut testler" description="Sistemde tanımlı psikometrik testlerin listesi ve özeti." />
+      )}
+      <div className="flex flex-wrap gap-2 justify-end">
         <Input
           placeholder="Test ara…"
           value={search}
@@ -75,7 +78,7 @@ export function TestsListView() {
           <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>
-      </PageHeader>
+      </div>
 
       <Card className="shadow-[0_4px_6px_rgba(0,0,0,0.05)] rounded-lg">
         <CardHeader>

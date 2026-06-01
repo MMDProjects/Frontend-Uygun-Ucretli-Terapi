@@ -36,7 +36,7 @@ function formatWhen(iso: string): string {
   }
 }
 
-export function TestResultsView() {
+export function TestResultsView({ hideHeader }: { hideHeader?: boolean } = {}) {
   const { tests } = usePsychometricTests();
   const [testFilter, setTestFilter] = useState<string>("__all__");
   const [search, setSearch] = useState("");
@@ -61,7 +61,10 @@ export function TestResultsView() {
 
   return (
     <div className="flex-1 space-y-6">
-      <PageHeader title="Test sonuçları" description="Testleri tamamlayan kullanıcıların gönderimleri.">
+      {!hideHeader && (
+        <PageHeader title="Test sonuçları" description="Testleri tamamlayan kullanıcıların gönderimleri." />
+      )}
+      <div className="flex flex-wrap gap-2 justify-end">
         <Select
           value={testFilter}
           onValueChange={(v) => setTestFilter(v ?? "__all__")}
@@ -94,7 +97,7 @@ export function TestResultsView() {
           <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>
-      </PageHeader>
+      </div>
 
       <Card className="shadow-[0_4px_6px_rgba(0,0,0,0.05)] rounded-lg">
         <CardHeader>

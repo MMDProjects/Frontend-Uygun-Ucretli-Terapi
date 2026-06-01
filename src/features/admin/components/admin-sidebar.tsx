@@ -38,15 +38,8 @@ const groups: NavGroup[] = [
       { label: "SSS Yayinla", href: "/admin/icerik/sss" },
       { label: "Paketler", href: "/admin/icerik/paketler" },
       { label: "Forum sorulari", href: "/admin/icerik/forum-sorulari" },
-    ],
-  },
-  {
-    title: "Form ve test",
-    items: [
       { label: "Gelen talepler", href: "/admin/formlar/talepler" },
-      { label: "Mevcut testler", href: "/admin/formlar/testler" },
-      { label: "Test sonuclari", href: "/admin/formlar/test-sonuclari" },
-      { label: "Test olusturucu", href: "/admin/formlar/test-olusturucu" },
+      { label: "Test yonetimi", href: "/admin/formlar/testler" },
     ],
   },
   {
