@@ -23,8 +23,7 @@ export default function TaleplerimPage() {
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">Yakında</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Talep takip özelliği Faz 2&apos;de aktif olacak. Şu an görüşme talebinizi
-              iletişim formu üzerinden iletebilirsiniz.
+              Görüşme talebinizi iletişim formu üzerinden iletebilirsiniz.
             </p>
           </div>
           <Link

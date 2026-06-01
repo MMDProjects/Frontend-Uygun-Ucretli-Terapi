@@ -9,8 +9,7 @@ export default function UzmanTaleplerPage() {
       </div>
       <h1 className="text-xl font-bold text-foreground">Yakında</h1>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Danışan talepleri özelliği Faz 2&apos;de aktif olacak. Şu an görüşme talepleri
-        iletişim formu üzerinden alınmaktadır.
+        Görüşme talepleri şu an iletişim formu üzerinden alınmaktadır.
       </p>
       <Link
         href="/uzman/dashboard"
