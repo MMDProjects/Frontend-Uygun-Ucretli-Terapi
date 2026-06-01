@@ -1,7 +1,6 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { FilterPopover, filterChip } from "@/components/shared/filter-popover";
 
 const TAGS = [
@@ -9,8 +8,6 @@ const TAGS = [
   "Aile", "Panik Atak", "Tükenmişlik", "Özgüven", "Yas",
   "Travma", "Öfke", "Motivasyon", "Sosyal Fobi",
 ];
-
-const DAY_LABELS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
 export type ExpertFilters = {
   tags: string[];
@@ -24,7 +21,7 @@ interface Props {
   hasActive: boolean;
 }
 
-export function ExpertsFilterSheet({ filters, onChange, hasActive }: Props) {
+export function ExpertsFilterSheet({ filters, onChange }: Props) {
   function toggleTag(tag: string) {
     const next = filters.tags.includes(tag)
       ? filters.tags.filter((t) => t !== tag)
@@ -32,17 +29,7 @@ export function ExpertsFilterSheet({ filters, onChange, hasActive }: Props) {
     onChange({ ...filters, tags: next });
   }
 
-  function toggleDay(day: number) {
-    const next = filters.days.includes(day)
-      ? filters.days.filter((d) => d !== day)
-      : [...filters.days, day];
-    onChange({ ...filters, days: next });
-  }
-
-  const activeCount =
-    filters.tags.length +
-    (filters.minRating > 0 ? 1 : 0) +
-    filters.days.length;
+  const activeCount = filters.tags.length + (filters.minRating > 0 ? 1 : 0);
 
   return (
     <FilterPopover
@@ -87,31 +74,6 @@ export function ExpertsFilterSheet({ filters, onChange, hasActive }: Props) {
               )}
             </button>
           ))}
-        </div>
-      </div>
-
-      {/* Müsaitlik Günü */}
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-foreground">Müsaitlik Günü</p>
-        <div className="flex gap-1.5">
-          {DAY_LABELS.map((label, i) => {
-            const active = filters.days.includes(i + 1);
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => toggleDay(i + 1)}
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-lg border text-xs font-semibold transition",
-                  active
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-muted text-foreground hover:border-primary/40 hover:text-primary",
-                )}
-              >
-                {label}
-              </button>
-            );
-          })}
         </div>
       </div>
     </FilterPopover>
