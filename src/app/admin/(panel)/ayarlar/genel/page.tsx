@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Save, Tag, Info, Megaphone, Plus, Trash2, Dices } from "lucide-react";
+import { Save, Tag, Info, Megaphone, Plus, Trash2, Dices, Video } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
@@ -14,6 +14,7 @@ type Settings = {
   id: string;
   standardPrice: string | number;
   discountedPrice: string | number;
+  videoUrl?: string | null;
   announcementItems?: string[];
   wheelSegments?: WheelSegment[];
 };
@@ -24,6 +25,8 @@ export default function AyarlarGenelPage() {
   const [discountedPrice, setDiscountedPrice] = useState("");
   const [items, setItems] = useState<string[]>([]);
   const [newItem, setNewItem] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [savingVideo, setSavingVideo] = useState(false);
   const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
   const [savingWheel, setSavingWheel] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,6 +40,7 @@ export default function AyarlarGenelPage() {
         setSettings(s);
         setStandardPrice(String(Number(s.standardPrice)));
         setDiscountedPrice(String(Number(s.discountedPrice)));
+        setVideoUrl(s.videoUrl ?? "");
         setItems(s.announcementItems ?? []);
         setWheelSegments(s.wheelSegments ?? []);
       })
@@ -82,6 +86,23 @@ export default function AyarlarGenelPage() {
       toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
     } finally {
       setSavingBanner(false);
+    }
+  }
+
+  async function handleSaveVideo() {
+    setSavingVideo(true);
+    try {
+      const token = getAccessToken();
+      await apiFetch("/admin/settings", {
+        method: "PUT",
+        token,
+        body: { videoUrl: videoUrl.trim() || null },
+      });
+      toast.success("Video URL kaydedildi.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
+    } finally {
+      setSavingVideo(false);
     }
   }
 
@@ -199,6 +220,37 @@ export default function AyarlarGenelPage() {
           </button>
         </div>
       </form>
+
+      {/* Video URL */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="mb-5 flex items-center gap-2">
+            <Video className="size-4 text-primary" />
+            <h2 className="text-sm font-bold text-primary-hover">Tanıtım Videosu</h2>
+          </div>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Ana sayfadaki &quot;Biz kimiz?&quot; bölümünde gösterilecek video URL&apos;sini girin (MP4, Cloudinary vb.). Boş bırakılırsa play butonu görünmez.
+          </p>
+          <input
+            type="url"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder="https://res.cloudinary.com/.../video.mp4"
+            className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
+          />
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveVideo}
+              disabled={savingVideo}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:opacity-60"
+            >
+              {savingVideo ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Save className="size-4" />}
+              {savingVideo ? "Kaydediliyor…" : "Videoyu Kaydet"}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Duyuru Şeridi */}
       <Card>
