@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray, type UseFormRegister, type FieldErrors, type UseFormSetValue, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { getActiveTags, type ApiTag } from "@/lib/services/uzman.service";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -34,8 +35,7 @@ const schema = z.object({
   ylBolum: z.string().optional(),
   ylYil: z.string().optional(),
   sertifikalar: z.array(z.object({ ad: z.string(), kurum: z.string() })),
-  hedefKitle: z.array(z.string()),
-  uzmanlikAlanlari: z.array(z.string()),
+  tagIds: z.array(z.string()).min(2, "En az 2 etiket seçiniz.").max(5, "En fazla 5 etiket seçilebilir."),
   deneyim: z.string().optional(),
   biyografi: z
     .string()
@@ -70,24 +70,9 @@ const STEP_FIELDS: Record<number, (keyof FormValues)[]> = {
   1: ["ad", "soyad", "eposta", "telefon", "il", "ilce", "sifre"],
   2: ["lisansUni", "lisansBolum"],
   3: [],
-  4: ["biyografi"],
+  4: ["tagIds", "biyografi"],
   5: ["kvkk", "kosullar"],
 };
-
-const HEDEF_KITLE = ["Yetişkin", "Çocuk", "Ergen", "Çift"];
-
-const UZMANLIK_ALANLARI = [
-  "Aile ve Çift Danışmanlığı",
-  "Cinsel Terapi",
-  "Çocuk Psikolojisi",
-  "Ergen Psikolojisi",
-  "İlişki Danışmanlığı",
-  "Sınav Koçu",
-  "Yetişkin Psikolojisi",
-  "Travma ve TSSB",
-  "Depresyon",
-  "Kaygı Bozuklukları",
-];
 
 const DENEYIM_SURESI = [
   "1 yıldan az",
@@ -332,60 +317,59 @@ function Step4({
   register,
   errors,
   setValue,
-  hedefKitle,
-  uzmanlikAlanlari,
+  tagIds,
   biyografi,
 }: BaseStepProps & {
   setValue: UseFormSetValue<FormValues>;
-  hedefKitle: string[];
-  uzmanlikAlanlari: string[];
+  tagIds: string[];
   biyografi: string;
 }) {
+  const [allTags, setAllTags] = useState<ApiTag[]>([]);
+
+  useEffect(() => {
+    getActiveTags().then(setAllTags).catch(() => {});
+  }, []);
+
   const wordCount = biyografi.trim() ? biyografi.trim().split(/\s+/).length : 0;
 
-  function toggleChip(field: "hedefKitle" | "uzmanlikAlanlari", val: string) {
-    const current = field === "hedefKitle" ? hedefKitle : uzmanlikAlanlari;
-    setValue(
-      field,
-      current.includes(val) ? current.filter((v) => v !== val) : [...current, val],
-      { shouldValidate: true }
-    );
+  function toggleTag(id: string) {
+    const next = tagIds.includes(id)
+      ? tagIds.filter((t) => t !== id)
+      : tagIds.length < 5
+      ? [...tagIds, id]
+      : tagIds;
+    setValue("tagIds", next, { shouldValidate: true });
   }
 
   return (
     <div className="space-y-6">
       <div className="space-y-2.5">
-        <Label>
-          Hedef Kitle{" "}
-          <span className="text-muted-foreground font-normal">(Çoklu Seçim)</span>
-        </Label>
-        <div className="flex flex-wrap gap-2">
-          {HEDEF_KITLE.map((k) => (
-            <Chip
-              key={k}
-              label={k}
-              active={hedefKitle.includes(k)}
-              onClick={() => toggleChip("hedefKitle", k)}
-            />
-          ))}
+        <div className="flex items-center justify-between">
+          <Label>
+            Uzmanlık Alanları{" "}
+            <span className="text-destructive">*</span>
+          </Label>
+          <span className="text-xs text-muted-foreground">
+            {tagIds.length} / 5 seçildi (min 2)
+          </span>
         </div>
-      </div>
-
-      <div className="space-y-2.5">
-        <Label>
-          Uzmanlık Alanları{" "}
-          <span className="text-muted-foreground font-normal">(Çoklu Seçim)</span>
-        </Label>
-        <div className="flex flex-wrap gap-2">
-          {UZMANLIK_ALANLARI.map((a) => (
-            <Chip
-              key={a}
-              label={a}
-              active={uzmanlikAlanlari.includes(a)}
-              onClick={() => toggleChip("uzmanlikAlanlari", a)}
-            />
-          ))}
-        </div>
+        {allTags.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Etiketler yükleniyor…</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {allTags.map((tag) => (
+              <Chip
+                key={tag.id}
+                label={tag.name}
+                active={tagIds.includes(tag.id)}
+                onClick={() => toggleTag(tag.id)}
+              />
+            ))}
+          </div>
+        )}
+        {errors.tagIds && (
+          <p className="text-xs text-destructive">{errors.tagIds.message}</p>
+        )}
       </div>
 
       <Field label="Deneyim Süresi">
@@ -503,14 +487,13 @@ export default function ExpertApplicationPage() {
       lisansUni: "", lisansBolum: "", lisansYil: "",
       ylUni: "", ylBolum: "", ylYil: "",
       sertifikalar: [{ ad: "", kurum: "" }],
-      hedefKitle: [], uzmanlikAlanlari: [],
+      tagIds: [],
       deneyim: "", biyografi: "",
       kvkk: false, kosullar: false,
     },
   });
 
-  const hedefKitle = watch("hedefKitle");
-  const uzmanlikAlanlari = watch("uzmanlikAlanlari");
+  const tagIds = watch("tagIds");
   const biyografi = watch("biyografi") ?? "";
 
   const [step, setStep] = useState(1);
@@ -534,6 +517,9 @@ export default function ExpertApplicationPage() {
       formData.append("password", data.sifre ?? "");
       formData.append("title", data.unvan || "Uzman");
       formData.append("kvkkConsent", "true");
+
+      // Etiketler
+      data.tagIds?.forEach((id) => formData.append("tagIds", id));
 
       // PDF dosyaları
       if (data.sertifika?.[0]) formData.append("certificate", data.sertifika[0]);
@@ -611,8 +597,7 @@ export default function ExpertApplicationPage() {
                 register={register}
                 errors={errors}
                 setValue={setValue}
-                hedefKitle={hedefKitle}
-                uzmanlikAlanlari={uzmanlikAlanlari}
+                tagIds={tagIds}
                 biyografi={biyografi}
               />
             )}
