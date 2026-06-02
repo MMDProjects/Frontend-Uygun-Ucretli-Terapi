@@ -1,17 +1,43 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Play, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/common/section-heading";
 import { siteConfig } from "@/lib/constants/site";
 
 export function AboutHomeSection() {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
+    if (!apiUrl) return;
+    fetch(`${apiUrl}/settings`)
+      .then((r) => r.json())
+      .then((data) => { if (data.videoUrl) setVideoUrl(data.videoUrl); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (modalOpen) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [modalOpen]);
+
+  function openModal() { if (videoUrl) setModalOpen(true); }
+  function closeModal() { setModalOpen(false); }
+
   return (
-    <section
-      className="bg-[#cce1de] py-20"
-      aria-labelledby="home-about-heading"
-    >
+    <section className="bg-[#cce1de] py-20" aria-labelledby="home-about-heading">
       <div className="page-shell space-y-8">
         <SectionHeading
           title="Biz kimiz?"
@@ -21,11 +47,11 @@ export function AboutHomeSection() {
 
         <div className="grid items-stretch gap-5 lg:grid-cols-[1fr_1fr]">
 
-          {/* Sol: Video kutusu */}
+          {/* Sol: Kapak görseli + play butonu */}
           <div
             className="relative min-h-[300px] overflow-hidden rounded-[2rem] border border-border/60 bg-black/30 shadow-sm"
             role="img"
-            aria-label="Biz kimiz videosu kapak görseli; oynat düğmesi dekoratif"
+            aria-label="Tanıtım videosu kapak görseli"
           >
             <Image
               src="/images/image.png"
@@ -34,14 +60,20 @@ export function AboutHomeSection() {
               className="object-cover object-center"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-primary shadow-md">
-                <Play className="ml-1 h-8 w-8 fill-current" aria-hidden />
-              </span>
-            </div>
+            {videoUrl && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button
+                  onClick={openModal}
+                  aria-label="Videoyu oynat"
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-primary shadow-md transition hover:scale-110 hover:bg-white"
+                >
+                  <Play className="ml-1 h-8 w-8 fill-current" aria-hidden />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Sağ: PsikoDestek ile tanışın kutusu */}
+          {/* Sağ: PsikoDestek ile tanışın */}
           <div className="flex flex-col justify-center gap-6 rounded-[2rem] border border-border/60 bg-white p-8 shadow-sm">
             <h3 className="text-balance text-2xl font-bold tracking-tight text-primary-hover sm:text-3xl">
               {siteConfig.brandShortName} ile tanışın
@@ -82,6 +114,33 @@ export function AboutHomeSection() {
 
         </div>
       </div>
+
+      {/* Video modal — dikey video için optimize */}
+      <dialog
+        ref={dialogRef}
+        onClick={(e) => { if (e.target === dialogRef.current) closeModal(); }}
+        className="m-auto max-h-[90dvh] w-full max-w-sm rounded-[2rem] bg-black p-0 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm open:flex open:flex-col"
+      >
+        <div className="flex items-center justify-between px-4 py-3">
+          <span className="text-sm font-semibold text-white">Tanıtım Videosu</span>
+          <button
+            onClick={closeModal}
+            aria-label="Kapat"
+            className="flex size-8 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+        {modalOpen && videoUrl && (
+          <video
+            src={videoUrl}
+            controls
+            autoPlay
+            playsInline
+            className="w-full flex-1 object-contain"
+          />
+        )}
+      </dialog>
     </section>
   );
 }
