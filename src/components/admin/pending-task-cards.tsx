@@ -5,8 +5,11 @@ import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   FileText,
+  FlaskConical,
   Inbox,
   Loader2,
+  MessageCircle,
+  MessageSquare,
   UserCheck,
   UserPlus,
 } from "lucide-react";
@@ -27,6 +30,9 @@ const taskIcons: Record<PendingTaskType, LucideIcon> = {
   profil_guncelleme: UserCheck,
   blog_onay: FileText,
   yeni_talep: Inbox,
+  forum_cevap_onay: MessageSquare,
+  yorum_onay: MessageCircle,
+  yeni_test_sonucu: FlaskConical,
 };
 
 const urgencyConfig: Record<
