@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import type { ApiTag } from "@/lib/services/uzman.service";
+import { getTags } from "@/lib/services/public.service";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -496,6 +497,15 @@ export default function ExpertApplicationPage() {
 
   const tagIds = watch("tagIds");
   const biyografi = watch("biyografi") ?? "";
+
+  const [allTags, setAllTags] = useState<ApiTag[]>([]);
+  const [tagsError, setTagsError] = useState(false);
+
+  useEffect(() => {
+    getTags()
+      .then((tags) => setAllTags(tags.filter((t) => t.isActive)))
+      .catch(() => setTagsError(true));
+  }, []);
 
   const [step, setStep] = useState(1);
   const isLast = step === STEPS.length;
