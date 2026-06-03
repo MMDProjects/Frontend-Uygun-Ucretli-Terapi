@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -21,9 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { usePsychometricTests } from "@/hooks/use-psychometric-tests";
 import type { PsychometricTestDefinition } from "@/types/dto/psychometric-test";
+import { deleteTest, type SavePsychometricTestPayload } from "@/services/tests/psychometric-tests.service";
 import { TestDetailDialog } from "./test-detail-dialog";
+import { PsychometricTestBuilderView } from "./psychometric-test-builder-view";
 
 function formatUpdated(iso?: string): string {
   if (!iso) return "—";
@@ -46,6 +53,33 @@ export function TestsListView({ hideHeader, externalSearch, onRefresh }: TestsLi
   const search = externalSearch ?? internalSearch;
   const [detail, setDetail] = useState<PsychometricTestDefinition | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<SavePsychometricTestPayload | null>(null);
+
+  async function handleDelete(t: PsychometricTestDefinition, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm(`"${t.title}" testini silmek istediğinize emin misiniz? Tüm test sonuçları da silinecektir.`)) return;
+    try {
+      await deleteTest(t.id);
+      toast.success("Test silindi.");
+      void refetch();
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Silinemedi.");
+    }
+  }
+
+  function handleEdit(t: PsychometricTestDefinition, e: React.MouseEvent) {
+    e.stopPropagation();
+    setEditTarget({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      disclaimer: t.disclaimer,
+      subscales: t.subscales,
+      interpretationBands: t.interpretationBands,
+      questions: t.questions,
+    });
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -113,18 +147,40 @@ export function TestsListView({ hideHeader, externalSearch, onRefresh }: TestsLi
             <>
               <div className="grid gap-3 md:hidden">
                 {filtered.map((t) => (
-                  <button
+                  <div
                     key={t.id}
-                    type="button"
-                    className="rounded-lg border bg-card p-4 text-left shadow-[0_4px_6px_rgba(0,0,0,0.05)] transition-colors hover:bg-muted/40 active:scale-[0.99]"
-                    onClick={() => openDetail(t)}
+                    className="flex items-center gap-3 rounded-lg border bg-card p-4 shadow-[0_4px_6px_rgba(0,0,0,0.05)]"
                   >
-                    <p className="font-medium">{t.title}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t.questions.length} soru · {t.subscales.length} alt ölçek ·{" "}
-                      {formatUpdated(t.updatedAt)}
-                    </p>
-                  </button>
+                    <button
+                      type="button"
+                      className="flex-1 text-left transition-colors hover:text-primary active:scale-[0.99]"
+                      onClick={() => openDetail(t)}
+                    >
+                      <p className="font-medium">{t.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t.questions.length} soru · {t.subscales.length} alt ölçek ·{" "}
+                        {formatUpdated(t.updatedAt)}
+                      </p>
+                    </button>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => handleEdit(t, e)}
+                        className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+                        aria-label="Düzenle"
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => void handleDelete(t, e)}
+                        className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive"
+                        aria-label="Sil"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
               <div className="hidden md:block overflow-x-auto">
@@ -135,6 +191,7 @@ export function TestsListView({ hideHeader, externalSearch, onRefresh }: TestsLi
                       <TableHead>Soru</TableHead>
                       <TableHead>Alt ölçek</TableHead>
                       <TableHead>Güncelleme</TableHead>
+                      <TableHead className="w-[80px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -151,6 +208,26 @@ export function TestsListView({ hideHeader, externalSearch, onRefresh }: TestsLi
                         <TableCell>{t.subscales.length}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {formatUpdated(t.updatedAt)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={(e) => handleEdit(t, e)}
+                              className="flex size-7 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+                              aria-label="Düzenle"
+                            >
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => void handleDelete(t, e)}
+                              className="flex size-7 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive"
+                              aria-label="Sil"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -170,6 +247,22 @@ export function TestsListView({ hideHeader, externalSearch, onRefresh }: TestsLi
           if (!o) window.setTimeout(() => setDetail(null), 200);
         }}
       />
+
+      <Dialog open={editTarget !== null} onOpenChange={(o) => { if (!o) setEditTarget(null); }}>
+        <DialogContent className="flex max-h-[92vh] max-w-4xl flex-col gap-0 overflow-y-auto p-6">
+          {editTarget && (
+            <PsychometricTestBuilderView
+              hideHeader={false}
+              initialData={editTarget}
+              onSaved={() => {
+                setEditTarget(null);
+                void refetch();
+                onRefresh?.();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

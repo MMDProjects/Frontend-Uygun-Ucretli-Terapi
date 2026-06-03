@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<UzmanBlogStatus, { label: string; className: string 
     className: "bg-red-50 text-red-700 border-red-200",
   },
   revize_gonderildi: {
-    label: "Revize Gönderildi",
+    label: "Revize Bekleniyor",
     className: "bg-blue-50 text-blue-700 border-blue-200",
   },
 };
@@ -116,7 +116,7 @@ function BlogPostRow({
                 <Eye className="size-3.5" />
               </a>
             )}
-            {(post.status === "taslak" || post.status === "reddedildi") && (
+            {post.status !== "incelemede" && (
               <Link
                 href={`/uzman/blog/${post.id}`}
                 className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-primary/30 hover:text-primary"
@@ -125,17 +125,15 @@ function BlogPostRow({
                 <Pencil className="size-3.5" />
               </Link>
             )}
-            {post.status !== "yayinda" && post.status !== "incelemede" && post.status !== "revize_gonderildi" && (
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={handleDelete}
-                className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive disabled:opacity-60"
-                aria-label="Sil"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={handleDelete}
+              className="flex size-8 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive disabled:opacity-60"
+              aria-label="Sil"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
           </div>
         </div>
 

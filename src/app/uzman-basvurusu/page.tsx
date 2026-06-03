@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { getActiveTags, type ApiTag } from "@/lib/services/uzman.service";
+import type { ApiTag } from "@/lib/services/uzman.service";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -319,16 +319,15 @@ function Step4({
   setValue,
   tagIds,
   biyografi,
+  allTags,
+  tagsError,
 }: BaseStepProps & {
   setValue: UseFormSetValue<FormValues>;
   tagIds: string[];
   biyografi: string;
+  allTags: ApiTag[];
+  tagsError: boolean;
 }) {
-  const [allTags, setAllTags] = useState<ApiTag[]>([]);
-
-  useEffect(() => {
-    getActiveTags().then(setAllTags).catch(() => {});
-  }, []);
 
   const wordCount = biyografi.trim() ? biyografi.trim().split(/\s+/).length : 0;
 
@@ -353,7 +352,9 @@ function Step4({
             {tagIds.length} / 5 seçildi (min 2)
           </span>
         </div>
-        {allTags.length === 0 ? (
+        {tagsError ? (
+          <p className="text-xs text-destructive">Etiketler yüklenemedi, lütfen sayfayı yenileyin.</p>
+        ) : allTags.length === 0 ? (
           <p className="text-xs text-muted-foreground">Etiketler yükleniyor…</p>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -599,6 +600,8 @@ export default function ExpertApplicationPage() {
                 setValue={setValue}
                 tagIds={tagIds}
                 biyografi={biyografi}
+                allTags={allTags}
+                tagsError={tagsError}
               />
             )}
             {step === 5 && <Step5 register={register} errors={errors} />}

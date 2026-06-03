@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useBlogApprovals } from "@/hooks/use-blog-approvals";
 import {
@@ -14,6 +14,8 @@ import {
 } from "@/lib/blog-approval-schemas";
 import type { BlogApprovalDto } from "@/types/dto/blog-approval";
 import { PageHeader } from "@/features/admin/components/page-header";
+import { apiFetch } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth-cookies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -171,6 +173,19 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
     }
   });
 
+  const handleDelete = async (item: BlogApprovalDto) => {
+    if (!confirm(`"${item.title}" blog yazısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+    try {
+      const token = getAccessToken();
+      await apiFetch(`/admin/blogs/${item.id}`, { method: "DELETE", token });
+      toast.success("Blog yazısı silindi.");
+      if (selected?.id === item.id) setSelected(null);
+      void refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Silinemedi");
+    }
+  };
+
   const openReject = (post: BlogApprovalDto) => {
     setRejectTarget(post);
   };
@@ -283,6 +298,15 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
                   >
                     Reddet
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-destructive/30 text-destructive hover:bg-destructive/5"
+                    onClick={() => void handleDelete(item)}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -361,6 +385,16 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
                   className="sm:mr-auto"
                 >
                   Kapat
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/5"
+                  disabled={revisionForm.formState.isSubmitting}
+                  onClick={() => void handleDelete(selected)}
+                >
+                  <Trash2 className="mr-1.5 size-3.5" />
+                  Sil
                 </Button>
                 <Button
                   type="button"

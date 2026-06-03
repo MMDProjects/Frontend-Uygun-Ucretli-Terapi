@@ -3,7 +3,7 @@ import { ExpertCardApi } from "@/features/experts/components/expert-card-api";
 import { ExpertCardSkeleton } from "@/features/experts/components/expert-card-skeleton";
 import { getExperts, getPublicPricing } from "@/lib/services/public.service";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export default async function ExpertsPage() {
   let experts: Awaited<ReturnType<typeof getExperts>>["data"] = [];
