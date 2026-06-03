@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 export default async function Home() {
   let experts: Awaited<ReturnType<typeof getExperts>>["data"] = [];

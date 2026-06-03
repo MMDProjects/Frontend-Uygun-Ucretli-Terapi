@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { SssSection } from "@/components/common/sss-section";
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 function PackageCardApi({
   pkg,

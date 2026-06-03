@@ -1,7 +1,7 @@
 import { PageIntro } from "@/components/common/page-intro";
 import { getSss } from "@/lib/services/public.service";
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 export default async function FaqPage() {
   let items: Awaited<ReturnType<typeof getSss>> = [];

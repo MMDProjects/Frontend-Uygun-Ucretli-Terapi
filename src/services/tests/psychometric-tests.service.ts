@@ -138,6 +138,22 @@ export async function saveTest(
   return cloneTests([mapped])[0];
 }
 
+// ─── Delete ──────────────────────────────────────────────────────────────────
+
+export async function deleteTest(id: string): Promise<void> {
+  const base = getOptionalApiBase();
+  if (!base) {
+    memStore = memStore.filter((t) => t.id !== id);
+    return;
+  }
+  const res = await fetch(`${base}/admin/tests/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`Test silinemedi (${res.status})`);
+  memStore = memStore.filter((t) => t.id !== id);
+}
+
 // ─── Seeded defaults (scoring mocks) ─────────────────────────────────────────
 
 export function getDefaultSeededTests(): PsychometricTestDefinition[] {

@@ -16,9 +16,13 @@ import {
 
 function PackageEditor({
   pkg,
+  order,
+  isPopular,
   onSaved,
 }: {
   pkg: AdminPackage;
+  order: number;
+  isPopular: boolean;
   onSaved: (updated: AdminPackage) => void;
 }) {
   const [name, setName] = useState(pkg.name);
@@ -48,7 +52,19 @@ function PackageEditor({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">{pkg.name}</CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base">{pkg.name}</CardTitle>
+          <div className="flex items-center gap-1.5">
+            {isPopular && (
+              <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                ⭐ En Popüler
+              </span>
+            )}
+            <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              {order}. Sıra
+            </span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -135,8 +151,14 @@ export default function AdminPaketlerPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {packages.map((pkg) => (
-            <PackageEditor key={pkg.id} pkg={pkg} onSaved={handleSaved} />
+          {packages.map((pkg, i) => (
+            <PackageEditor
+              key={pkg.id}
+              pkg={pkg}
+              order={i + 1}
+              isPopular={i === Math.floor(packages.length / 2)}
+              onSaved={handleSaved}
+            />
           ))}
         </div>
       )}

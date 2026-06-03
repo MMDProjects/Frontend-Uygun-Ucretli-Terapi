@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 const bentoSpanPattern = [
   "xl:col-span-6",

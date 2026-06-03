@@ -13,7 +13,8 @@ export function FreeConsultationPopup() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && !hasSeenFreeConsultPopup) {
+    const alreadySeen = localStorage.getItem("free_consult_seen") === "1";
+    if (isAuthenticated && !hasSeenFreeConsultPopup && !alreadySeen) {
       const timer = setTimeout(() => setOpen(true), 800);
       return () => clearTimeout(timer);
     }
@@ -22,6 +23,7 @@ export function FreeConsultationPopup() {
   function handleClose() {
     setOpen(false);
     markFreeConsultSeen();
+    localStorage.setItem("free_consult_seen", "1");
   }
 
   return (
@@ -32,21 +34,22 @@ export function FreeConsultationPopup() {
           className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-border/80 bg-white p-0 shadow-2xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:max-w-lg"
           aria-describedby="free-consult-desc"
         >
+          {/* Çarpı butonu — overflow-hidden dışında, Dialog.Content'e göre konumlanır */}
+          <Dialog.Close asChild>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
+              aria-label="Kapat"
+            >
+              <X className="size-4" />
+            </button>
+          </Dialog.Close>
+
           {/* Üst bant */}
           <div className="relative overflow-hidden rounded-t-3xl bg-primary px-6 pb-8 pt-7">
             <div className="absolute -right-6 -top-6 size-32 rounded-full bg-white/10" />
             <div className="absolute -bottom-4 -left-4 size-20 rounded-full bg-white/10" />
-
-            <Dialog.Close asChild>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
-                aria-label="Kapat"
-              >
-                <X className="size-4" />
-              </button>
-            </Dialog.Close>
 
             <div className="relative">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">

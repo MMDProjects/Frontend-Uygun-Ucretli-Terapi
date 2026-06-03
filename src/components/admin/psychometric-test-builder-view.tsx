@@ -35,9 +35,16 @@ function emptyForm(): SavePsychometricTestPayload {
   };
 }
 
-export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boolean } = {}) {
-  const [form, setForm] = useState<SavePsychometricTestPayload>(emptyForm);
+interface PsychometricTestBuilderViewProps {
+  hideHeader?: boolean;
+  initialData?: SavePsychometricTestPayload;
+  onSaved?: () => void;
+}
+
+export function PsychometricTestBuilderView({ hideHeader, initialData, onSaved }: PsychometricTestBuilderViewProps = {}) {
+  const [form, setForm] = useState<SavePsychometricTestPayload>(initialData ?? emptyForm);
   const [saving, setSaving] = useState(false);
+  const isEditMode = Boolean(initialData?.id);
 
   const validate = (): string | null => {
     if (!form.title.trim()) return "Test başlığı zorunludur.";
@@ -67,8 +74,9 @@ export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boole
     setSaving(true);
     try {
       await saveTest(form);
-      toast.success("Test kaydedildi");
-      setForm(emptyForm());
+      toast.success(isEditMode ? "Test güncellendi" : "Test kaydedildi");
+      if (!isEditMode) setForm(emptyForm());
+      onSaved?.();
     } catch (errUnknown) {
       toast.error(
         errUnknown instanceof Error ? errUnknown.message : "Kayıt başarısız"
@@ -82,7 +90,7 @@ export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boole
     <form onSubmit={handleSubmit} className="flex-1 space-y-6">
       {!hideHeader && (
         <PageHeader
-          title="Test oluşturucu"
+          title={isEditMode ? "Testi düzenle" : "Test oluşturucu"}
           description="Soru başına şıkları ve puanları tanımlayın; alt ölçek ve yorum bantları isteğe bağlıdır."
         />
       )}
@@ -165,7 +173,7 @@ export function PsychometricTestBuilderView({ hideHeader }: { hideHeader?: boole
           disabled={saving}
           className="min-w-[140px] transition-colors hover:opacity-95 active:scale-[0.98]"
         >
-          {saving ? "Kaydediliyor…" : "Testi kaydet"}
+          {saving ? "Kaydediliyor…" : isEditMode ? "Değişiklikleri Kaydet" : "Testi kaydet"}
         </Button>
         <Button
           type="button"

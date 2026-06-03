@@ -6,7 +6,7 @@ import { getBlog } from "@/lib/services/public.service";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export default async function BlogDetailPage({ params }: Props) {
   const { slug } = await params;
@@ -18,8 +18,8 @@ export default async function BlogDetailPage({ params }: Props) {
     notFound();
   }
 
-  const authorName =
-    `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim();
+  const authorName = (blog as { authorName?: string | null }).authorName
+    || `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim();
   const dateLabel = new Date(blog.createdAt).toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "long",

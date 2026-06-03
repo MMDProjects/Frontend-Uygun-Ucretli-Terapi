@@ -42,7 +42,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       role: payload.role,
       hasSetMusaitlik: false,
     }),
-  clearSession: () =>
+  clearSession: () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("free_consult_seen");
+    }
     set({
       isAuthenticated: false,
       isLoading: false,
@@ -50,8 +53,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       displayName: null,
       email: null,
       role: null,
+      hasSeenFreeConsultPopup: false,
       hasSetMusaitlik: false,
-    }),
+    });
+  },
   setLoading: (loading) => set({ isLoading: loading }),
   markFreeConsultSeen: () => set({ hasSeenFreeConsultPopup: true }),
   markMusaitlikSet: () => set({ hasSetMusaitlik: true }),

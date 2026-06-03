@@ -6,7 +6,7 @@ import { Star, Award, FileText, MessageSquare, Phone, BookOpen, Calendar } from 
 import { getExpert, getExpertBlogs } from "@/lib/services/public.service";
 import { FavoriteButton } from "@/features/experts/components/favorite-button";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 type ExpertDetailPageProps = {
   params: Promise<{ slug: string }>;

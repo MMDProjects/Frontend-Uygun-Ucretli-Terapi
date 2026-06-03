@@ -72,7 +72,8 @@ export default function BlogDuzenlePage({ params }: PageProps) {
   if (notFoundPage || !blog) notFound();
 
   const isRejected = blog!.status === "reddedildi";
-  const canEdit = blog!.status === "taslak" || isRejected;
+  const isPublished = blog!.status === "yayinda";
+  const canEdit = blog!.status === "taslak" || isRejected || isPublished;
 
   if (!canEdit) {
     return (
@@ -85,7 +86,7 @@ export default function BlogDuzenlePage({ params }: PageProps) {
             Bu yazı şu an düzenlenemez.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Yalnızca taslak veya reddedilmiş yazılar düzenlenebilir.
+            İncelemede veya revize bekleyen yazılar düzenlenemez.
           </p>
         </div>
       </div>
@@ -116,7 +117,11 @@ export default function BlogDuzenlePage({ params }: PageProps) {
       if (coverFile) {
         await uploadBlogCover(id, coverFile).catch(() => {});
       }
-      toast.success(isRejected ? "Yazı düzeltildi ve tekrar gönderildi." : "Yazı güncellendi ve incelemeye gönderildi.");
+      toast.success(
+        isRejected ? "Yazı düzeltildi ve tekrar gönderildi." :
+        isPublished ? "Revize incelemeye gönderildi. Onaylanana kadar mevcut içerik yayında kalmaya devam eder." :
+        "Yazı güncellendi ve incelemeye gönderildi."
+      );
       router.push("/uzman/blog");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Bir hata oluştu.");
@@ -125,7 +130,7 @@ export default function BlogDuzenlePage({ params }: PageProps) {
     }
   }
 
-  const submitLabel = isRejected ? "Düzelt ve Tekrar Gönder" : "Güncelle ve İncelemeye Gönder";
+  const submitLabel = isRejected ? "Düzelt ve Tekrar Gönder" : isPublished ? "Revize Gönder" : "Güncelle ve İncelemeye Gönder";
 
   return (
     <div className="space-y-5">
@@ -137,6 +142,16 @@ export default function BlogDuzenlePage({ params }: PageProps) {
       <Link href="/uzman/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-primary">
         <ArrowLeft className="size-4" /> Geri Dön
       </Link>
+
+      {/* Yayındaki blog uyarısı */}
+      {isPublished && (
+        <div className="flex items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <p className="text-sm text-amber-800">
+            Değişiklikler admin onayına gönderilecek. Onaylanana kadar mevcut içerik yayında kalmaya devam eder.
+          </p>
+        </div>
+      )}
 
       {/* Admin notu */}
       {blog!.adminNote && (
