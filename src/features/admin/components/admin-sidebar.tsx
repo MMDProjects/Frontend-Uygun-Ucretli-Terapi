@@ -7,6 +7,7 @@ import { Bell, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/constants/site";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { logout } from "@/lib/services/auth.service";
 
 type NavItem = { label: string; href: string; badge?: number };
@@ -54,6 +55,7 @@ const groups: NavGroup[] = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const { displayName } = useAuthStore();
+  const { unreadCount } = useAdminNotificationStore();
 
   const name = displayName ?? "Admin";
   const initials = name
@@ -141,10 +143,15 @@ export function AdminSidebar() {
           <div className="flex items-center gap-1">
             <Link
               href="/admin/bildirimler"
-              className="rounded-md p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+              className="relative rounded-md p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
               aria-label="Bildirimler"
             >
               <Bell className="size-4" />
+              {unreadCount > 0 && (
+                <span className="absolute right-0 top-0 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
             <button
               type="button"

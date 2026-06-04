@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminSidebar } from "@/features/admin/components/admin-sidebar";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
+import { subscribeToNotificationStream } from "@/lib/services/admin.service";
 import { cn } from "@/lib/utils";
 
 export default function AdminLayout({
@@ -12,6 +14,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { isAuthenticated, isLoading, role } = useAuthStore();
+  const { addNotification } = useAdminNotificationStore();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -21,6 +24,20 @@ export default function AdminLayout({
       router.replace("/admin/giris");
     }
   }, [isAuthenticated, isLoading, role, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated || role !== "admin") return;
+    const unsubscribe = subscribeToNotificationStream((data) => {
+      addNotification({
+        id: data.id,
+        message: data.message,
+        type: data.type,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      });
+    });
+    return () => unsubscribe();
+  }, [isAuthenticated, role, addNotification]);
 
   if (isLoading) {
     return (
