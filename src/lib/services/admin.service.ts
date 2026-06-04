@@ -13,7 +13,7 @@ export type AdminNotification = {
 
 export async function getAllAdminNotifications(limit = 50): Promise<AdminNotification[]> {
   const token = getAccessToken();
-  return apiFetch("/notifications/all", { token, query: { limit } });
+  return apiFetch(`/notifications/all?limit=${limit}`, { token });
 }
 
 export async function markAllAdminNotificationsRead(): Promise<void> {
