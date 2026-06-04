@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import type { AdminNotification } from "@/lib/services/admin.service";
 
+// Admin notification state management
+
 interface AdminNotificationStore {
   notifications: AdminNotification[];
   unreadCount: number;
