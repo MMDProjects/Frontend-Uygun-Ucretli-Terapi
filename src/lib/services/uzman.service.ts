@@ -299,12 +299,21 @@ export function subscribeToNotificationStream(
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
   const es = new EventSource(`${apiUrl}/notifications/stream?token=${token}`);
 
-  es.onmessage = (e) => {
+  function handleEvent(e: MessageEvent) {
     try {
       const parsed = JSON.parse(e.data);
-      onMessage(parsed);
+      // Backend { data: { type, message, id } } sarmalıyor olabilir
+      const payload = parsed?.data ?? parsed;
+      onMessage(payload);
     } catch {}
-  };
+  }
 
-  return () => es.close();
+  // NestJS SSE hem 'message' hem custom event type gönderebilir
+  es.onmessage = handleEvent;
+  es.addEventListener("notification", handleEvent);
+
+  return () => {
+    es.removeEventListener("notification", handleEvent);
+    es.close();
+  };
 }
