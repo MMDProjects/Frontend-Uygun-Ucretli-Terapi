@@ -2,6 +2,7 @@ export type ExpertStatus = "active" | "inactive";
 
 export interface ExpertListItem {
   id: string;
+  userId: string;
   fullName: string;
   email: string;
   status: ExpertStatus;

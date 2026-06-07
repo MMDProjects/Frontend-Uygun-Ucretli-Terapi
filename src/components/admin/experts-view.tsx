@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useExperts } from "@/hooks/use-experts";
 import { sortExpertsByPriority } from "@/services/users/experts-list.service";
+import { apiFetch } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth-cookies";
 import type { ExpertListItem } from "@/types/dto/expert-list";
 
 export function ExpertsView() {
@@ -64,12 +66,22 @@ export function ExpertsView() {
     setWarningOpen(true);
   };
 
-  const handleSendWarning = (message: string, _type: string) => {
+  const handleSendWarning = async (message: string, type: string) => {
     if (!warningExpert) return;
-    toast.success(`${warningExpert.fullName} için uyarı kaydedildi (API TODO)`);
-    console.warn("[expert warning stub]", warningExpert.id, message, _type);
-    setWarningOpen(false);
-    setWarningExpert(null);
+    try {
+      const token = getAccessToken();
+      await apiFetch("/admin/notifications", {
+        method: "POST",
+        token,
+        body: { userId: warningExpert.userId, type, message },
+      });
+      toast.success(`${warningExpert.fullName} için bildirim gönderildi.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bildirim gönderilemedi.");
+    } finally {
+      setWarningOpen(false);
+      setWarningExpert(null);
+    }
   };
 
   const handleStatusToggleRow = async (expertId: string) => {
