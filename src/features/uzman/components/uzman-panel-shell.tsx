@@ -8,18 +8,21 @@ import { UzmanSidebar } from "@/features/uzman/components/uzman-sidebar";
 import { UzmanAuthGuard } from "@/features/uzman/components/uzman-auth-guard";
 import { DangerPanicOverlay } from "@/features/uzman/components/danger-panic-overlay";
 import { subscribeToNotificationStream, getMyUzmanNotifications } from "@/lib/services/uzman.service";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isAuthenticated } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [panicMessage, setPanicMessage] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     getMyUzmanNotifications()
       .then((notifs) => setUnreadCount(notifs.filter((n) => !n.isRead).length))
       .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   // Bildirimler sayfasını ziyaret edince sayacı sıfırla
   useEffect(() => {
@@ -29,6 +32,7 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const unsub = subscribeToNotificationStream((data) => {
       setUnreadCount((prev) => prev + 1);
       if (data.type === "DANGER_PANIC") {
@@ -48,7 +52,7 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
       }
     });
     return unsub;
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <UzmanAuthGuard>
