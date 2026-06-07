@@ -60,17 +60,16 @@ export function AboutHomeSection() {
               className="object-cover object-center"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
-            {videoUrl && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <button
-                  onClick={openModal}
-                  aria-label="Videoyu oynat"
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-primary shadow-md transition hover:scale-110 hover:bg-white"
-                >
-                  <Play className="ml-1 h-8 w-8 fill-current" aria-hidden />
-                </button>
-              </div>
-            )}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <button
+                onClick={openModal}
+                aria-label="Videoyu oynat"
+                disabled={!videoUrl}
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-primary shadow-md transition hover:scale-110 hover:bg-white disabled:cursor-default disabled:opacity-60 disabled:hover:scale-100"
+              >
+                <Play className="ml-1 h-8 w-8 fill-current" aria-hidden />
+              </button>
+            </div>
           </div>
 
           {/* Sağ: PsikoDestek ile tanışın */}
