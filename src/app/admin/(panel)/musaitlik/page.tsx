@@ -1,319 +1,405 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
-import { Lock, Unlock, Users, Save, CheckSquare, Square } from "lucide-react";
+import { Lock, Users } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
 
-type ExpertItem = { id: string; priorityScore: number; user: { firstName: string; lastName: string } };
-type ApiAvailability = { id: string; expertProfileId: string; dayOfWeek: number; startTime: string; endTime: string; isBlockedByAdmin: boolean };
+type ExpertItem = {
+  id: string;
+  priorityScore: number;
+  user: { firstName: string; lastName: string };
+};
+type ApiAvailability = {
+  id: string;
+  expertProfileId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isBlockedByAdmin: boolean;
+};
+type AvailWithExpert = ApiAvailability & { expertId: string };
 
-const DAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
-const DAY_FULL = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
-const DAY_NUM = [1, 2, 3, 4, 5, 6, 0];
-const SLOT_LABELS = ["Sabah", "Öğle", "Akşam"];
-const SLOT_STARTS = ["09:00", "12:00", "17:00"];
-const SLOT_ENDS = ["12:00", "17:00", "21:00"];
+const EXPERT_COLORS = [
+  "#4d978b",
+  "#f59e0b",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#6366f1",
+];
 
-function getToken() { return getAccessToken() ?? ""; }
+// Mon=1 … Sat=6, Sun=0  —  displayed left to right
+const DAY_LABELS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+const DAY_OF_WEEK = [1, 2, 3, 4, 5, 6, 0];
+
+function getToken() {
+  return getAccessToken() ?? "";
+}
+function initials(e: ExpertItem) {
+  return `${e.user.firstName[0] ?? ""}${e.user.lastName[0] ?? ""}`.toUpperCase();
+}
+
+function getWeekDates(): Date[] {
+  const today = new Date();
+  const day = today.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - diff);
+  monday.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function isTodayDate(date: Date): boolean {
+  const t = new Date();
+  return (
+    date.getDate() === t.getDate() &&
+    date.getMonth() === t.getMonth() &&
+    date.getFullYear() === t.getFullYear()
+  );
+}
 
 async function fetchExperts(): Promise<ExpertItem[]> {
-  const res = await apiFetch<{ data: ExpertItem[] } | ExpertItem[]>("/admin/experts?limit=100", { token: getToken() });
-  return Array.isArray(res) ? res : res.data ?? [];
+  const res = await apiFetch<{ data: ExpertItem[] } | ExpertItem[]>(
+    "/admin/experts?limit=100",
+    { token: getToken() },
+  );
+  return Array.isArray(res) ? res : (res.data ?? []);
 }
-async function fetchAvailabilities(expertId: string): Promise<ApiAvailability[]> {
-  return apiFetch(`/admin/experts/${expertId}/availabilities`, { token: getToken() });
+async function fetchAvailabilities(
+  expertId: string,
+): Promise<ApiAvailability[]> {
+  return apiFetch(`/admin/experts/${expertId}/availabilities`, {
+    token: getToken(),
+  });
 }
-async function patchBulkBlock(ids: string[], block: boolean): Promise<void> {
-  await apiFetch("/admin/availabilities/bulk-block", { method: "PATCH", body: { ids, block }, token: getToken() });
+async function patchBulkBlock(ids: string[], block: boolean) {
+  return apiFetch("/admin/availabilities/bulk-block", {
+    method: "PATCH",
+    body: { ids, block },
+    token: getToken(),
+  });
 }
-function initials(e: ExpertItem) { return `${e.user.firstName[0] ?? ""}${e.user.lastName[0] ?? ""}`.toUpperCase(); }
 
 export default function AdminMusaitlikPage() {
   const [experts, setExperts] = useState<ExpertItem[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [viewId, setViewId] = useState<string | null>(null);
-  const [availabilities, setAvailabilities] = useState<ApiAvailability[]>([]);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [availMap, setAvailMap] = useState<Map<string, ApiAvailability[]>>(
+    new Map(),
+  );
   const [loadingExperts, setLoadingExperts] = useState(true);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [saving, setSaving] = useState(false);
-  // pending: id → new isBlockedByAdmin value
-  const [pending, setPending] = useState<Map<string, boolean>>(new Map());
 
-  const loadSlots = useCallback(async (id: string) => {
-    setLoadingSlots(true);
-    setPending(new Map());
-    try {
-      const data = await fetchAvailabilities(id);
-      setAvailabilities(data);
-    } catch { toast.error("Müsaitlik yüklenemedi"); }
-    finally { setLoadingSlots(false); }
-  }, []);
+  const weekDates = useMemo(() => getWeekDates(), []);
 
   useEffect(() => {
     fetchExperts()
-      .then((list) => {
+      .then(async (list) => {
         setExperts(list);
-        if (list.length > 0) { setViewId(list[0].id); setSelectedIds(new Set([list[0].id])); }
+        const ids = list.map((e) => e.id);
+        setCheckedIds(new Set(ids));
+        const entries = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const data = await fetchAvailabilities(id);
+              return [id, data] as [string, ApiAvailability[]];
+            } catch {
+              return [id, []] as [string, ApiAvailability[]];
+            }
+          }),
+        );
+        setAvailMap(new Map(entries));
       })
       .catch(() => toast.error("Uzmanlar yüklenemedi"))
       .finally(() => setLoadingExperts(false));
   }, []);
 
-  useEffect(() => { if (viewId) loadSlots(viewId); }, [viewId, loadSlots]);
+  const colorMap = useMemo(() => {
+    const m = new Map<string, string>();
+    experts.forEach((e, i) =>
+      m.set(e.id, EXPERT_COLORS[i % EXPERT_COLORS.length]),
+    );
+    return m;
+  }, [experts]);
 
-  function toggleSelect(id: string) {
-    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const visibleAvails = useMemo((): AvailWithExpert[] => {
+    const result: AvailWithExpert[] = [];
+    checkedIds.forEach((id) => {
+      (availMap.get(id) ?? []).forEach((a) =>
+        result.push({ ...a, expertId: id }),
+      );
+    });
+    return result;
+  }, [checkedIds, availMap]);
+
+  const timeSlots = useMemo(() => {
+    const s = new Set(visibleAvails.map((a) => a.startTime));
+    return [...s].sort();
+  }, [visibleAvails]);
+
+  function getCellAvails(dowIdx: number, time: string): AvailWithExpert[] {
+    const dayNum = DAY_OF_WEEK[dowIdx];
+    return visibleAvails.filter(
+      (a) => a.dayOfWeek === dayNum && a.startTime === time,
+    );
   }
-  function selectAll() { setExperts((e) => { setSelectedIds(new Set(e.map((x) => x.id))); return e; }); }
-  function clearAll() { setSelectedIds(new Set()); }
 
-  // Slot tıklanınca pending'e yaz (anında API'ye gitmiyor)
-  function handleToggleSlot(slot: ApiAvailability) {
-    setPending((prev) => {
+  async function handleToggle(avail: AvailWithExpert) {
+    const newBlocked = !avail.isBlockedByAdmin;
+    setAvailMap((prev) => {
       const n = new Map(prev);
-      const currentBlocked = n.has(slot.id) ? n.get(slot.id)! : slot.isBlockedByAdmin;
-      n.set(slot.id, !currentBlocked);
+      const list = (n.get(avail.expertId) ?? []).map((a) =>
+        a.id === avail.id ? { ...a, isBlockedByAdmin: newBlocked } : a,
+      );
+      n.set(avail.expertId, list);
+      return n;
+    });
+    try {
+      await patchBulkBlock([avail.id], newBlocked);
+      toast.success(newBlocked ? "Slot kilitlendi" : "Slot açıldı");
+    } catch {
+      setAvailMap((prev) => {
+        const n = new Map(prev);
+        const list = (n.get(avail.expertId) ?? []).map((a) =>
+          a.id === avail.id ? { ...a, isBlockedByAdmin: !newBlocked } : a,
+        );
+        n.set(avail.expertId, list);
+        return n;
+      });
+      toast.error("İşlem başarısız");
+    }
+  }
+
+  function toggleCheck(id: string) {
+    setCheckedIds((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
   }
 
-  // Toplu kilitle/aç: tüm seçili uzmanların slotlarını pending'e ekle
-  async function handleBulkPending(block: boolean) {
-    if (selectedIds.size === 0) { toast.error("Hiç uzman seçilmedi"); return; }
-    setSaving(true);
-    try {
-      const allAvails: ApiAvailability[] = [];
-      await Promise.all([...selectedIds].map(async (id) => {
-        const avails = await fetchAvailabilities(id);
-        allAvails.push(...avails);
-      }));
-      const ids = allAvails.map((a) => a.id);
-      if (ids.length === 0) { toast.error("Seçili uzmanların müsaitlik slotu yok"); return; }
-      await patchBulkBlock(ids, block);
-      if (viewId) await loadSlots(viewId);
-      toast.success(`${selectedIds.size} uzman, ${allAvails.length} slot ${block ? "kilitlendi" : "açıldı"}`);
-    } catch { toast.error("Toplu işlem başarısız"); }
-    finally { setSaving(false); }
-  }
-
-  // Kaydet: pending değişiklikleri backend'e gönder
-  async function handleSave() {
-    if (pending.size === 0) { toast.info("Değişiklik yok"); return; }
-    setSaving(true);
-    try {
-      const toBlock = [...pending.entries()].filter(([, v]) => v).map(([id]) => id);
-      const toUnblock = [...pending.entries()].filter(([, v]) => !v).map(([id]) => id);
-      await Promise.all([
-        toBlock.length > 0 ? patchBulkBlock(toBlock, true) : Promise.resolve(),
-        toUnblock.length > 0 ? patchBulkBlock(toUnblock, false) : Promise.resolve(),
-      ]);
-      if (viewId) await loadSlots(viewId);
-      toast.success(`${pending.size} slot kaydedildi`);
-    } catch { toast.error("Kayıt başarısız"); }
-    finally { setSaving(false); }
-  }
-
-  function getSlot(dayNum: number, slotIdx: number) {
-    return availabilities.find((a) => a.dayOfWeek === dayNum && a.startTime === SLOT_STARTS[slotIdx]);
-  }
-
-  function isBlocked(slot: ApiAvailability) {
-    return pending.has(slot.id) ? pending.get(slot.id)! : slot.isBlockedByAdmin;
-  }
-
-  const selected = experts.find((e) => e.id === viewId);
-  const hasPending = pending.size > 0;
+  const allChecked =
+    experts.length > 0 && checkedIds.size === experts.length;
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Müsaitlik Yönetimi" description="Uzman bazlı müsaitlik görüntüleme ve admin kilit yönetimi.">
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2">
-          {selectedIds.size > 0 && (
-            <span className="text-xs font-medium text-muted-foreground">
-              {selectedIds.size} uzman seçili
-            </span>
-          )}
-          <Button size="sm" variant="outline" onClick={() => handleBulkPending(false)} disabled={saving || selectedIds.size === 0}>
-            <Unlock className="mr-1.5 size-3.5" /> Tümünü Aç
-          </Button>
-          <Button size="sm" variant="destructive" onClick={() => handleBulkPending(true)} disabled={saving || selectedIds.size === 0}>
-            <Lock className="mr-1.5 size-3.5" /> Tümünü Kilitle
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={saving || !hasPending}
-            className={cn(hasPending ? "bg-primary hover:bg-primary-hover" : "")}
-          >
-            {saving
-              ? <><span className="mr-1.5 size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />Kaydediliyor…</>
-              : <><Save className="mr-1.5 size-3.5" />Kaydet {hasPending ? `(${pending.size})` : ""}</>
-            }
-          </Button>
-        </div>
-      </PageHeader>
+      <PageHeader
+        title="Müsaitlik Yönetimi"
+        description="Tüm uzmanların haftalık müsaitliklerini ortak tabloda görüntüleyin ve yönetin."
+      />
 
       <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
-        {/* Uzman listesi */}
-        <div className="rounded-2xl border border-border/60 bg-white overflow-hidden">
-          <div className="border-b border-border/60 bg-[#e6f0ee] px-4 py-2.5">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                <Users className="size-3.5" /> Uzmanlar
-              </p>
-              <button
-                type="button"
-                onClick={selectedIds.size === experts.length && experts.length > 0 ? clearAll : selectAll}
-                className="flex items-center justify-center rounded p-0.5 transition hover:bg-white/60"
-                aria-label={selectedIds.size === experts.length ? "Seçimi kaldır" : "Tümünü seç"}
-              >
-                {selectedIds.size === experts.length && experts.length > 0
-                  ? <CheckSquare className="size-4 text-primary" />
-                  : selectedIds.size > 0
-                    ? <CheckSquare className="size-4 text-primary/50" />
-                    : <Square className="size-4 text-muted-foreground/50" />
-                }
-              </button>
-            </div>
+        {/* ── Expert selector ─────────────────────────────────────── */}
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+          <div className="flex items-center justify-between border-b border-border/60 bg-[#e6f0ee] px-4 py-2.5">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Users className="size-3.5" /> Uzman Seç
+            </p>
+            <button
+              type="button"
+              className="text-[10px] font-semibold text-primary hover:underline"
+              onClick={() =>
+                setCheckedIds(
+                  allChecked ? new Set() : new Set(experts.map((e) => e.id)),
+                )
+              }
+            >
+              {allChecked ? "Kaldır" : "Tümünü Seç"}
+            </button>
           </div>
-          <div className="flex flex-col gap-1 p-2 max-h-[60vh] overflow-y-auto">
-            {loadingExperts ? (
-              Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-12 skeleton rounded-xl" />)
-            ) : experts.length === 0 ? (
-              <p className="p-3 text-xs text-muted-foreground text-center">Uzman bulunamadı</p>
-            ) : (
-              experts.map((expert) => {
-                const isChecked = selectedIds.has(expert.id);
-                const isViewing = viewId === expert.id;
-                return (
-                  <div
-                    key={expert.id}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-xl border-[1.5px] px-3 py-2 transition cursor-pointer",
-                      isViewing ? "border-primary/30 bg-primary/7 text-[#014a3e]" : "border-transparent hover:bg-[#e6f0ee]",
-                    )}
-                    onClick={() => setViewId(expert.id)}
-                  >
+
+          <div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto p-2">
+            {loadingExperts
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="skeleton h-12 rounded-xl" />
+                ))
+              : experts.map((expert) => {
+                  const color = colorMap.get(expert.id) ?? "#4d978b";
+                  const checked = checkedIds.has(expert.id);
+                  return (
                     <button
+                      key={expert.id}
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); toggleSelect(expert.id); }}
-                      className="shrink-0 flex items-center justify-center"
-                      aria-label={isChecked ? "Seçimi kaldır" : "Seç"}
+                      onClick={() => toggleCheck(expert.id)}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition",
+                        checked
+                          ? "border-primary/30 bg-primary/5"
+                          : "border-transparent opacity-50 hover:bg-[#e6f0ee] hover:opacity-80",
+                      )}
                     >
-                      {isChecked
-                        ? <CheckSquare className="size-4 text-primary" />
-                        : <Square className="size-4 text-muted-foreground/40" />
-                      }
+                      <div
+                        className="flex size-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                        style={{ background: color }}
+                      >
+                        {initials(expert)}
+                      </div>
+                      <p className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
+                        {expert.user.firstName} {expert.user.lastName}
+                      </p>
+                      <div
+                        className={cn(
+                          "size-3 shrink-0 rounded-full border-2 transition",
+                          checked
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground/30",
+                        )}
+                      />
                     </button>
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#4d978b] text-[10px] font-bold text-white">
-                      {initials(expert)}
-                    </div>
-                    <p className="truncate text-xs font-semibold text-foreground">
-                      {expert.user.firstName} {expert.user.lastName}
-                    </p>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })}
           </div>
         </div>
 
-        {/* Grid */}
-        <div className="rounded-2xl border border-border/60 bg-white overflow-hidden">
-          <div className="border-b border-border/60 bg-[#e6f0ee] px-4 py-2.5 flex items-center justify-between">
+        {/* ── Combined weekly grid ─────────────────────────────────── */}
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+          <div className="border-b border-border/60 bg-[#e6f0ee] px-4 py-2.5">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {selected ? `${selected.user.firstName} ${selected.user.lastName} — Müsaitlik Takvimi` : "Uzman Seçin"}
+              Haftalık Ortak Takvim
+              {checkedIds.size > 0 && (
+                <span className="ml-2 font-normal normal-case text-[#014a3e]">
+                  — {checkedIds.size} uzman görüntüleniyor
+                </span>
+              )}
             </p>
-            {hasPending && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                {pending.size} değişiklik kaydedilmedi
-              </span>
-            )}
           </div>
 
-          {loadingSlots ? (
-            <div className="flex items-center justify-center p-16">
-              <span className="size-5 animate-spin rounded-full border-2 border-border border-t-primary" />
-            </div>
-          ) : !viewId ? (
-            <div className="flex items-center justify-center p-16 text-sm text-muted-foreground">Listeden bir uzman seçin</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <div className="flex border-b-2 border-border/60 bg-[#e6f0ee]">
-                <div className="w-24 shrink-0 border-r border-border/60 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Zaman</div>
-                {DAYS.map((day, i) => (
-                  <div key={day} className="flex-1 border-r border-border/60 py-3 text-center last:border-r-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{day}</p>
-                    <p className="mt-0.5 text-[11px] font-semibold text-[#014a3e] hidden sm:block">{DAY_FULL[i].slice(0, 3)}</p>
-                  </div>
-                ))}
+          <div className="overflow-x-auto">
+            {/* Day headers */}
+            <div className="flex border-b-2 border-border/60 bg-[#e6f0ee]">
+              <div className="w-16 shrink-0 border-r border-border/60 px-2 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Saat
               </div>
+              {weekDates.map((date, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "min-w-[80px] flex-1 border-r border-border/60 py-2 text-center last:border-r-0",
+                    isTodayDate(date) && "bg-primary/10",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-[10px] font-bold uppercase",
+                      isTodayDate(date) ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {DAY_LABELS[i]}
+                  </p>
+                  <p
+                    className={cn(
+                      "text-base font-bold",
+                      isTodayDate(date) ? "text-primary" : "text-[#014a3e]",
+                    )}
+                  >
+                    {date.getDate()}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-              {SLOT_LABELS.map((label, slotIdx) => (
-                <div key={label} className="flex border-b border-border/40 last:border-b-0 hover:bg-primary/[0.015]">
-                  <div className="w-24 shrink-0 border-r border-border/60 bg-[#e6f0ee] px-3 py-4">
-                    <p className="text-xs font-semibold text-[#014a3e]">{label}</p>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">{SLOT_STARTS[slotIdx]}–{SLOT_ENDS[slotIdx]}</p>
+            {/* Time rows */}
+            {timeSlots.length === 0 ? (
+              <div className="py-14 text-center text-sm text-muted-foreground">
+                {checkedIds.size === 0
+                  ? "Sol panelden uzman seçin"
+                  : "Seçili uzmanlarda müsaitlik kaydı bulunamadı"}
+              </div>
+            ) : (
+              timeSlots.map((time) => (
+                <div
+                  key={time}
+                  className="flex border-b border-border/40 last:border-b-0"
+                >
+                  <div className="flex w-16 shrink-0 items-start justify-center border-r border-border/60 bg-[#e6f0ee] px-1 pt-2">
+                    <p className="text-[11px] font-semibold text-[#014a3e]">
+                      {time}
+                    </p>
                   </div>
-                  {DAY_NUM.map((dayNum, dayIdx) => {
-                    const slot = getSlot(dayNum, slotIdx);
-                    const blocked = slot ? isBlocked(slot) : false;
-                    const isAvailable = !!slot;
-                    const isDirty = slot ? pending.has(slot.id) : false;
-
+                  {weekDates.map((date, dowIdx) => {
+                    const cell = getCellAvails(dowIdx, time);
                     return (
                       <div
-                        key={dayIdx}
+                        key={dowIdx}
                         className={cn(
-                          "flex flex-1 items-center justify-center border-r border-border/40 p-2 last:border-r-0",
-                          blocked && "bg-red-50/60",
-                          !isAvailable && "bg-muted/30",
+                          "min-h-[44px] min-w-[80px] flex-1 border-r border-border/40 p-1 last:border-r-0",
+                          isTodayDate(date) && "bg-primary/[0.03]",
                         )}
                       >
-                        {!isAvailable ? (
-                          <div className="w-full rounded-lg border border-border/40 bg-muted/50 py-2.5 text-center text-[10px] text-muted-foreground">—</div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleSlot(slot!)}
-                            title={blocked ? "Kilidi aç" : "Kilitle"}
-                            style={blocked ? { backgroundImage: "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.1) 3px, rgba(220,38,38,0.1) 6px)" } : undefined}
-                            className={cn(
-                              "w-full rounded-lg border py-2.5 text-[10px] font-bold transition-all flex items-center justify-center gap-1",
-                              isDirty && "ring-2 ring-amber-400 ring-offset-1",
-                              blocked ? "border-red-300 text-red-600 hover:border-red-400" : "border-primary/40 bg-primary text-white hover:bg-primary-hover active:scale-95",
-                            )}
-                          >
-                            {blocked ? <><Lock className="size-3" /> Kilitli</> : <><Unlock className="size-3" /> Müsait</>}
-                          </button>
-                        )}
+                        <div className="flex flex-col gap-0.5">
+                          {cell.map((avail) => {
+                            const expert = experts.find(
+                              (e) => e.id === avail.expertProfileId,
+                            );
+                            if (!expert) return null;
+                            const color =
+                              colorMap.get(expert.id) ?? "#4d978b";
+                            const blocked = avail.isBlockedByAdmin;
+                            return (
+                              <button
+                                key={avail.id}
+                                type="button"
+                                onClick={() => handleToggle(avail)}
+                                title={`${expert.user.firstName} ${expert.user.lastName} — ${blocked ? "Kilidi aç" : "Kilitle"}`}
+                                className="flex w-full cursor-pointer items-center gap-1 rounded px-1.5 py-[3px] text-[10px] font-bold transition hover:opacity-75 active:scale-95"
+                                style={
+                                  blocked
+                                    ? {
+                                        background: "#fee2e2",
+                                        color: "#dc2626",
+                                      }
+                                    : {
+                                        background: color + "22",
+                                        color,
+                                      }
+                                }
+                              >
+                                <span
+                                  className="size-2 shrink-0 rounded-full"
+                                  style={{
+                                    background: blocked ? "#dc2626" : color,
+                                  }}
+                                />
+                                <span
+                                  className={cn(blocked && "line-through")}
+                                >
+                                  {initials(expert)}
+                                </span>
+                                {blocked && (
+                                  <Lock className="ml-auto size-2.5 shrink-0 text-red-500" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
 
-          <div className="flex flex-wrap items-center gap-4 border-t border-border/40 px-4 py-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-4 w-6 rounded border border-primary/40 bg-primary" />Müsait
+          <div className="flex flex-wrap items-center gap-4 border-t border-border/40 px-4 py-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-full bg-[#4d978b]" />
+              Müsait
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-4 w-6 rounded border border-red-300" style={{ backgroundImage: "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.1) 3px, rgba(220,38,38,0.1) 6px)" }} />
+            <div className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-full bg-red-400" />
               Admin Kilitli
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-4 w-6 rounded border-2 border-amber-400 bg-white" />
-              Kaydedilmedi
-            </div>
-            <p className="ml-auto text-xs text-muted-foreground">Slota tıkla → Kaydet ile gönder</p>
+            <p className="ml-auto">
+              İsim chip&apos;ine tıklayarak kilit durumunu değiştirin
+            </p>
           </div>
         </div>
       </div>
