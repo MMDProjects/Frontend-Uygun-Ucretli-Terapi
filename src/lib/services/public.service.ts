@@ -179,10 +179,29 @@ export type ContactPayload = {
   companyName?: string;
   employeeCount?: string;
   kvkkApproved?: boolean;
+  kvkkVersionId?: string;
 };
 
 export async function submitContact(payload: ContactPayload): Promise<{ message: string; id: string }> {
   return apiFetch("/contact", { method: "POST", body: payload });
+}
+
+// ─── KVKK ────────────────────────────────────────────────────────────────────
+
+export type KvkkSection = { id: string; title: string; html: string };
+
+export type ApiKvkkContent = {
+  id: string | null;
+  version: string;
+  sections: KvkkSection[];
+};
+
+export async function getPublicKvkk(): Promise<ApiKvkkContent | null> {
+  try {
+    return await apiFetch<ApiKvkkContent>("/kvkk");
+  } catch {
+    return null;
+  }
 }
 
 // ─── Newsletter ───────────────────────────────────────────────────────────────

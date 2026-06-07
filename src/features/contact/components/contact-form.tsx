@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ import {
   type CorporateContactFormValues,
   type ContactFormValues,
 } from "@/features/contact/schemas/contact-form-schema";
-import { submitContact, type ContactPayload } from "@/lib/services/public.service";
+import { submitContact, getPublicKvkk, type ContactPayload } from "@/lib/services/public.service";
 
 type ContactFormProps = {
   title: string;
@@ -101,6 +101,13 @@ export function ContactForm({
 }: ContactFormProps) {
   const isCorporate = variant === "corporate";
   const storageKey = isCorporate ? CORPORATE_KEY : GENERAL_KEY;
+  const kvkkVersionIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    getPublicKvkk().then((data) => {
+      if (data?.id) kvkkVersionIdRef.current = data.id;
+    }).catch(() => {});
+  }, []);
 
   const draft = readDraft(storageKey);
 
@@ -141,6 +148,7 @@ export function ContactForm({
           companyName: v.companyName,
           employeeCount: v.employeeCount,
           kvkkApproved: v.kvkkApproved,
+          kvkkVersionId: kvkkVersionIdRef.current,
         };
       } else {
         const v = values as ContactFormValues;
@@ -152,6 +160,7 @@ export function ContactForm({
           message: v.message,
           isCorporate: false,
           kvkkApproved: v.kvkkApproved,
+          kvkkVersionId: kvkkVersionIdRef.current,
         };
       }
 

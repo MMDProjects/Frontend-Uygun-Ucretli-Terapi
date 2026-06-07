@@ -431,3 +431,12 @@ select {
 #main-content > *:first-child.hero-full-bleed {
   padding-top: var(--site-header-height);
 }
+
+/* KVKK DB-rendered HTML içeriği */
+.kvkk-content p { margin-bottom: 0.75rem; }
+.kvkk-content p:last-child { margin-bottom: 0; }
+.kvkk-content ul { list-style: none; padding: 0; margin: 0.5rem 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.kvkk-content ul li { display: flex; gap: 0.5rem; }
+.kvkk-content ul li::before { content: ""; flex-shrink: 0; width: 0.375rem; height: 0.375rem; margin-top: 0.55rem; border-radius: 9999px; background: var(--primary); }
+.kvkk-content a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.kvkk-content a:hover { opacity: 0.8; }
