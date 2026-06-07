@@ -77,11 +77,18 @@ function isTodayDate(d: Date) {
   return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear();
 }
 
-function weekLabel(offset: number) {
-  if (offset === 0)  return "Bu Hafta";
-  if (offset === -1) return "Geçen Hafta";
-  if (offset === 1)  return "Gelecek Hafta";
-  return offset > 0 ? `+${offset} Hafta` : `${offset} Hafta`;
+const MONTH_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+
+function weekRangeLabel(dates: Date[]): string {
+  const from = dates[0];
+  const to   = dates[6];
+  const d1   = from.getDate();
+  const d2   = to.getDate();
+  const m1   = MONTH_SHORT[from.getMonth()];
+  const m2   = MONTH_SHORT[to.getMonth()];
+  return from.getMonth() === to.getMonth()
+    ? `${d1}–${d2} ${m1}`
+    : `${d1} ${m1} – ${d2} ${m2}`;
 }
 
 /* ─── API ────────────────────────────────────────────────── */
@@ -273,10 +280,15 @@ export default function AdminMusaitlikPage() {
           >
             <ChevronLeft className="size-4 text-muted-foreground" />
           </button>
-          <span className="flex h-10 min-w-[100px] cursor-default items-center justify-center
-                           px-3 text-sm font-medium text-foreground">
-            {weekLabel(weekOffset)}
-          </span>
+          <div className="flex h-10 min-w-[120px] cursor-default flex-col items-center
+                          justify-center px-3 leading-none">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              {weekOffset === 0 ? "Bu Hafta" : weekOffset === -1 ? "Geçen Hafta" : weekOffset === 1 ? "Gelecek Hafta" : weekOffset > 0 ? `+${weekOffset} Hafta` : `${weekOffset} Hafta`}
+            </span>
+            <span className="text-sm font-semibold text-foreground tabular-nums">
+              {weekRangeLabel(weekDates)}
+            </span>
+          </div>
           <button
             type="button"
             onClick={() => setWeekOffset((p) => p + 1)}
@@ -385,10 +397,16 @@ export default function AdminMusaitlikPage() {
                     {DAY_LABELS[dowIdx]}
                   </p>
                   <p className={cn(
-                    "text-base font-bold leading-tight",
+                    "text-base font-bold leading-none",
                     today ? "text-primary" : "text-[#014a3e]",
                   )}>
                     {date.getDate()}
+                  </p>
+                  <p className={cn(
+                    "text-[9px] font-medium mt-0.5",
+                    today ? "text-primary/70" : "text-muted-foreground/50",
+                  )}>
+                    {MONTH_SHORT[date.getMonth()]}
                   </p>
                 </div>
               );
