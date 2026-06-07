@@ -60,11 +60,12 @@ function mapBackendStatus(raw: unknown): UserListStatus {
 }
 
 function mapOneUserRow(row: Record<string, unknown>): DanisanUser {
-  const first = String(row.first_name ?? "");
-  const last = String(row.last_name ?? "");
+  // Backend returns camelCase (firstName/lastName); some APIs use snake_case
+  const first = String(row.firstName ?? row.first_name ?? "");
+  const last = String(row.lastName ?? row.last_name ?? "");
   const nameFromParts = `${first} ${last}`.trim();
-  const name =
-    String(row.name ?? "").trim() || nameFromParts || "İsimsiz";
+  const name = String(row.name ?? "").trim() || nameFromParts || "İsimsiz";
+  const isActive = row.isActive ?? row.is_active;
 
   return {
     id: String(row.id ?? ""),
@@ -73,23 +74,34 @@ function mapOneUserRow(row: Record<string, unknown>): DanisanUser {
     role: mapBackendRole(
       typeof row.role === "string" ? row.role : undefined
     ),
-    status: mapBackendStatus(row.status),
+    status: mapBackendStatus(isActive !== undefined ? isActive : row.status),
     registeredAt:
-      typeof row.created_at === "string"
-        ? row.created_at
-        : typeof row.registeredDate === "string"
-          ? row.registeredDate
-          : undefined,
+      typeof row.createdAt === "string"
+        ? row.createdAt
+        : typeof row.created_at === "string"
+          ? row.created_at
+          : typeof row.registeredDate === "string"
+            ? row.registeredDate
+            : undefined,
   };
 }
 
 /**
  * Supports:
+ * - { data: T[], total, page, limit } (backend format — data is directly an array)
  * - { success: true, data: { users?: T[] } } (standard envelope)
  * - { status: "success", data: { users?: T[], USER_DETAILS?: T[] } } (Sportlink-style)
  */
 export function mapUsersFromResponse(payload: unknown): DanisanUser[] {
   if (!isRecord(payload)) return [];
+
+  // Backend format: { data: [...], total, page, limit }
+  if (Array.isArray(payload.data)) {
+    return payload.data
+      .filter(isRecord)
+      .map(mapOneUserRow)
+      .filter((u) => u.id.length > 0);
+  }
 
   const data = isRecord(payload.data) ? payload.data : null;
   if (!data) return [];
@@ -110,6 +122,8 @@ function responseLooksSuccessful(payload: unknown): boolean {
   if (!isRecord(payload)) return false;
   if (payload.success === true) return true;
   if (payload.status === "success") return true;
+  // Backend format: { data: [...], total, page, limit } — no success flag
+  if (Array.isArray(payload.data)) return true;
   return false;
 }
 
