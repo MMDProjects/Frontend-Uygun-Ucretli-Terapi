@@ -45,11 +45,14 @@ function mapAdminUserRow(row: Record<string, unknown>): AdminUser {
       ? "inactive"
       : "active";
 
+  const dbRole = String(row.role ?? "").toUpperCase();
+  const role: AdminUser["role"] = dbRole === "UZMAN" ? "personel" : "admin";
+
   return {
     id: String(row.id ?? ""),
     fullName,
     email: String(row.email ?? ""),
-    role: "admin",
+    role,
     status,
     createdAt:
       typeof row.createdAt === "string"
