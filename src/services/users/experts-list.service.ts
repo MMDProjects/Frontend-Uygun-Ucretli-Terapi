@@ -64,7 +64,7 @@ interface BackendExpert {
   isPublished: boolean;
   adminNote: string | null;
   createdAt: string;
-  user: { firstName: string; lastName: string; email: string; phone: string; isActive: boolean };
+  user: { id: string; firstName: string; lastName: string; email: string; phone: string; isActive: boolean };
   tags: { id: string; name: string; isActive: boolean }[];
 }
 
@@ -77,6 +77,7 @@ function mapToListItem(expert: BackendExpert): ExpertListItem {
 
   return {
     id: expert.id,
+    userId: expert.user.id,
     fullName: `${expert.user.firstName} ${expert.user.lastName}`.trim(),
     email: expert.user.email,
     status: expert.user.isActive ? "active" : "inactive",
