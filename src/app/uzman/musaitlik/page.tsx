@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Info, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Info, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { cn } from "@/lib/utils";
 import {
@@ -109,6 +116,19 @@ export default function UzmanMusaitlikPage() {
   const [saved, setSaved] = useState(false);
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
+
+  const weekOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 53 }, (_, i) => {
+      const offset = i - 26;
+      const dates = getWeekDates(offset);
+      const label = weekRangeLabel(dates);
+      const yearSuffix = dates[0].getFullYear() !== currentYear ? ` ${dates[0].getFullYear()}` : "";
+      const prefix = offset === 0 ? "Bu Hafta · " : "";
+      return { offset, label: `${prefix}${label}${yearSuffix}` };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     getMyAvailabilities()
@@ -263,43 +283,22 @@ export default function UzmanMusaitlikPage() {
             >
               Temizle
             </button>
-            {/* Week navigation */}
-            <div className="flex items-center overflow-hidden rounded-lg border border-border/60">
-              <button
-                type="button"
-                onClick={() => setWeekOffset((p) => p - 1)}
-                className="flex h-8 cursor-pointer items-center px-2 transition-colors
-                           hover:bg-muted/60 border-r border-border/60"
-                aria-label="Önceki hafta"
-              >
-                <ChevronLeft className="size-3.5 text-muted-foreground" />
-              </button>
-              <div className="flex h-8 min-w-[96px] flex-col items-center justify-center px-2 leading-none">
-                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                  {weekOffset === 0
-                    ? "Bu Hafta"
-                    : weekOffset === 1
-                    ? "Gelecek Hafta"
-                    : weekOffset === -1
-                    ? "Geçen Hafta"
-                    : weekOffset > 0
-                    ? `+${weekOffset} Hafta`
-                    : `${weekOffset} Hafta`}
-                </span>
-                <span className="text-[11px] font-semibold text-foreground tabular-nums">
-                  {weekRangeLabel(weekDates)}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setWeekOffset((p) => p + 1)}
-                className="flex h-8 cursor-pointer items-center px-2 transition-colors
-                           hover:bg-muted/60 border-l border-border/60"
-                aria-label="Sonraki hafta"
-              >
-                <ChevronRight className="size-3.5 text-muted-foreground" />
-              </button>
-            </div>
+            {/* Week selection dropdown */}
+            <Select
+              value={String(weekOffset)}
+              onValueChange={(v) => setWeekOffset(Number(v))}
+            >
+              <SelectTrigger className="h-8 min-w-[180px] border-border/60 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {weekOptions.map((opt) => (
+                  <SelectItem key={opt.offset} value={String(opt.offset)} className="text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
