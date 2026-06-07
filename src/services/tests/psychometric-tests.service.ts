@@ -15,6 +15,7 @@ interface BackendTest {
   slug: string;
   description: string;
   isActive: boolean;
+  updatedAt?: string;
   definition?: PsychometricTestDefinition | null;
 }
 
@@ -49,10 +50,13 @@ function mapBackendTest(row: BackendTest): PsychometricTestDefinition | null {
   const def = row.definition;
   return {
     ...def,
+    id: row.id,
+    title: def.title || row.title,
+    description: def.description || row.description,
     questions: def.questions ?? [],
     subscales: def.subscales ?? [],
     interpretationBands: def.interpretationBands ?? [],
-    id: row.id,
+    updatedAt: def.updatedAt ?? row.updatedAt,
   };
 }
 
