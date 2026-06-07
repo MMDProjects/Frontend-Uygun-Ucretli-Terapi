@@ -58,5 +58,17 @@ export async function publishKvkkVersion(
   });
   const payload = (await res.json()) as { success: boolean; message: string };
   if (!res.ok) throw new Error(payload?.message ?? "Yayınlama başarısız");
+
+  // /kvkk sayfasının ISR cache'ini sıfırla
+  try {
+    await fetch("/api/revalidate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: "/kvkk" }),
+    });
+  } catch {
+    // revalidate başarısız olsa da publish başarılı sayılır
+  }
+
   return payload;
 }

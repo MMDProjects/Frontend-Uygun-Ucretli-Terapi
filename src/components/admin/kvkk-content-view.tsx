@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   getKvkkAdminContent,
   publishKvkkVersion,
@@ -17,6 +16,65 @@ import {
 } from "@/services/content/kvkk-content.service";
 import type { KvkkSection } from "@/lib/services/public.service";
 import { DEFAULT_KVKK_SECTIONS } from "@/lib/constants/kvkk-defaults";
+
+// contentEditable bölüm editörü — HTML render eder, kullanıcı düz metin gibi düzenler
+function SectionEditor({
+  section,
+  index,
+  onTitleChange,
+  onHtmlChange,
+}: {
+  section: KvkkSection;
+  index: number;
+  onTitleChange: (value: string) => void;
+  onHtmlChange: (value: string) => void;
+}) {
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // key prop (section.id + resetKey) değiştiğinde bileşen yeniden mount olur;
+  // mount sırasında HTML'i imperativ olarak set et (contentEditable + dangerouslySetInnerHTML birlikte kullanılamaz)
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = section.html;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="rounded-md border border-border p-4 space-y-3">
+      <span className="text-xs font-medium text-muted-foreground">
+        Bölüm {index + 1}
+      </span>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Başlık</Label>
+        <Input
+          value={section.title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Bölüm başlığı"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">İçerik</Label>
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={() => {
+            if (editorRef.current) {
+              onHtmlChange(editorRef.current.innerHTML);
+            }
+          }}
+          className="kvkk-content min-h-[80px] w-full rounded-xl border border-input bg-white px-4 py-3 text-sm leading-7 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+        <p className="text-xs text-muted-foreground">
+          Metni seçip <kbd className="rounded bg-muted px-1 text-[10px]">Ctrl+B</kbd> ile kalın yapabilirsiniz. Bağlantılar ve listeler otomatik korunur.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function KvkkContentView() {
   const [active, setActive] = useState<KvkkActiveVersion | null>(null);
@@ -28,6 +86,7 @@ export function KvkkContentView() {
 
   const [draftVersion, setDraftVersion] = useState("");
   const [draftSections, setDraftSections] = useState<KvkkSection[]>([]);
+  const [resetKey, setResetKey] = useState(0);
 
   const lastLoaded = useRef<{ version: string; sections: KvkkSection[] } | null>(null);
 
@@ -44,9 +103,10 @@ export function KvkkContentView() {
         setDraftSections(sections);
         lastLoaded.current = { version: data.active.version, sections };
       } else {
-        setDraftVersion(new Date().toISOString().slice(0, 7));
+        const ver = new Date().toISOString().slice(0, 7);
+        setDraftVersion(ver);
         setDraftSections(DEFAULT_KVKK_SECTIONS);
-        lastLoaded.current = null;
+        lastLoaded.current = { version: ver, sections: DEFAULT_KVKK_SECTIONS };
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yüklenemedi");
@@ -58,23 +118,26 @@ export function KvkkContentView() {
   useEffect(() => { void load(); }, [load]);
 
   const isDirty = useMemo(() => {
-    if (!lastLoaded.current) return draftSections.length > 0 || draftVersion.length > 0;
+    if (!lastLoaded.current) return false;
     return (
       draftVersion !== lastLoaded.current.version ||
       JSON.stringify(draftSections) !== JSON.stringify(lastLoaded.current.sections)
     );
   }, [draftVersion, draftSections]);
 
-  const updateSection = (idx: number, field: "title" | "html", value: string) => {
-    setDraftSections((prev) =>
-      prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s))
-    );
+  const updateSectionTitle = (idx: number, value: string) => {
+    setDraftSections((prev) => prev.map((s, i) => (i === idx ? { ...s, title: value } : s)));
+  };
+
+  const updateSectionHtml = (idx: number, value: string) => {
+    setDraftSections((prev) => prev.map((s, i) => (i === idx ? { ...s, html: value } : s)));
   };
 
   const handleReset = () => {
     if (!lastLoaded.current) return;
     setDraftVersion(lastLoaded.current.version);
     setDraftSections(lastLoaded.current.sections);
+    setResetKey((k) => k + 1);
     toast.info("Son yayınlanan versiyona sıfırlandı.");
   };
 
@@ -89,6 +152,7 @@ export function KvkkContentView() {
       toast.success(result.message ?? "Yeni KVKK versiyonu yayınlandı.");
       lastLoaded.current = { version: draftVersion.trim(), sections: draftSections };
       await load();
+      setResetKey((k) => k + 1);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Yayınlama başarısız.");
     } finally {
@@ -103,7 +167,6 @@ export function KvkkContentView() {
         description="Her yayınlama yeni bir versiyon oluşturur. Form onayları hangi versiyonu gördüklerine göre kayıt altına alınır."
       />
 
-      {/* Aktif versiyon bilgisi */}
       {active?.id && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-primary/5 px-4 py-2.5 text-sm">
           <span className="size-2 rounded-full bg-primary" />
@@ -133,7 +196,6 @@ export function KvkkContentView() {
             </div>
           ) : (
             <>
-              {/* Versiyon etiketi */}
               <div className="space-y-2">
                 <Label htmlFor="kvkk-version">
                   Versiyon Etiketi <span className="text-destructive">*</span>
@@ -146,43 +208,23 @@ export function KvkkContentView() {
                   className="max-w-xs"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Yayınlama sırasında değiştirirseniz yeni bir versiyon oluşur.
+                  Değiştirmeden yayınlarsanız mevcut versiyonun üzerine yazılmaz, yeni versiyon oluşturulur.
                 </p>
               </div>
 
-              {/* Bölümler */}
               <div className="space-y-4">
                 <p className="text-sm font-medium">Bölümler</p>
                 {draftSections.map((section, idx) => (
-                  <div key={section.id} className="rounded-md border border-border p-4 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        Bölüm {idx + 1} — <code className="text-primary">{section.id}</code>
-                      </span>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Başlık</Label>
-                      <Input
-                        value={section.title}
-                        onChange={(e) => updateSection(idx, "title", e.target.value)}
-                        placeholder="Bölüm başlığı"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">İçerik (HTML)</Label>
-                      <Textarea
-                        value={section.html}
-                        onChange={(e) => updateSection(idx, "html", e.target.value)}
-                        rows={5}
-                        className="font-mono text-xs"
-                        placeholder="<p>...</p>"
-                      />
-                    </div>
-                  </div>
+                  <SectionEditor
+                    key={`${section.id}-${resetKey}`}
+                    section={section}
+                    index={idx}
+                    onTitleChange={(v) => updateSectionTitle(idx, v)}
+                    onHtmlChange={(v) => updateSectionHtml(idx, v)}
+                  />
                 ))}
               </div>
 
-              {/* Aksiyon butonları */}
               <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
                 <Button
                   type="button"
@@ -195,7 +237,7 @@ export function KvkkContentView() {
                 <Button
                   type="button"
                   onClick={() => void handlePublish()}
-                  disabled={saving || !isDirty}
+                  disabled={saving}
                 >
                   {saving ? (
                     <>
@@ -212,7 +254,6 @@ export function KvkkContentView() {
         </CardContent>
       </Card>
 
-      {/* Versiyon geçmişi */}
       {history.length > 0 && (
         <Card className="rounded-lg border border-border shadow-[0_4px_6px_rgba(0,0,0,0.05)]">
           <CardContent className="pt-4">
