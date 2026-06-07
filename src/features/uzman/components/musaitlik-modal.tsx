@@ -23,23 +23,12 @@ const DAYS: DayOfWeek[] = [
 ];
 const SLOTS: TimeSlot[] = ["Sabah", "Öğleden Sonra", "Akşam"];
 
-// dayOfWeek: 1=Pazartesi ... 6=Cumartesi, 0=Pazar (uzman/musaitlik sayfasıyla aynı)
-const DAY_INDEX_MAP: Record<number, DayOfWeek> = {
-  1: "Pazartesi",
-  2: "Salı",
-  3: "Çarşamba",
-  4: "Perşembe",
-  5: "Cuma",
-  6: "Cumartesi",
-  0: "Pazar",
+// 0=Mon..6=Sun → DayOfWeek adı
+const DAY_IDX_MAP: Record<number, DayOfWeek> = {
+  0: "Pazartesi", 1: "Salı", 2: "Çarşamba", 3: "Perşembe",
+  4: "Cuma", 5: "Cumartesi", 6: "Pazar",
 };
 
-const DAY_TO_INDEX: Record<DayOfWeek, number> = {
-  "Pazartesi": 1, "Salı": 2, "Çarşamba": 3, "Perşembe": 4,
-  "Cuma": 5, "Cumartesi": 6, "Pazar": 0,
-};
-
-// startTime → zaman dilimi (uzman/musaitlik sayfasıyla aynı saatler)
 const SLOT_TIME_MAP: Record<TimeSlot, { startTime: string; endTime: string }> = {
   "Sabah":          { startTime: "09:00", endTime: "12:00" },
   "Öğleden Sonra": { startTime: "12:00", endTime: "17:00" },
@@ -63,6 +52,26 @@ function cellKey(day: DayOfWeek, slot: TimeSlot) {
   return `${day}::${slot}`;
 }
 
+function getCurrentWeekDates(): Date[] {
+  const today = new Date();
+  const diff = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - diff);
+  monday.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function toDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function MusaitlikModal() {
   const { role, isAuthenticated, hasSetMusaitlik, markMusaitlikSet } =
     useAuthStore();
@@ -70,13 +79,17 @@ export function MusaitlikModal() {
   const [cells, setCells] = useState<AvailabilityCell[]>(buildEmptyCells());
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  // Mevcut kayıtlı availability'lerin id'lerini key bazında tut
   const savedIdsRef = useRef<Map<string, string>>(new Map());
+  // dateStr for each day index in current week (0=Mon..6=Sun)
+  const weekDatesRef = useRef<string[]>([]);
 
   const shouldShow = isAuthenticated && role === "uzman" && !hasSetMusaitlik;
 
   useEffect(() => {
     if (!shouldShow) return;
+
+    const weekDates = getCurrentWeekDates();
+    weekDatesRef.current = weekDates.map(toDateStr);
 
     getMyAvailabilities()
       .then((avails) => {
@@ -84,8 +97,17 @@ export function MusaitlikModal() {
         const newCells = buildEmptyCells();
 
         avails.forEach((a) => {
-          const day = DAY_INDEX_MAP[a.dayOfWeek];
+          // Parse the date field and map to day index (0=Mon..6=Sun)
+          const d = new Date(a.date);
+          const jsDay = d.getDay(); // 0=Sun,1=Mon..6=Sat
+          const dayIdx = jsDay === 0 ? 6 : jsDay - 1;
+          const day = DAY_IDX_MAP[dayIdx];
           if (!day) return;
+
+          // Only apply slots that belong to the current week
+          const aDateStr = a.date.substring(0, 10);
+          if (aDateStr !== weekDatesRef.current[dayIdx]) return;
+
           const slot = startTimeToSlot(a.startTime);
           if (!slot) return;
           const key = cellKey(day, slot);
@@ -132,11 +154,11 @@ export function MusaitlikModal() {
         const existingId = savedIdsRef.current.get(key);
 
         if (cell.available && !existingId) {
-          // Yeni eklenen slot
+          const dayIdx = DAYS.indexOf(cell.day);
+          const dateStr = weekDatesRef.current[dayIdx];
           const { startTime, endTime } = SLOT_TIME_MAP[cell.slot];
-          promises.push(addAvailability({ dayOfWeek: DAY_TO_INDEX[cell.day], startTime, endTime }));
+          if (dateStr) promises.push(addAvailability({ date: dateStr, startTime, endTime }));
         } else if (!cell.available && existingId) {
-          // Kaldırılan slot
           promises.push(removeAvailability(existingId));
         }
       });

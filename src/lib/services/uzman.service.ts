@@ -66,7 +66,7 @@ export type ApiUzmanProfile = {
 export type ApiAvailability = {
   id: string;
   expertProfileId: string;
-  dayOfWeek: number;
+  date: string;  // ISO datetime string "2026-06-09T00:00:00.000Z"
   startTime: string;
   endTime: string;
   isBlockedByAdmin: boolean;
@@ -164,7 +164,7 @@ export async function getMyAvailabilities(): Promise<ApiAvailability[]> {
 }
 
 export async function addAvailability(dto: {
-  dayOfWeek: number;
+  date: string;  // "YYYY-MM-DD"
   startTime: string;
   endTime: string;
 }): Promise<ApiAvailability> {

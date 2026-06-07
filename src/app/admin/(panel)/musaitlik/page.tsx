@@ -24,7 +24,7 @@ type ExpertItem = {
 type ApiAvailability = {
   id: string;
   expertProfileId: string;
-  dayOfWeek: number;
+  date: string;  // ISO datetime string "2026-06-09T00:00:00.000Z"
   startTime: string;
   endTime: string;
   isBlockedByAdmin: boolean;
@@ -37,8 +37,7 @@ const EXPERT_COLORS = [
   "#ec4899","#14b8a6","#f97316","#6366f1",
 ];
 
-const DAY_LABELS  = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
-const DAY_OF_WEEK = [1, 2, 3, 4, 5, 6, 0];
+const DAY_LABELS = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
 
 const TIME_BLOCKS = [
   { key: "09-12", label: "09–12", test: (t: string) => t >= "09:00" && t < "12:00" },
@@ -98,8 +97,9 @@ async function fetchExperts(): Promise<ExpertItem[]> {
   );
   return Array.isArray(res) ? res : (res.data ?? []);
 }
-async function fetchAvailabilities(id: string): Promise<ApiAvailability[]> {
-  return apiFetch(`/admin/experts/${id}/availabilities`, { token: getToken() });
+async function fetchAvailabilities(id: string, weekStart: Date): Promise<ApiAvailability[]> {
+  const ws = weekStart.toISOString().substring(0, 10);
+  return apiFetch(`/admin/experts/${id}/availabilities?weekStart=${ws}`, { token: getToken() });
 }
 async function patchBulkBlock(ids: string[], block: boolean) {
   return apiFetch("/admin/availabilities/bulk-block", {
@@ -121,23 +121,28 @@ export default function AdminMusaitlikPage() {
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
+  // Uzman listesini bir kez yükle
   useEffect(() => {
     fetchExperts()
-      .then(async (list) => {
+      .then((list) => {
         setExperts(list);
-        const ids = list.map((e) => e.id);
-        setCheckedIds(new Set(ids));
-        const entries = await Promise.all(
-          ids.map(async (id) => {
-            try   { return [id, await fetchAvailabilities(id)] as [string, ApiAvailability[]]; }
-            catch { return [id, []] as [string, ApiAvailability[]]; }
-          }),
-        );
-        setAvailMap(new Map(entries));
+        setCheckedIds(new Set(list.map((e) => e.id)));
       })
       .catch(() => toast.error("Uzmanlar yüklenemedi"))
       .finally(() => setLoadingExperts(false));
   }, []);
+
+  // Hafta değişince tüm uzmanların müsaitliklerini yeniden çek
+  useEffect(() => {
+    if (loadingExperts || experts.length === 0) return;
+    const weekStart = weekDates[0];
+    Promise.all(
+      experts.map(async (e) => {
+        try   { return [e.id, await fetchAvailabilities(e.id, weekStart)] as [string, ApiAvailability[]]; }
+        catch { return [e.id, []] as [string, ApiAvailability[]]; }
+      }),
+    ).then((entries) => setAvailMap(new Map(entries)));
+  }, [weekDates, loadingExperts, experts]);
 
   const colorMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -169,10 +174,12 @@ export default function AdminMusaitlikPage() {
   const triggerCls = buttonVariants({ variant: "outline", size: "default" }) + " gap-2";
 
   function getCellAvails(dowIdx: number, blockKey: BlockKey): AvailWithExpert[] {
-    const dayNum = DAY_OF_WEEK[dowIdx];
-    const block  = TIME_BLOCKS.find((b) => b.key === blockKey);
+    const block = TIME_BLOCKS.find((b) => b.key === blockKey);
     if (!block) return [];
-    return visibleAvails.filter((a) => a.dayOfWeek === dayNum && block.test(a.startTime));
+    const dateStr = weekDates[dowIdx].toISOString().substring(0, 10);
+    return visibleAvails.filter(
+      (a) => a.date.startsWith(dateStr) && block.test(a.startTime),
+    );
   }
 
   async function handleToggle(avail: AvailWithExpert) {

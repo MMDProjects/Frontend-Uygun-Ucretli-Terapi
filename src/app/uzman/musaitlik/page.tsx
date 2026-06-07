@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Info, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Info, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/features/admin/components/page-header";
@@ -12,133 +12,145 @@ import {
   removeAvailability,
   type ApiAvailability,
 } from "@/lib/services/uzman.service";
-import type { AvailabilityCell, DayOfWeek, TimeSlot } from "@/types/domain";
 
-const DAYS: DayOfWeek[] = [
-  "Pazartesi",
-  "Salı",
-  "Çarşamba",
-  "Perşembe",
-  "Cuma",
-  "Cumartesi",
-  "Pazar",
-];
-const SLOTS: TimeSlot[] = ["Sabah", "Öğleden Sonra", "Akşam"];
+/* ─── Constants ────────────────────────────────────────────── */
+const DAY_SHORT = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+const MONTH_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
-const SLOT_TIMES: Record<TimeSlot, string> = {
-  Sabah: "09:00–12:00",
-  "Öğleden Sonra": "12:00–17:00",
-  Akşam: "17:00–21:00",
+const SLOT_DEFS = [
+  { key: "09-12" as const, label: "09–12", startTime: "09:00", endTime: "12:00" },
+  { key: "12-17" as const, label: "12–17", startTime: "12:00", endTime: "17:00" },
+  { key: "17-21" as const, label: "17–21", startTime: "17:00", endTime: "21:00" },
+] as const;
+
+type SlotKey = typeof SLOT_DEFS[number]["key"];
+
+type WeekCell = {
+  id?: string;
+  dateStr: string;
+  dayIdx: number;
+  slotKey: SlotKey;
+  available: boolean;
+  adminLocked: boolean;
 };
 
-const SLOT_API: Record<TimeSlot, { startTime: string; endTime: string }> = {
-  Sabah: { startTime: "09:00", endTime: "12:00" },
-  "Öğleden Sonra": { startTime: "12:00", endTime: "17:00" },
-  Akşam: { startTime: "17:00", endTime: "21:00" },
-};
-
-const DAY_TO_NUMBER: Record<DayOfWeek, number> = {
-  Pazartesi: 1,
-  Salı: 2,
-  Çarşamba: 3,
-  Perşembe: 4,
-  Cuma: 5,
-  Cumartesi: 6,
-  Pazar: 0,
-};
-
-const NUMBER_TO_DAY: Record<number, DayOfWeek> = {
-  1: "Pazartesi",
-  2: "Salı",
-  3: "Çarşamba",
-  4: "Perşembe",
-  5: "Cuma",
-  6: "Cumartesi",
-  0: "Pazar",
-};
-
-function startTimeToSlot(startTime: string): TimeSlot | null {
-  if (startTime === "09:00") return "Sabah";
-  if (startTime === "12:00") return "Öğleden Sonra";
-  if (startTime === "17:00") return "Akşam";
-  return null;
+/* ─── Helpers ──────────────────────────────────────────────── */
+function toDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
-function buildEmptyGrid(): AvailabilityCell[] {
-  return DAYS.flatMap((day) =>
-    SLOTS.map((slot) => ({ day, slot, available: false, adminLocked: false }))
+function getWeekDates(offset = 0): Date[] {
+  const today = new Date();
+  const diff = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - diff + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function isTodayDate(d: Date) {
+  const t = new Date();
+  return (
+    d.getDate() === t.getDate() &&
+    d.getMonth() === t.getMonth() &&
+    d.getFullYear() === t.getFullYear()
   );
 }
 
-function applyApiData(raw: ApiAvailability[]): AvailabilityCell[] {
-  const cells = buildEmptyGrid();
-  for (const avail of raw) {
-    const day = NUMBER_TO_DAY[avail.dayOfWeek];
-    const slot = startTimeToSlot(avail.startTime);
-    if (!day || !slot) continue;
-    const cell = cells.find((c) => c.day === day && c.slot === slot);
-    if (cell) {
-      cell.id = avail.id;
-      cell.available = true;
-      cell.adminLocked = avail.isBlockedByAdmin;
-    }
-  }
-  return cells;
+function weekRangeLabel(dates: Date[]): string {
+  const d1 = dates[0].getDate();
+  const d2 = dates[6].getDate();
+  const m1 = MONTH_SHORT[dates[0].getMonth()];
+  const m2 = MONTH_SHORT[dates[6].getMonth()];
+  return dates[0].getMonth() === dates[6].getMonth()
+    ? `${d1}–${d2} ${m1}`
+    : `${d1} ${m1} – ${d2} ${m2}`;
 }
 
+function deriveWeekCells(weekDates: Date[], avails: ApiAvailability[]): WeekCell[] {
+  return weekDates.flatMap((date, dayIdx) =>
+    SLOT_DEFS.map((slot) => {
+      const dateStr = toDateStr(date);
+      const existing = avails.find(
+        (a) => a.date.startsWith(dateStr) && a.startTime === slot.startTime,
+      );
+      return {
+        dateStr,
+        dayIdx,
+        slotKey: slot.key,
+        id: existing?.id,
+        available: !!existing,
+        adminLocked: existing?.isBlockedByAdmin ?? false,
+      };
+    }),
+  );
+}
+
+/* ─── Component ────────────────────────────────────────────── */
 export default function UzmanMusaitlikPage() {
-  const [cells, setCells] = useState<AvailabilityCell[]>(buildEmptyGrid());
-  const [initialCells, setInitialCells] = useState<AvailabilityCell[]>([]);
+  const [allAvails, setAllAvails] = useState<ApiAvailability[]>([]);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [cells, setCells] = useState<WeekCell[]>([]);
+  const [initialCells, setInitialCells] = useState<WeekCell[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
+
   useEffect(() => {
     getMyAvailabilities()
-      .then((raw) => {
-        const mapped = applyApiData(raw);
-        setCells(mapped);
-        setInitialCells(JSON.parse(JSON.stringify(mapped)));
-      })
+      .then(setAllAvails)
       .catch(() => toast.error("Müsaitlik yüklenemedi."))
       .finally(() => setLoading(false));
   }, []);
 
-  function toggleCell(day: DayOfWeek, slot: TimeSlot) {
+  useEffect(() => {
+    const derived = deriveWeekCells(weekDates, allAvails);
+    setCells(derived);
+    setInitialCells(JSON.parse(JSON.stringify(derived)));
+  }, [weekDates, allAvails]);
+
+  function toggleCell(dateStr: string, slotKey: SlotKey) {
     setCells((prev) =>
       prev.map((c) =>
-        c.day === day && c.slot === slot && !c.adminLocked
+        c.dateStr === dateStr && c.slotKey === slotKey && !c.adminLocked
           ? { ...c, available: !c.available }
-          : c
-      )
+          : c,
+      ),
     );
   }
 
-  function getCell(day: DayOfWeek, slot: TimeSlot) {
-    return cells.find((c) => c.day === day && c.slot === slot);
+  function getCell(dateStr: string, slotKey: SlotKey) {
+    return cells.find((c) => c.dateStr === dateStr && c.slotKey === slotKey);
   }
 
   function selectAll() {
-    setCells((prev) =>
-      prev.map((c) => (c.adminLocked ? c : { ...c, available: true }))
-    );
+    setCells((prev) => prev.map((c) => (c.adminLocked ? c : { ...c, available: true })));
   }
 
   function clearAll() {
-    setCells((prev) =>
-      prev.map((c) => (c.adminLocked ? c : { ...c, available: false }))
-    );
+    setCells((prev) => prev.map((c) => (c.adminLocked ? c : { ...c, available: false })));
   }
 
   async function handleSave() {
     setSaving(true);
     try {
-      const toAdd: AvailabilityCell[] = [];
+      const toAdd: WeekCell[] = [];
       const toRemove: string[] = [];
 
       for (const cell of cells) {
         if (cell.adminLocked) continue;
-        const initial = initialCells.find((c) => c.day === cell.day && c.slot === cell.slot);
+        const initial = initialCells.find(
+          (c) => c.dateStr === cell.dateStr && c.slotKey === cell.slotKey,
+        );
         const wasAvailable = initial?.available ?? false;
 
         if (cell.available && !wasAvailable) {
@@ -150,19 +162,18 @@ export default function UzmanMusaitlikPage() {
 
       await Promise.all([
         ...toRemove.map((id) => removeAvailability(id)),
-        ...toAdd.map((c) =>
-          addAvailability({
-            dayOfWeek: DAY_TO_NUMBER[c.day],
-            ...SLOT_API[c.slot],
-          })
-        ),
+        ...toAdd.map((c) => {
+          const slot = SLOT_DEFS.find((s) => s.key === c.slotKey)!;
+          return addAvailability({
+            date: c.dateStr,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+          });
+        }),
       ]);
 
-      // Reload to get new IDs
       const fresh = await getMyAvailabilities();
-      const mapped = applyApiData(fresh);
-      setCells(mapped);
-      setInitialCells(JSON.parse(JSON.stringify(mapped)));
+      setAllAvails(fresh);
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -222,6 +233,7 @@ export default function UzmanMusaitlikPage() {
       </div>
 
       <div className="rounded-2xl border border-border/60 bg-white p-5">
+        {/* Toolbar */}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-foreground">Haftalık Takvim</h3>
@@ -233,70 +245,136 @@ export default function UzmanMusaitlikPage() {
             <button
               type="button"
               onClick={selectAll}
-              className="rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
+              className="rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold
+                         text-muted-foreground transition hover:border-primary/30 hover:text-primary"
             >
               Tümünü Seç
             </button>
             <button
               type="button"
               onClick={clearAll}
-              className="rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-destructive/30 hover:text-destructive"
+              className="rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold
+                         text-muted-foreground transition hover:border-destructive/30 hover:text-destructive"
             >
               Temizle
             </button>
+            {/* Week navigation */}
+            <div className="flex items-center overflow-hidden rounded-lg border border-border/60">
+              <button
+                type="button"
+                onClick={() => setWeekOffset((p) => p - 1)}
+                className="flex h-8 cursor-pointer items-center px-2 transition-colors
+                           hover:bg-muted/60 border-r border-border/60"
+                aria-label="Önceki hafta"
+              >
+                <ChevronLeft className="size-3.5 text-muted-foreground" />
+              </button>
+              <div className="flex h-8 min-w-[96px] flex-col items-center justify-center px-2 leading-none">
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  {weekOffset === 0
+                    ? "Bu Hafta"
+                    : weekOffset === 1
+                    ? "Gelecek Hafta"
+                    : weekOffset === -1
+                    ? "Geçen Hafta"
+                    : weekOffset > 0
+                    ? `+${weekOffset} Hafta`
+                    : `${weekOffset} Hafta`}
+                </span>
+                <span className="text-[11px] font-semibold text-foreground tabular-nums">
+                  {weekRangeLabel(weekDates)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setWeekOffset((p) => p + 1)}
+                className="flex h-8 cursor-pointer items-center px-2 transition-colors
+                           hover:bg-muted/60 border-l border-border/60"
+                aria-label="Sonraki hafta"
+              >
+                <ChevronRight className="size-3.5 text-muted-foreground" />
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-border/60">
           {/* Day header row */}
           <div className="flex border-b-2 border-border/60 bg-[#e6f0ee]">
-            <div className="w-32 shrink-0 border-r border-border/60 px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Zaman
+            <div className="w-16 shrink-0 border-r border-border/60 px-2 py-3
+                            text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
+              SAAT
             </div>
-            {DAYS.map((day) => (
-              <div
-                key={day}
-                className="flex-1 border-r border-border/60 py-3 text-center last:border-r-0"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <span className="hidden sm:block">{day.slice(0, 3)}</span>
-                  <span className="block sm:hidden">{day.slice(0, 1)}</span>
-                </p>
-                <p className="mt-0.5 text-xs font-semibold text-[#014a3e]">
-                  <span className="hidden sm:block">{day}</span>
-                  <span className="block sm:hidden">{day.slice(0, 3)}</span>
-                </p>
-              </div>
-            ))}
+            {weekDates.map((date, dayIdx) => {
+              const today = isTodayDate(date);
+              return (
+                <div
+                  key={dayIdx}
+                  className={cn(
+                    "flex-1 min-w-0 border-r border-border/60 py-2 text-center last:border-r-0",
+                    today && "bg-primary/15",
+                  )}
+                >
+                  <p className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider",
+                    today ? "text-primary" : "text-muted-foreground",
+                  )}>
+                    {DAY_SHORT[dayIdx]}
+                  </p>
+                  <p className={cn(
+                    "text-base font-bold leading-none",
+                    today ? "text-primary" : "text-[#014a3e]",
+                  )}>
+                    {date.getDate()}
+                  </p>
+                  <p className={cn(
+                    "text-[9px] font-medium mt-0.5",
+                    today ? "text-primary/70" : "text-muted-foreground/50",
+                  )}>
+                    {MONTH_SHORT[date.getMonth()]}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           {/* Slot rows */}
-          {SLOTS.map((slot, slotIdx) => (
+          {SLOT_DEFS.map((slot, slotIdx) => (
             <div
-              key={slot}
+              key={slot.key}
               className={cn(
                 "flex border-b border-border/40 last:border-b-0",
-                "hover:bg-primary/[0.02]"
+                "hover:bg-primary/[0.02]",
+                slotIdx % 2 === 1 && "bg-muted/[0.015]",
               )}
             >
-              <div className="w-32 shrink-0 border-r border-border/60 bg-[#e6f0ee] px-3 py-4">
-                <p className="text-xs font-semibold text-[#014a3e]">{slot}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{SLOT_TIMES[slot]}</p>
+              <div className="w-16 shrink-0 border-r border-border/60 bg-[#e6f0ee] px-2 py-4">
+                <p className="text-xs font-semibold text-[#014a3e]">{slot.label}</p>
               </div>
-              {DAYS.map((day) => {
-                const cell = getCell(day, slot);
-                if (!cell) return <div key={day} className="flex-1 border-r border-border/40 last:border-r-0" />;
+              {weekDates.map((date, dayIdx) => {
+                const dateStr = toDateStr(date);
+                const cell = getCell(dateStr, slot.key);
+                const today = isTodayDate(date);
+                if (!cell) {
+                  return (
+                    <div
+                      key={dayIdx}
+                      className="flex-1 border-r border-border/40 last:border-r-0 p-2"
+                    />
+                  );
+                }
                 return (
                   <div
-                    key={day}
+                    key={dayIdx}
                     className={cn(
                       "flex flex-1 items-center justify-center border-r border-border/40 p-2 last:border-r-0",
                       cell.adminLocked && "bg-red-50/50",
+                      today && !cell.adminLocked && "bg-primary/[0.02]",
                     )}
                   >
                     <button
                       type="button"
-                      onClick={() => toggleCell(day, slot)}
+                      onClick={() => toggleCell(dateStr, slot.key)}
                       disabled={cell.adminLocked}
                       title={
                         cell.adminLocked
@@ -324,7 +402,7 @@ export default function UzmanMusaitlikPage() {
                           !cell.available &&
                           "border-border/50 bg-white text-muted-foreground hover:border-primary/30 hover:bg-[#e6f0ee] hover:text-primary",
                       )}
-                      aria-label={`${day} ${slot} ${cell.available ? "müsait" : "müsait değil"}`}
+                      aria-label={`${DAY_SHORT[dayIdx]} ${slot.label} ${cell.available ? "müsait" : "müsait değil"}`}
                       aria-pressed={cell.available}
                     >
                       {cell.adminLocked ? "Kilitli" : cell.available ? "Müsait" : "Boş"}
@@ -345,14 +423,14 @@ export default function UzmanMusaitlikPage() {
             <div className="h-4 w-6 rounded border border-border/50 bg-white" />
             Müsait Değil
           </div>
-          <div
-            className="flex items-center gap-2 text-xs text-muted-foreground"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.12) 3px, rgba(220,38,38,0.12) 6px)",
-            }}
-          >
-            <div className="h-4 w-6 rounded border border-red-200" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div
+              className="h-4 w-6 rounded border border-red-200"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.12) 3px, rgba(220,38,38,0.12) 6px)",
+              }}
+            />
             <span>Admin Kilitli</span>
           </div>
         </div>
