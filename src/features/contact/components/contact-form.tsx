@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { FileText, X } from "lucide-react";
+import { FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   contactFormSchema,
   corporateContactFormSchema,
@@ -99,126 +93,6 @@ function readDraft(key: string): Record<string, unknown> | null {
   }
 }
 
-function KvkkDialog({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-primary-hover">
-            KVKK Aydınlatma Metni
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 text-sm leading-7 text-muted-foreground">
-          <p>
-            Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu
-            (&quot;KVKK&quot;) kapsamında, <strong className="text-foreground">PsikoDestek</strong>{" "}
-            tarafından kişisel verilerinizin işlenmesine ilişkin bilgilendirme amacıyla
-            hazırlanmıştır.
-          </p>
-
-          <div>
-            <p className="font-semibold text-foreground">1. Veri Sorumlusu</p>
-            <p>
-              Kişisel verileriniz, veri sorumlusu sıfatıyla PsikoDestek tarafından
-              işlenmektedir.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">2. İşlenen Kişisel Veriler</p>
-            <p>
-              Ad-soyad, e-posta adresi, telefon numarası ve iletişim formu aracılığıyla
-              ilettiğiniz mesaj içerikleri işlenmektedir. Kurumsal başvurularda ek olarak
-              şirket adı ve yetkili kişi bilgileri de toplanmaktadır.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">3. Kişisel Verilerin İşlenme Amaçları</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>İletişim taleplerinizin karşılanması ve yanıtlanması</li>
-              <li>Randevu ve ön görüşme taleplerinin yönetilmesi</li>
-              <li>Hizmet kalitesinin geliştirilmesi</li>
-              <li>Yasal yükümlülüklerin yerine getirilmesi</li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">4. Kişisel Verilerin Aktarımı</p>
-            <p>
-              Kişisel verileriniz; hizmetin ifası için zorunlu olmadıkça üçüncü kişilere
-              aktarılmaz. Yalnızca e-posta altyapısı (Brevo) ve sunucu hizmetleri kapsamında
-              teknik hizmet sağlayıcılarla, veri güvenliği sözleşmeleri çerçevesinde
-              paylaşılabilir.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">5. Kişisel Verilerin Saklanma Süresi</p>
-            <p>
-              İletişim formundan toplanan veriler, talebinizin tamamlanmasından itibaren
-              en fazla 2 yıl süreyle saklanmakta; bu sürenin sonunda silinmekte veya
-              anonimleştirilmektedir.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">6. İlgili Kişi Hakları</p>
-            <p>KVKK'nın 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
-              <li>İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme</li>
-              <li>Yurt içinde / yurt dışında aktarıldığı üçüncü kişileri öğrenme</li>
-              <li>Eksik veya yanlış işlenmiş verilerin düzeltilmesini isteme</li>
-              <li>İşleme koşullarının ortadan kalkması halinde silinmesini isteme</li>
-              <li>Düzeltme ve silme işlemlerinin aktarılan kişilere bildirilmesini isteme</li>
-              <li>Otomatik sistemlerle analiz sonucu aleyhte kararın itiraz etme</li>
-              <li>Kanuna aykırı işleme nedeniyle oluşan zararın tazmin edilmesini isteme</li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">7. Veri Güvenliği</p>
-            <p>
-              Kişisel verileriniz AES-256 şifreleme ile korunmakta, yetkisiz erişime
-              karşı teknik ve idari tedbirler uygulanmaktadır. Psikolojik danışmanlık
-              süreçlerine ilişkin hassas veriler özel güvenlik protokolleriyle saklanmaktadır.
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold text-foreground">8. İletişim</p>
-            <p>
-              Yukarıdaki haklarınızı kullanmak veya kişisel verilerinizle ilgili soru
-              iletmek için{" "}
-              <a
-                href="mailto:kvkk@psikodestek.com"
-                className="text-primary underline underline-offset-2"
-              >
-                kvkk@psikodestek.com
-              </a>{" "}
-              adresine başvurabilirsiniz.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-2 flex justify-end">
-          <Button variant="outline" onClick={onClose}>
-            <X className="mr-1.5 size-4" />
-            Kapat
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export function ContactForm({
   title,
@@ -227,7 +101,6 @@ export function ContactForm({
 }: ContactFormProps) {
   const isCorporate = variant === "corporate";
   const storageKey = isCorporate ? CORPORATE_KEY : GENERAL_KEY;
-  const [kvkkOpen, setKvkkOpen] = useState(false);
 
   const draft = readDraft(storageKey);
 
@@ -293,10 +166,7 @@ export function ContactForm({
   }
 
   return (
-    <>
-      <KvkkDialog open={kvkkOpen} onClose={() => setKvkkOpen(false)} />
-
-      <div className="rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm sm:p-8">
+    <div className="rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm sm:p-8">
         <div className="mb-6 space-y-2">
           <h2 className="text-2xl font-semibold text-primary-hover">{title}</h2>
           <p className="text-sm leading-6 text-muted-foreground">{description}</p>
@@ -405,14 +275,15 @@ export function ContactForm({
                 {...form.register("kvkkApproved")}
               />
               <span>
-                <button
-                  type="button"
-                  onClick={() => setKvkkOpen(true)}
+                <a
+                  href="/kvkk"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition"
                 >
                   <FileText className="size-3.5" />
                   KVKK Aydınlatma Metni
-                </button>
+                </a>
                 &apos;ni okudum, kişisel verilerimin işlenmesine onay veriyorum.{" "}
                 <span className="text-destructive">*</span>
               </span>
@@ -434,6 +305,5 @@ export function ContactForm({
           </Button>
         </form>
       </div>
-    </>
   );
 }
