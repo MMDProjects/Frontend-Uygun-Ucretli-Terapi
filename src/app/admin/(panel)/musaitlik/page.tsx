@@ -82,6 +82,13 @@ function isTodayDate(d: Date) {
   return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear();
 }
 
+function toDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 const MONTH_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
 function weekRangeLabel(dates: Date[]): string {
@@ -104,7 +111,7 @@ async function fetchExperts(): Promise<ExpertItem[]> {
   return Array.isArray(res) ? res : (res.data ?? []);
 }
 async function fetchAvailabilities(id: string, weekStart: Date): Promise<ApiAvailability[]> {
-  const ws = weekStart.toISOString().substring(0, 10);
+  const ws = toDateStr(weekStart);
   return apiFetch(`/admin/experts/${id}/availabilities?weekStart=${ws}`, { token: getToken() });
 }
 async function patchBulkBlock(ids: string[], block: boolean) {
@@ -182,7 +189,7 @@ export default function AdminMusaitlikPage() {
   function getCellAvails(dowIdx: number, blockKey: BlockKey): AvailWithExpert[] {
     const block = TIME_BLOCKS.find((b) => b.key === blockKey);
     if (!block) return [];
-    const dateStr = weekDates[dowIdx].toISOString().substring(0, 10);
+    const dateStr = toDateStr(weekDates[dowIdx]);
     return visibleAvails.filter(
       (a) => a.date.startsWith(dateStr) && block.test(a.startTime),
     );
