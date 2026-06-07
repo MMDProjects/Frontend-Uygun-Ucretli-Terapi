@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
-import { Lock, ChevronDown, CalendarDays, Clock } from "lucide-react";
+import { Lock, ChevronDown, CalendarDays, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -38,9 +38,8 @@ const EXPERT_COLORS = [
 ];
 
 const DAY_LABELS  = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
-const DAY_OF_WEEK = [1, 2, 3, 4, 5, 6, 0]; // Mon=1…Sun=0
+const DAY_OF_WEEK = [1, 2, 3, 4, 5, 6, 0];
 
-/* 3 sabit blok — her biri flex-1 olarak dikey %100 doldurur */
 const TIME_BLOCKS = [
   { key: "09-12", label: "09–12", test: (t: string) => t >= "09:00" && t < "12:00" },
   { key: "12-17", label: "12–17", test: (t: string) => t >= "12:00" && t < "17:00" },
@@ -60,11 +59,11 @@ function initials(e: ExpertItem) {
   return `${e.user.firstName[0] ?? ""}${e.user.lastName?.[0] ?? ""}`.toUpperCase();
 }
 
-function getWeekDates(): Date[] {
-  const today = new Date();
+function getWeekDates(offset = 0): Date[] {
+  const today  = new Date();
   const diff   = today.getDay() === 0 ? 6 : today.getDay() - 1;
   const monday = new Date(today);
-  monday.setDate(today.getDate() - diff);
+  monday.setDate(today.getDate() - diff + offset * 7);
   monday.setHours(0, 0, 0, 0);
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
@@ -76,6 +75,13 @@ function getWeekDates(): Date[] {
 function isTodayDate(d: Date) {
   const t = new Date();
   return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear();
+}
+
+function weekLabel(offset: number) {
+  if (offset === 0)  return "Bu Hafta";
+  if (offset === -1) return "Geçen Hafta";
+  if (offset === 1)  return "Gelecek Hafta";
+  return offset > 0 ? `+${offset} Hafta` : `${offset} Hafta`;
 }
 
 /* ─── API ────────────────────────────────────────────────── */
@@ -100,13 +106,13 @@ export default function AdminMusaitlikPage() {
   const [checkedIds,     setCheckedIds]     = useState<Set<string>>(new Set());
   const [availMap,       setAvailMap]       = useState<Map<string, ApiAvailability[]>>(new Map());
   const [loadingExperts, setLoadingExperts] = useState(true);
-  /* her blok başlangıçta seçili */
   const [filterDays,     setFilterDays]     = useState<Set<number>>(new Set([0,1,2,3,4,5,6]));
   const [filterBlocks,   setFilterBlocks]   = useState<Set<BlockKey>>(
     new Set(TIME_BLOCKS.map((b) => b.key)),
   );
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const weekDates = useMemo(() => getWeekDates(), []);
+  const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
   useEffect(() => {
     fetchExperts()
@@ -140,7 +146,6 @@ export default function AdminMusaitlikPage() {
     return r;
   }, [checkedIds, availMap]);
 
-  /* Gösterilen bloklar — filter sırasını koruyarak */
   const visibleBlocks = useMemo(
     () => TIME_BLOCKS.filter((b) => filterBlocks.has(b.key)),
     [filterBlocks],
@@ -152,6 +157,9 @@ export default function AdminMusaitlikPage() {
   );
 
   const allChecked = experts.length > 0 && checkedIds.size === experts.length;
+
+  /* buton stili — diğer sayfalardaki toolbar ile aynı (size: default) */
+  const triggerCls = buttonVariants({ variant: "outline", size: "default" }) + " gap-2";
 
   function getCellAvails(dowIdx: number, blockKey: BlockKey): AvailWithExpert[] {
     const dayNum = DAY_OF_WEEK[dowIdx];
@@ -196,78 +204,104 @@ export default function AdminMusaitlikPage() {
 
   /* ─── render ─────────────────────────────────────────────── */
   return (
-    <div className="flex flex-col gap-3">
+    /*
+     * space-y-6: diğer admin sayfalarıyla (kategoriler, bildirimler vb.)
+     * aynı PageHeader → içerik boşluğu (24px)
+     */
+    <div className="space-y-6">
 
-      {/* PageHeader — her iki filtre aynı dropdown görünümde */}
-      <div className="shrink-0">
-        <PageHeader
-          title="Müsaitlik Yönetimi"
-          description="Tüm uzmanların haftalık müsaitliklerini ortak tabloda görüntüleyin."
-        >
-          {/* Gün filtresi */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              type="button"
-              className={buttonVariants({ variant: "outline", size: "sm" }) + " gap-1.5"}
-            >
-              <CalendarDays className="size-3.5" />
-              {filterDays.size === 7
-                ? "Tüm Günler"
-                : filterDays.size === 0
-                  ? "Gün Seçin"
-                  : `${filterDays.size} Gün`}
-              <ChevronDown className="size-3 opacity-60" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
-              {DAY_LABELS.map((label, i) => (
-                <DropdownMenuCheckboxItem
-                  key={i}
-                  checked={filterDays.has(i)}
-                  onCheckedChange={() => toggleDay(i)}
-                >
-                  {label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <PageHeader
+        title="Müsaitlik Yönetimi"
+        description="Tüm uzmanların haftalık müsaitliklerini ortak tabloda görüntüleyin."
+      >
+        {/* Gün filtresi */}
+        <DropdownMenu>
+          <DropdownMenuTrigger type="button" className={triggerCls}>
+            <CalendarDays className="size-4" />
+            {filterDays.size === 7
+              ? "Tüm Günler"
+              : filterDays.size === 0
+                ? "Gün Seçin"
+                : `${filterDays.size} Gün`}
+            <ChevronDown className="size-4 opacity-60" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            {DAY_LABELS.map((label, i) => (
+              <DropdownMenuCheckboxItem
+                key={i}
+                checked={filterDays.has(i)}
+                onCheckedChange={() => toggleDay(i)}
+              >
+                {label}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Saat filtresi — gün filtresiyle birebir aynı görünüm */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              type="button"
-              className={buttonVariants({ variant: "outline", size: "sm" }) + " gap-1.5"}
-            >
-              <Clock className="size-3.5" />
-              {filterBlocks.size === TIME_BLOCKS.length
-                ? "Tüm Saatler"
-                : filterBlocks.size === 0
-                  ? "Saat Seçin"
-                  : `${filterBlocks.size} Aralık`}
-              <ChevronDown className="size-3 opacity-60" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
-              {TIME_BLOCKS.map((block) => (
-                <DropdownMenuCheckboxItem
-                  key={block.key}
-                  checked={filterBlocks.has(block.key)}
-                  onCheckedChange={() => toggleBlock(block.key)}
-                >
-                  {block.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </PageHeader>
-      </div>
+        {/* Saat filtresi — gün filtresiyle birebir aynı */}
+        <DropdownMenu>
+          <DropdownMenuTrigger type="button" className={triggerCls}>
+            <Clock className="size-4" />
+            {filterBlocks.size === TIME_BLOCKS.length
+              ? "Tüm Saatler"
+              : filterBlocks.size === 0
+                ? "Saat Seçin"
+                : `${filterBlocks.size} Aralık`}
+            <ChevronDown className="size-4 opacity-60" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36">
+            {TIME_BLOCKS.map((block) => (
+              <DropdownMenuCheckboxItem
+                key={block.key}
+                checked={filterBlocks.has(block.key)}
+                onCheckedChange={() => toggleBlock(block.key)}
+              >
+                {block.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* Ana kutu */}
+        {/* Hafta navigasyonu */}
+        <div className="flex items-center overflow-hidden rounded-md border border-border/60">
+          <button
+            type="button"
+            onClick={() => setWeekOffset((p) => p - 1)}
+            className="flex h-10 cursor-pointer items-center px-2.5 transition-colors
+                       hover:bg-muted/60 border-r border-border/60"
+            aria-label="Önceki hafta"
+          >
+            <ChevronLeft className="size-4 text-muted-foreground" />
+          </button>
+          <span className="flex h-10 min-w-[100px] cursor-default items-center justify-center
+                           px-3 text-sm font-medium text-foreground">
+            {weekLabel(weekOffset)}
+          </span>
+          <button
+            type="button"
+            onClick={() => setWeekOffset((p) => p + 1)}
+            className="flex h-10 cursor-pointer items-center px-2.5 transition-colors
+                       hover:bg-muted/60 border-l border-border/60"
+            aria-label="Sonraki hafta"
+          >
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
+        </div>
+      </PageHeader>
+
+      {/*
+        Ana kutu
+        space-y-6 dışarıda margin-top 24px ekler; layout main p-4/p-6 padding içinde.
+        Toplam çıkarılacak: padding × 2 + PageHeader yüksekliği + space-y-6 gap
+        p-4 (mobile): 32px + ~72px + 24px = ~128px ≈ 8rem
+        p-6 (sm+):    48px + ~72px + 24px = ~144px ≈ 9rem
+      */}
       <div className="flex overflow-hidden rounded-2xl border border-border/60 bg-white
                       h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)]">
 
         {/* ── SOL: Uzman listesi ──────────────────────────── */}
         <div className="flex w-56 shrink-0 flex-col overflow-hidden border-r border-border/60">
 
-          {/* Mini başlık */}
           <div className="flex shrink-0 items-center justify-between px-3 pt-2.5 pb-1">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
               Uzmanlar
@@ -283,7 +317,6 @@ export default function AdminMusaitlikPage() {
             </button>
           </div>
 
-          {/* Uzman kartları */}
           <div className="flex flex-1 min-h-0 flex-col gap-1 overflow-y-auto px-2 pb-2">
             {loadingExperts
               ? Array.from({ length: 5 }).map((_, i) => (
@@ -302,20 +335,16 @@ export default function AdminMusaitlikPage() {
                       className={cn(
                         "flex cursor-pointer items-center gap-2.5 rounded-xl border-2 px-3 py-2",
                         "text-left transition-all duration-150",
-                        checked
-                          ? "shadow-sm"
-                          : "border-border/40 bg-muted/20",
+                        checked ? "shadow-sm" : "border-border/40 bg-muted/20",
                       )}
                     >
-                      {/* Avatar — seçiliyken renkli, değilken gri */}
                       <div
-                        className="flex size-7 shrink-0 items-center justify-center
-                                   rounded-full text-[10px] font-bold text-white transition-colors duration-150"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-full
+                                   text-[10px] font-bold text-white transition-colors duration-150"
                         style={{ background: checked ? color : "#9ca3af" }}
                       >
                         {initials(expert)}
                       </div>
-                      {/* İsim — seçiliyken koyu, değilken muted */}
                       <span className={cn(
                         "min-w-0 flex-1 truncate text-[12px] font-medium leading-tight transition-colors duration-150",
                         checked ? "text-foreground" : "text-muted-foreground",
@@ -332,7 +361,7 @@ export default function AdminMusaitlikPage() {
         {/* ── SAĞ: Tablo ──────────────────────────────────── */}
         <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
 
-          {/* Gün başlıkları (sabit, scroll yok) */}
+          {/* Gün başlıkları */}
           <div className="flex shrink-0 border-b-2 border-border/60 bg-[#e6f0ee]">
             <div className="w-14 shrink-0 border-r border-border/60 px-2 py-2.5
                             text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -398,8 +427,7 @@ export default function AdminMusaitlikPage() {
                       <div
                         key={dowIdx}
                         className={cn(
-                          "min-w-[110px] flex-1 border-r border-border/40 p-2 last:border-r-0",
-                          "overflow-y-auto",
+                          "min-w-[110px] flex-1 overflow-y-auto border-r border-border/40 p-2 last:border-r-0",
                           today && "bg-primary/[0.02]",
                         )}
                       >
