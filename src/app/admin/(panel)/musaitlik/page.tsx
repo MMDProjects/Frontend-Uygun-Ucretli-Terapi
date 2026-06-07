@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
-import { Lock, ChevronDown, X, CalendarDays, Clock } from "lucide-react";
+import { Lock, ChevronDown, CalendarDays, Clock } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -11,13 +11,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
@@ -37,7 +30,6 @@ type ApiAvailability = {
   isBlockedByAdmin: boolean;
 };
 type AvailWithExpert = ApiAvailability & { expertId: string };
-type TimeRange = "all" | "morning" | "afternoon" | "evening";
 
 /* ─── constants ──────────────────────────────────────────── */
 const EXPERT_COLORS = [
@@ -48,18 +40,14 @@ const EXPERT_COLORS = [
 const DAY_LABELS  = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
 const DAY_OF_WEEK = [1, 2, 3, 4, 5, 6, 0]; // Mon=1…Sun=0
 
-/* 09:00–20:00 sabit saat dilimleri — filtre ile daraltılır */
-const ALL_TIME_SLOTS = [
-  "09:00","10:00","11:00","12:00","13:00",
-  "14:00","15:00","16:00","17:00","18:00","19:00","20:00",
-];
+/* 3 sabit blok — her biri flex-1 olarak dikey %100 doldurur */
+const TIME_BLOCKS = [
+  { key: "09-12", label: "09–12", test: (t: string) => t >= "09:00" && t < "12:00" },
+  { key: "12-17", label: "12–17", test: (t: string) => t >= "12:00" && t < "17:00" },
+  { key: "17-21", label: "17–21", test: (t: string) => t >= "17:00" },
+] as const;
 
-const TIME_RANGE_LABELS: Record<TimeRange, string> = {
-  all:       "Tüm Saatler",
-  morning:   "Sabah (09-12)",
-  afternoon: "Öğle (12-17)",
-  evening:   "Akşam (17-21)",
-};
+type BlockKey = typeof TIME_BLOCKS[number]["key"];
 
 /* ─── helpers ────────────────────────────────────────────── */
 function getToken() { return getAccessToken() ?? ""; }
@@ -90,13 +78,6 @@ function isTodayDate(d: Date) {
   return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear();
 }
 
-function matchesRange(time: string, range: TimeRange) {
-  if (range === "morning")   return time >= "09:00" && time < "12:00";
-  if (range === "afternoon") return time >= "12:00" && time < "17:00";
-  if (range === "evening")   return time >= "17:00" && time <= "20:00";
-  return true;
-}
-
 /* ─── API ────────────────────────────────────────────────── */
 async function fetchExperts(): Promise<ExpertItem[]> {
   const res = await apiFetch<{ data: ExpertItem[] } | ExpertItem[]>(
@@ -119,8 +100,11 @@ export default function AdminMusaitlikPage() {
   const [checkedIds,     setCheckedIds]     = useState<Set<string>>(new Set());
   const [availMap,       setAvailMap]       = useState<Map<string, ApiAvailability[]>>(new Map());
   const [loadingExperts, setLoadingExperts] = useState(true);
+  /* her blok başlangıçta seçili */
   const [filterDays,     setFilterDays]     = useState<Set<number>>(new Set([0,1,2,3,4,5,6]));
-  const [filterRange,    setFilterRange]    = useState<TimeRange>("all");
+  const [filterBlocks,   setFilterBlocks]   = useState<Set<BlockKey>>(
+    new Set(TIME_BLOCKS.map((b) => b.key)),
+  );
 
   const weekDates = useMemo(() => getWeekDates(), []);
 
@@ -156,9 +140,10 @@ export default function AdminMusaitlikPage() {
     return r;
   }, [checkedIds, availMap]);
 
-  const timeSlots = useMemo(
-    () => ALL_TIME_SLOTS.filter((t) => matchesRange(t, filterRange)),
-    [filterRange],
+  /* Gösterilen bloklar — filter sırasını koruyarak */
+  const visibleBlocks = useMemo(
+    () => TIME_BLOCKS.filter((b) => filterBlocks.has(b.key)),
+    [filterBlocks],
   );
 
   const filteredDayIndices = useMemo(
@@ -166,12 +151,13 @@ export default function AdminMusaitlikPage() {
     [filterDays],
   );
 
-  const activeFilterCount = (filterRange !== "all" ? 1 : 0) + (filterDays.size < 7 ? 1 : 0);
   const allChecked = experts.length > 0 && checkedIds.size === experts.length;
 
-  function getCellAvails(dowIdx: number, time: string): AvailWithExpert[] {
+  function getCellAvails(dowIdx: number, blockKey: BlockKey): AvailWithExpert[] {
     const dayNum = DAY_OF_WEEK[dowIdx];
-    return visibleAvails.filter((a) => a.dayOfWeek === dayNum && a.startTime === time);
+    const block  = TIME_BLOCKS.find((b) => b.key === blockKey);
+    if (!block) return [];
+    return visibleAvails.filter((a) => a.dayOfWeek === dayNum && block.test(a.startTime));
   }
 
   async function handleToggle(avail: AvailWithExpert) {
@@ -201,19 +187,18 @@ export default function AdminMusaitlikPage() {
   function toggleDay(i: number) {
     setFilterDays((p) => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; });
   }
+  function toggleBlock(key: BlockKey) {
+    setFilterBlocks((p) => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; });
+  }
   function toggleCheck(id: string) {
     setCheckedIds((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  }
-  function clearFilters() {
-    setFilterDays(new Set([0,1,2,3,4,5,6]));
-    setFilterRange("all");
   }
 
   /* ─── render ─────────────────────────────────────────────── */
   return (
     <div className="flex flex-col gap-3">
 
-      {/* PageHeader — filtreler sağ toolbar */}
+      {/* PageHeader — her iki filtre aynı dropdown görünümde */}
       <div className="shrink-0">
         <PageHeader
           title="Müsaitlik Yönetimi"
@@ -246,42 +231,36 @@ export default function AdminMusaitlikPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Saat aralığı */}
-          <Select value={filterRange} onValueChange={(v) => setFilterRange(v as TimeRange)}>
-            <SelectTrigger className="h-9 w-40 gap-1.5 text-sm">
-              <Clock className="size-3.5 shrink-0 opacity-60" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
-              {(Object.entries(TIME_RANGE_LABELS) as [TimeRange, string][]).map(([val, label]) => (
-                <SelectItem key={val} value={val}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Temizle */}
-          {activeFilterCount > 0 && (
-            <button
+          {/* Saat filtresi — gün filtresiyle birebir aynı görünüm */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
               type="button"
-              onClick={clearFilters}
-              className="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5
-                         text-sm font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50
-                         transition-colors duration-150"
+              className={buttonVariants({ variant: "outline", size: "sm" }) + " gap-1.5"}
             >
-              <X className="size-3.5" />
-              Temizle ({activeFilterCount})
-            </button>
-          )}
+              <Clock className="size-3.5" />
+              {filterBlocks.size === TIME_BLOCKS.length
+                ? "Tüm Saatler"
+                : filterBlocks.size === 0
+                  ? "Saat Seçin"
+                  : `${filterBlocks.size} Aralık`}
+              <ChevronDown className="size-3 opacity-60" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
+              {TIME_BLOCKS.map((block) => (
+                <DropdownMenuCheckboxItem
+                  key={block.key}
+                  checked={filterBlocks.has(block.key)}
+                  onCheckedChange={() => toggleBlock(block.key)}
+                >
+                  {block.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </PageHeader>
       </div>
 
-      {/*
-        Ana kutu
-        Yükseklik hesabı (admin layout: main = flex-1 overflow-auto p-4 sm:p-6)
-        PageHeader toolbar satırında ~80px yükseklik alıyor.
-        p-4: 32px padding + 80px header + 12px gap = 124px ≈ 8rem
-        p-6: 48px padding + 80px header + 12px gap = 140px ≈ 9rem
-      */}
+      {/* Ana kutu */}
       <div className="flex overflow-hidden rounded-2xl border border-border/60 bg-white
                       h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)]">
 
@@ -325,17 +304,22 @@ export default function AdminMusaitlikPage() {
                         "text-left transition-all duration-150",
                         checked
                           ? "shadow-sm"
-                          : "border-transparent bg-muted/20 opacity-40 hover:opacity-60 hover:bg-muted/30",
+                          : "border-border/40 bg-muted/20",
                       )}
                     >
+                      {/* Avatar — seçiliyken renkli, değilken gri */}
                       <div
                         className="flex size-7 shrink-0 items-center justify-center
-                                   rounded-full text-[10px] font-bold text-white"
-                        style={{ background: color }}
+                                   rounded-full text-[10px] font-bold text-white transition-colors duration-150"
+                        style={{ background: checked ? color : "#9ca3af" }}
                       >
                         {initials(expert)}
                       </div>
-                      <span className="min-w-0 flex-1 truncate text-[12px] font-medium leading-tight text-foreground">
+                      {/* İsim — seçiliyken koyu, değilken muted */}
+                      <span className={cn(
+                        "min-w-0 flex-1 truncate text-[12px] font-medium leading-tight transition-colors duration-150",
+                        checked ? "text-foreground" : "text-muted-foreground",
+                      )}>
                         {expert.user.firstName}{" "}
                         <span className="font-semibold">{expert.user.lastName}</span>
                       </span>
@@ -347,142 +331,124 @@ export default function AdminMusaitlikPage() {
 
         {/* ── SAĞ: Tablo ──────────────────────────────────── */}
         <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-auto">
-            <div className="flex min-h-full flex-col">
 
-              {/* Sticky gün başlıkları */}
-              <div className="sticky top-0 z-10 flex shrink-0 border-b-2 border-border/60 bg-[#e6f0ee]">
-                <div className="w-14 shrink-0 border-r border-border/60 px-2 py-2.5
-                                text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                  SAAT
+          {/* Gün başlıkları (sabit, scroll yok) */}
+          <div className="flex shrink-0 border-b-2 border-border/60 bg-[#e6f0ee]">
+            <div className="w-14 shrink-0 border-r border-border/60 px-2 py-2.5
+                            text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
+              SAAT
+            </div>
+            {filteredDayIndices.map((dowIdx) => {
+              const date  = weekDates[dowIdx];
+              const today = isTodayDate(date);
+              return (
+                <div
+                  key={dowIdx}
+                  className={cn(
+                    "min-w-[110px] flex-1 border-r border-border/60 py-2 text-center last:border-r-0",
+                    today && "bg-primary/15",
+                  )}
+                >
+                  <p className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider",
+                    today ? "text-primary" : "text-muted-foreground",
+                  )}>
+                    {DAY_LABELS[dowIdx]}
+                  </p>
+                  <p className={cn(
+                    "text-base font-bold leading-tight",
+                    today ? "text-primary" : "text-[#014a3e]",
+                  )}>
+                    {date.getDate()}
+                  </p>
                 </div>
-                {filteredDayIndices.map((dowIdx) => {
-                  const date  = weekDates[dowIdx];
-                  const today = isTodayDate(date);
-                  return (
-                    <div
-                      key={dowIdx}
-                      className={cn(
-                        "min-w-[110px] flex-1 border-r border-border/60 py-2 text-center last:border-r-0",
-                        today && "bg-primary/15",
-                      )}
-                    >
-                      <p className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider",
-                        today ? "text-primary" : "text-muted-foreground",
-                      )}>
-                        {DAY_LABELS[dowIdx]}
-                      </p>
-                      <p className={cn(
-                        "text-base font-bold leading-tight",
-                        today ? "text-primary" : "text-[#014a3e]",
-                      )}>
-                        {date.getDate()}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+              );
+            })}
+          </div>
 
-              {/* Empty state */}
-              {filteredDayIndices.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center py-16
-                                text-sm text-muted-foreground">
-                  Gün filtresi boş — yukarıdan gün seçin
-                </div>
-              ) : (
-                <>
-                  {timeSlots.map((time, rowIdx) => (
-                    <div
-                      key={time}
-                      className={cn(
-                        "flex shrink-0 border-b border-border/40",
-                        "transition-colors duration-100 hover:bg-primary/[0.025]",
-                        rowIdx % 2 === 1 && "bg-muted/[0.02]",
-                      )}
-                    >
-                      {/* Saat etiketi */}
-                      <div className="flex w-14 shrink-0 items-center justify-center
-                                      border-r border-border/50 bg-[#e6f0ee]/70 px-1 py-3">
-                        <p className="text-[11px] font-semibold tabular-nums text-[#014a3e]">
-                          {time}
-                        </p>
-                      </div>
+          {/* 3 blok — flex-1 ile dikey %100 */}
+          {filteredDayIndices.length === 0 || visibleBlocks.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+              {filteredDayIndices.length === 0 ? "Gün filtresi boş" : "Saat aralığı seçin"}
+            </div>
+          ) : (
+            <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
+              {visibleBlocks.map((block, idx) => (
+                <div
+                  key={block.key}
+                  className={cn(
+                    "flex flex-1 min-h-0 border-b border-border/40 last:border-b-0",
+                    "transition-colors duration-100 hover:bg-primary/[0.015]",
+                    idx % 2 === 1 && "bg-muted/[0.015]",
+                  )}
+                >
+                  {/* Saat aralığı etiketi */}
+                  <div className="flex w-14 shrink-0 items-center justify-center
+                                  border-r border-border/50 bg-[#e6f0ee]/70 px-1">
+                    <p className="text-[11px] font-semibold tabular-nums text-[#014a3e]">
+                      {block.label}
+                    </p>
+                  </div>
 
-                      {/* Hücreler */}
-                      {filteredDayIndices.map((dowIdx) => {
-                        const today = isTodayDate(weekDates[dowIdx]);
-                        const cell  = getCellAvails(dowIdx, time);
-                        return (
-                          <div
-                            key={dowIdx}
-                            className={cn(
-                              "min-w-[110px] flex-1 border-r border-border/40 p-1.5 last:border-r-0",
-                              today && "bg-primary/[0.02]",
-                            )}
-                          >
-                            <div className="flex flex-col gap-1">
-                              {cell.map((avail) => {
-                                const expert = experts.find((e) => e.id === avail.expertProfileId);
-                                if (!expert) return null;
-                                const color   = colorMap.get(expert.id) ?? "#4d978b";
-                                const blocked = avail.isBlockedByAdmin;
-                                return (
-                                  <button
-                                    key={avail.id}
-                                    type="button"
-                                    title={`${expert.user.firstName} ${expert.user.lastName} — ${blocked ? "Kilidi aç" : "Kilitle"}`}
-                                    onClick={() => handleToggle(avail)}
-                                    className={cn(
-                                      "flex w-full cursor-pointer items-center gap-1.5 rounded-md",
-                                      "px-2 py-1 text-[11px] font-semibold",
-                                      "transition-all duration-150 hover:brightness-95 active:scale-[0.97]",
-                                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                    )}
-                                    style={
-                                      blocked
-                                        ? { background: "#fee2e2", color: "#dc2626" }
-                                        : { background: color + "1a", color }
-                                    }
-                                  >
-                                    <span
-                                      className="size-2 shrink-0 rounded-full"
-                                      style={{ background: blocked ? "#dc2626" : color }}
-                                    />
-                                    <span className={cn(
-                                      "min-w-0 flex-1 truncate leading-none",
-                                      blocked && "line-through",
-                                    )}>
-                                      {expertLabel(expert)}
-                                    </span>
-                                    {blocked && <Lock className="size-3 shrink-0 text-red-400" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-
-                  {/* Boş alan dolgusu — tablo aşağıya kadar uzanır */}
-                  <div className="flex flex-1">
-                    <div className="w-14 shrink-0 border-r border-border/60 bg-[#e6f0ee]/30" />
-                    {filteredDayIndices.map((dowIdx) => (
+                  {/* Hücreler */}
+                  {filteredDayIndices.map((dowIdx) => {
+                    const today = isTodayDate(weekDates[dowIdx]);
+                    const cell  = getCellAvails(dowIdx, block.key);
+                    return (
                       <div
                         key={dowIdx}
                         className={cn(
-                          "min-w-[110px] flex-1 border-r border-border/40 last:border-r-0",
-                          isTodayDate(weekDates[dowIdx]) && "bg-primary/[0.015]",
+                          "min-w-[110px] flex-1 border-r border-border/40 p-2 last:border-r-0",
+                          "overflow-y-auto",
+                          today && "bg-primary/[0.02]",
                         )}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
+                      >
+                        <div className="flex flex-col gap-1">
+                          {cell.map((avail) => {
+                            const expert = experts.find((e) => e.id === avail.expertProfileId);
+                            if (!expert) return null;
+                            const color   = colorMap.get(expert.id) ?? "#4d978b";
+                            const blocked = avail.isBlockedByAdmin;
+                            return (
+                              <button
+                                key={avail.id}
+                                type="button"
+                                title={`${expert.user.firstName} ${expert.user.lastName} — ${blocked ? "Kilidi aç" : "Kilitle"}`}
+                                onClick={() => handleToggle(avail)}
+                                className={cn(
+                                  "flex w-full cursor-pointer items-center gap-1.5 rounded-md",
+                                  "px-2 py-1 text-[11px] font-semibold",
+                                  "transition-all duration-150 hover:brightness-95 active:scale-[0.97]",
+                                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                )}
+                                style={
+                                  blocked
+                                    ? { background: "#fee2e2", color: "#dc2626" }
+                                    : { background: color + "1a", color }
+                                }
+                              >
+                                <span
+                                  className="size-2 shrink-0 rounded-full"
+                                  style={{ background: blocked ? "#dc2626" : color }}
+                                />
+                                <span className={cn(
+                                  "min-w-0 flex-1 truncate leading-none",
+                                  blocked && "line-through",
+                                )}>
+                                  {expertLabel(expert)}
+                                </span>
+                                {blocked && <Lock className="size-3 shrink-0 text-red-400" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          </div>
+          )}
 
           {/* Footer */}
           <div className="flex shrink-0 items-center gap-4 border-t border-border/40
