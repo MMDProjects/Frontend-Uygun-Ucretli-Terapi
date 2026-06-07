@@ -39,13 +39,19 @@ const EXPERT_COLORS = [
 
 const DAY_LABELS = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"];
 
-const TIME_BLOCKS = [
-  { key: "09-12", label: "09–12", test: (t: string) => t >= "09:00" && t < "12:00" },
-  { key: "12-17", label: "12–17", test: (t: string) => t >= "12:00" && t < "17:00" },
-  { key: "17-21", label: "17–21", test: (t: string) => t >= "17:00" },
-] as const;
+const TIME_BLOCKS = Array.from({ length: 15 }, (_, i) => {
+  const h = 8 + i;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const start = `${pad(h)}:00`;
+  return {
+    key: `${pad(h)}-${pad(h + 1)}`,
+    label: `${pad(h)}:00`,
+    startTime: start,
+    test: (t: string) => t === start,
+  };
+});
 
-type BlockKey = typeof TIME_BLOCKS[number]["key"];
+type BlockKey = string;
 
 /* ─── helpers ────────────────────────────────────────────── */
 function getToken() { return getAccessToken() ?? ""; }
@@ -115,7 +121,7 @@ export default function AdminMusaitlikPage() {
   const [loadingExperts, setLoadingExperts] = useState(true);
   const [filterDays,     setFilterDays]     = useState<Set<number>>(new Set([0,1,2,3,4,5,6]));
   const [filterBlocks,   setFilterBlocks]   = useState<Set<BlockKey>>(
-    new Set(TIME_BLOCKS.map((b) => b.key)),
+    () => new Set(TIME_BLOCKS.map((b) => b.key)),
   );
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -426,17 +432,17 @@ export default function AdminMusaitlikPage() {
               {filteredDayIndices.length === 0 ? "Gün filtresi boş" : "Saat aralığı seçin"}
             </div>
           ) : (
-            <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
+            <div className="flex flex-1 min-h-0 flex-col overflow-y-auto">
               {visibleBlocks.map((block, idx) => (
                 <div
                   key={block.key}
                   className={cn(
-                    "flex flex-1 min-h-0 border-b border-border/40 last:border-b-0",
+                    "flex min-h-[52px] shrink-0 border-b border-border/40 last:border-b-0",
                     "transition-colors duration-100 hover:bg-primary/[0.015]",
                     idx % 2 === 1 && "bg-muted/[0.015]",
                   )}
                 >
-                  {/* Saat aralığı etiketi */}
+                  {/* Saat etiketi */}
                   <div className="flex w-14 shrink-0 items-center justify-center
                                   border-r border-border/50 bg-[#e6f0ee]/70 px-1">
                     <p className="text-[11px] font-semibold tabular-nums text-[#014a3e]">
@@ -452,7 +458,7 @@ export default function AdminMusaitlikPage() {
                       <div
                         key={dowIdx}
                         className={cn(
-                          "min-w-[110px] flex-1 overflow-y-auto border-r border-border/40 p-2 last:border-r-0",
+                          "min-w-[110px] flex-1 overflow-hidden border-r border-border/40 p-1.5 last:border-r-0",
                           today && "bg-primary/[0.02]",
                         )}
                       >

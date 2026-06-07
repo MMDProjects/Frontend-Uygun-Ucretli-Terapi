@@ -21,7 +21,18 @@ const DAYS: DayOfWeek[] = [
   "Cumartesi",
   "Pazar",
 ];
-const SLOTS: TimeSlot[] = ["Sabah", "Öğleden Sonra", "Akşam"];
+
+// 15 saatlik slot: 08:00–09:00, ..., 22:00–23:00
+const HOURLY_SLOTS = Array.from({ length: 15 }, (_, i) => {
+  const h = 8 + i;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    key: `${pad(h)}:00` as TimeSlot,
+    label: `${pad(h)}:00`,
+    startTime: `${pad(h)}:00`,
+    endTime: `${pad(h + 1)}:00`,
+  };
+});
 
 // 0=Mon..6=Sun → DayOfWeek adı
 const DAY_IDX_MAP: Record<number, DayOfWeek> = {
@@ -29,22 +40,14 @@ const DAY_IDX_MAP: Record<number, DayOfWeek> = {
   4: "Cuma", 5: "Cumartesi", 6: "Pazar",
 };
 
-const SLOT_TIME_MAP: Record<TimeSlot, { startTime: string; endTime: string }> = {
-  "Sabah":          { startTime: "09:00", endTime: "12:00" },
-  "Öğleden Sonra": { startTime: "12:00", endTime: "17:00" },
-  "Akşam":          { startTime: "17:00", endTime: "21:00" },
-};
-
 function startTimeToSlot(startTime: string): TimeSlot | null {
-  if (startTime === "09:00") return "Sabah";
-  if (startTime === "12:00") return "Öğleden Sonra";
-  if (startTime === "17:00") return "Akşam";
-  return null;
+  const slot = HOURLY_SLOTS.find((s) => s.startTime === startTime);
+  return slot ? slot.key : null;
 }
 
 function buildEmptyCells(): AvailabilityCell[] {
   return DAYS.flatMap((day) =>
-    SLOTS.map((slot) => ({ day, slot, available: false, adminLocked: false }))
+    HOURLY_SLOTS.map((slot) => ({ day, slot: slot.key, available: false, adminLocked: false }))
   );
 }
 
@@ -156,8 +159,8 @@ export function MusaitlikModal() {
         if (cell.available && !existingId) {
           const dayIdx = DAYS.indexOf(cell.day);
           const dateStr = weekDatesRef.current[dayIdx];
-          const { startTime, endTime } = SLOT_TIME_MAP[cell.slot];
-          if (dateStr) promises.push(addAvailability({ date: dateStr, startTime, endTime }));
+          const slotDef = HOURLY_SLOTS.find((s) => s.key === cell.slot);
+          if (dateStr && slotDef) promises.push(addAvailability({ date: dateStr, startTime: slotDef.startTime, endTime: slotDef.endTime }));
         } else if (!cell.available && existingId) {
           promises.push(removeAvailability(existingId));
         }
@@ -201,67 +204,69 @@ export function MusaitlikModal() {
         </div>
 
         {/* Grid */}
-        <div className="overflow-x-auto p-4">
+        <div className="p-4">
           {loading ? (
             <div className="flex h-40 items-center justify-center">
               <span className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
           ) : (
-            <table className="w-full min-w-[560px] border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="w-32 pb-3 text-left text-xs font-semibold text-muted-foreground" />
-                  {DAYS.map((day) => (
-                    <th
-                      key={day}
-                      className="pb-3 text-center text-xs font-semibold text-muted-foreground"
-                    >
-                      {day.slice(0, 3)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="space-y-1">
-                {SLOTS.map((slot) => (
-                  <tr key={slot}>
-                    <td className="py-1.5 pr-3 text-xs font-medium text-muted-foreground">
-                      {slot}
-                    </td>
-                    {DAYS.map((day) => {
-                      const cell = getCell(day, slot);
-                      if (!cell) return <td key={day} />;
-                      return (
-                        <td key={day} className="px-1 py-1.5 text-center">
-                          <button
-                            type="button"
-                            onClick={() => toggleCell(day, slot)}
-                            disabled={cell.adminLocked}
-                            title={
-                              cell.adminLocked
-                                ? "Admin tarafından kilitlendi"
-                                : undefined
-                            }
-                            className={cn(
-                              "mx-auto flex size-8 items-center justify-center rounded-lg border text-xs font-semibold transition",
-                              cell.adminLocked &&
-                                "cursor-not-allowed border-red-200 bg-red-50 text-red-400",
-                              !cell.adminLocked &&
-                                cell.available &&
-                                "border-primary/30 bg-primary text-white hover:bg-primary-hover",
-                              !cell.adminLocked &&
-                                !cell.available &&
-                                "border-border bg-white text-muted-foreground hover:border-primary/30 hover:bg-muted"
-                            )}
-                          >
-                            {cell.adminLocked ? "✕" : cell.available ? "✓" : ""}
-                          </button>
-                        </td>
-                      );
-                    })}
+            <div className="max-h-[420px] overflow-auto">
+              <table className="w-full min-w-[520px] border-collapse text-sm">
+                <thead className="sticky top-0 z-10 bg-white">
+                  <tr>
+                    <th className="w-14 pb-2 text-left text-[10px] font-semibold text-muted-foreground" />
+                    {DAYS.map((day) => (
+                      <th
+                        key={day}
+                        className="pb-2 text-center text-[10px] font-semibold text-muted-foreground"
+                      >
+                        {day.slice(0, 3)}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {HOURLY_SLOTS.map((slotDef) => (
+                    <tr key={slotDef.key}>
+                      <td className="py-0.5 pr-2 text-[11px] font-semibold tabular-nums text-muted-foreground">
+                        {slotDef.label}
+                      </td>
+                      {DAYS.map((day) => {
+                        const cell = getCell(day, slotDef.key);
+                        if (!cell) return <td key={day} />;
+                        return (
+                          <td key={day} className="px-0.5 py-0.5 text-center">
+                            <button
+                              type="button"
+                              onClick={() => toggleCell(day, slotDef.key)}
+                              disabled={cell.adminLocked}
+                              title={
+                                cell.adminLocked
+                                  ? "Admin tarafından kilitlendi"
+                                  : undefined
+                              }
+                              className={cn(
+                                "mx-auto flex size-7 items-center justify-center rounded-md border text-xs font-semibold transition",
+                                cell.adminLocked &&
+                                  "cursor-not-allowed border-red-200 bg-red-50 text-red-400",
+                                !cell.adminLocked &&
+                                  cell.available &&
+                                  "border-primary/30 bg-primary text-white hover:bg-primary-hover",
+                                !cell.adminLocked &&
+                                  !cell.available &&
+                                  "border-border bg-white text-muted-foreground hover:border-primary/30 hover:bg-muted"
+                              )}
+                            >
+                              {cell.adminLocked ? "✕" : cell.available ? "✓" : ""}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           <p className="mt-3 text-xs text-muted-foreground">

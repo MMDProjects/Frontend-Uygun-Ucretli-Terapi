@@ -17,13 +17,18 @@ import {
 const DAY_SHORT = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 const MONTH_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
 
-const SLOT_DEFS = [
-  { key: "09-12" as const, label: "09–12", startTime: "09:00", endTime: "12:00" },
-  { key: "12-17" as const, label: "12–17", startTime: "12:00", endTime: "17:00" },
-  { key: "17-21" as const, label: "17–21", startTime: "17:00", endTime: "21:00" },
-] as const;
+const SLOT_DEFS = Array.from({ length: 15 }, (_, i) => {
+  const h = 8 + i;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    key: `${pad(h)}-${pad(h + 1)}`,
+    label: `${pad(h)}:00`,
+    startTime: `${pad(h)}:00`,
+    endTime: `${pad(h + 1)}:00`,
+  };
+});
 
-type SlotKey = typeof SLOT_DEFS[number]["key"];
+type SlotKey = string;
 
 type WeekCell = {
   id?: string;
@@ -338,80 +343,82 @@ export default function UzmanMusaitlikPage() {
             })}
           </div>
 
-          {/* Slot rows */}
-          {SLOT_DEFS.map((slot, slotIdx) => (
-            <div
-              key={slot.key}
-              className={cn(
-                "flex border-b border-border/40 last:border-b-0",
-                "hover:bg-primary/[0.02]",
-                slotIdx % 2 === 1 && "bg-muted/[0.015]",
-              )}
-            >
-              <div className="w-16 shrink-0 border-r border-border/60 bg-[#e6f0ee] px-2 py-4">
-                <p className="text-xs font-semibold text-[#014a3e]">{slot.label}</p>
-              </div>
-              {weekDates.map((date, dayIdx) => {
-                const dateStr = toDateStr(date);
-                const cell = getCell(dateStr, slot.key);
-                const today = isTodayDate(date);
-                if (!cell) {
+          {/* Slot rows — scrollable */}
+          <div className="max-h-[480px] overflow-y-auto">
+            {SLOT_DEFS.map((slot, slotIdx) => (
+              <div
+                key={slot.key}
+                className={cn(
+                  "flex border-b border-border/40 last:border-b-0",
+                  "hover:bg-primary/[0.02]",
+                  slotIdx % 2 === 1 && "bg-muted/[0.015]",
+                )}
+              >
+                <div className="w-16 shrink-0 border-r border-border/60 bg-[#e6f0ee] px-2 py-1.5">
+                  <p className="text-[11px] font-semibold tabular-nums text-[#014a3e]">{slot.label}</p>
+                </div>
+                {weekDates.map((date, dayIdx) => {
+                  const dateStr = toDateStr(date);
+                  const cell = getCell(dateStr, slot.key);
+                  const today = isTodayDate(date);
+                  if (!cell) {
+                    return (
+                      <div
+                        key={dayIdx}
+                        className="flex-1 border-r border-border/40 last:border-r-0 p-1.5"
+                      />
+                    );
+                  }
                   return (
                     <div
                       key={dayIdx}
-                      className="flex-1 border-r border-border/40 last:border-r-0 p-2"
-                    />
-                  );
-                }
-                return (
-                  <div
-                    key={dayIdx}
-                    className={cn(
-                      "flex flex-1 items-center justify-center border-r border-border/40 p-2 last:border-r-0",
-                      cell.adminLocked && "bg-red-50/50",
-                      today && !cell.adminLocked && "bg-primary/[0.02]",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => toggleCell(dateStr, slot.key)}
-                      disabled={cell.adminLocked}
-                      title={
-                        cell.adminLocked
-                          ? "Admin tarafından kilitlendi"
-                          : cell.available
-                          ? "Müsait — tıklayarak kaldır"
-                          : "Müsait değil — tıklayarak ekle"
-                      }
-                      style={
-                        cell.adminLocked
-                          ? {
-                              backgroundImage:
-                                "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.12) 3px, rgba(220,38,38,0.12) 6px)",
-                            }
-                          : undefined
-                      }
                       className={cn(
-                        "w-full rounded-lg border py-2.5 text-[10px] font-bold transition-all",
-                        cell.adminLocked &&
-                          "cursor-not-allowed border-red-200 text-red-400",
-                        !cell.adminLocked &&
-                          cell.available &&
-                          "border-primary/40 bg-primary text-white shadow-sm hover:bg-primary-hover active:scale-95",
-                        !cell.adminLocked &&
-                          !cell.available &&
-                          "border-border/50 bg-white text-muted-foreground hover:border-primary/30 hover:bg-[#e6f0ee] hover:text-primary",
+                        "flex flex-1 items-center justify-center border-r border-border/40 p-1.5 last:border-r-0",
+                        cell.adminLocked && "bg-red-50/50",
+                        today && !cell.adminLocked && "bg-primary/[0.02]",
                       )}
-                      aria-label={`${DAY_SHORT[dayIdx]} ${slot.label} ${cell.available ? "müsait" : "müsait değil"}`}
-                      aria-pressed={cell.available}
                     >
-                      {cell.adminLocked ? "Kilitli" : cell.available ? "Müsait" : "Boş"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+                      <button
+                        type="button"
+                        onClick={() => toggleCell(dateStr, slot.key)}
+                        disabled={cell.adminLocked}
+                        title={
+                          cell.adminLocked
+                            ? "Admin tarafından kilitlendi"
+                            : cell.available
+                            ? "Müsait — tıklayarak kaldır"
+                            : "Müsait değil — tıklayarak ekle"
+                        }
+                        style={
+                          cell.adminLocked
+                            ? {
+                                backgroundImage:
+                                  "repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,38,38,0.12) 3px, rgba(220,38,38,0.12) 6px)",
+                              }
+                            : undefined
+                        }
+                        className={cn(
+                          "w-full rounded-lg border py-1.5 text-[10px] font-bold transition-all",
+                          cell.adminLocked &&
+                            "cursor-not-allowed border-red-200 text-red-400",
+                          !cell.adminLocked &&
+                            cell.available &&
+                            "border-primary/40 bg-primary text-white shadow-sm hover:bg-primary-hover active:scale-95",
+                          !cell.adminLocked &&
+                            !cell.available &&
+                            "border-border/50 bg-white text-muted-foreground hover:border-primary/30 hover:bg-[#e6f0ee] hover:text-primary",
+                        )}
+                        aria-label={`${DAY_SHORT[dayIdx]} ${slot.label} ${cell.available ? "müsait" : "müsait değil"}`}
+                        aria-pressed={cell.available}
+                      >
+                        {cell.adminLocked ? "Kilitli" : cell.available ? "Müsait" : "Boş"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-4">
