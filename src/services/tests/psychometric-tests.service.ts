@@ -46,9 +46,13 @@ function authHeaders(): HeadersInit {
 
 function mapBackendTest(row: BackendTest): PsychometricTestDefinition | null {
   if (!row.definition) return null;
+  const def = row.definition;
   return {
-    ...row.definition,
-    id: row.id, // backend UUID'yi kullan
+    ...def,
+    questions: def.questions ?? [],
+    subscales: def.subscales ?? [],
+    interpretationBands: def.interpretationBands ?? [],
+    id: row.id,
   };
 }
 
