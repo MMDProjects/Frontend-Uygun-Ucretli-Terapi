@@ -1,3 +1,4 @@
+import type React from "react";
 import { getPackages, getSss } from "@/lib/services/public.service";
 import type { ApiPackage } from "@/lib/services/public.service";
 import { cn } from "@/lib/utils";
@@ -5,6 +6,45 @@ import Link from "next/link";
 import { SssSection } from "@/components/common/sss-section";
 
 export const revalidate = 0;
+
+function renderDescription(text: string, highlighted: boolean) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const elements: React.ReactNode[] = [];
+  let bulletBuffer: string[] = [];
+
+  const flushBullets = (key: number) => {
+    if (bulletBuffer.length === 0) return;
+    elements.push(
+      <ul key={key} className="space-y-1.5 list-none">
+        {bulletBuffer.map((b, i) => (
+          <li key={i} className="flex items-start gap-2">
+            <span
+              className={cn(
+                "mt-[0.4rem] size-1.5 shrink-0 rounded-full",
+                highlighted ? "bg-white/70" : "bg-primary",
+              )}
+            />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>,
+    );
+    bulletBuffer = [];
+  };
+
+  lines.forEach((line, idx) => {
+    const isBullet = /^[-•*]\s+/.test(line);
+    if (isBullet) {
+      bulletBuffer.push(line.replace(/^[-•*]\s+/, ""));
+    } else {
+      flushBullets(idx);
+      elements.push(<p key={idx}>{line}</p>);
+    }
+  });
+  flushBullets(lines.length);
+
+  return elements;
+}
 
 function PackageCardApi({
   pkg,
@@ -55,14 +95,14 @@ function PackageCardApi({
         {priceLabel}
       </p>
 
-      <p
+      <div
         className={cn(
-          "mt-3 text-sm leading-6",
+          "mt-3 space-y-2 text-sm leading-6",
           highlighted ? "text-white/80" : "text-muted-foreground",
         )}
       >
-        {pkg.description}
-      </p>
+        {renderDescription(pkg.description, highlighted)}
+      </div>
 
       <div className={cn("my-6 h-px w-full", highlighted ? "bg-white/20" : "bg-border/60")} />
 

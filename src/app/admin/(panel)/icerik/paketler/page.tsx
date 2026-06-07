@@ -99,11 +99,17 @@ function PackageEditor({
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Açıklama</Label>
+          <p className="text-[11px] text-muted-foreground">
+            Her satır yeni bir paragraf. Satır başına{" "}
+            <code className="rounded bg-muted px-1">- </code> koyarsanız madde
+            listesi oluşur.
+          </p>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            className="resize-none"
+            rows={6}
+            placeholder={"- İlk madde\n- İkinci madde\nveya düz paragraf metin"}
+            className="resize-y font-mono text-xs"
           />
         </div>
         <div className="flex justify-end">
