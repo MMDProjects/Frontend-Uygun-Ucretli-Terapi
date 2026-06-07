@@ -281,7 +281,7 @@ type RawNotification = {
 
 export async function getMyUzmanNotifications(): Promise<ApiUzmanNotification[]> {
   const token = getAccessToken();
-  const raw = await apiFetch<RawNotification[]>("/notifications", { token });
+  const raw = await apiFetch<RawNotification[]>("/notifications/all", { token });
   return raw.map((n) => ({ ...n, type: mapNotificationType(n.type) }));
 }
 
