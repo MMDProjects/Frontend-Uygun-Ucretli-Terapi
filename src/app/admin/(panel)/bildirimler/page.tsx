@@ -29,7 +29,7 @@ import { getAccessToken } from "@/lib/auth-cookies";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { getAllAdminNotifications, markAllAdminNotificationsRead } from "@/lib/services/admin.service";
 
-type ExpertItem = { id: string; user: { firstName: string; lastName: string } };
+type ExpertItem = { id: string; user: { id: string; firstName: string; lastName: string } };
 
 const schema = z.object({
   userId: z.string().uuid("Geçerli bir uzman seçin."),
@@ -221,7 +221,7 @@ export default function AdminBildirimlerPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {experts.map((e) => (
-                        <SelectItem key={e.id} value={e.id}>
+                        <SelectItem key={e.id} value={e.user.id}>
                           {e.user.firstName} {e.user.lastName}
                         </SelectItem>
                       ))}
