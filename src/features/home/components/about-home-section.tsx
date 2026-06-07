@@ -118,7 +118,7 @@ export function AboutHomeSection() {
       <dialog
         ref={dialogRef}
         onClick={(e) => { if (e.target === dialogRef.current) closeModal(); }}
-        className="m-auto max-h-[90dvh] w-full max-w-sm rounded-[2rem] bg-black p-0 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm open:flex open:flex-col"
+        className="m-auto max-h-[90dvh] w-full max-w-2xl rounded-[2rem] bg-black p-0 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm open:flex open:flex-col"
       >
         <div className="flex items-center justify-between px-4 py-3">
           <span className="text-sm font-semibold text-white">Tanıtım Videosu</span>
@@ -131,13 +131,22 @@ export function AboutHomeSection() {
           </button>
         </div>
         {modalOpen && videoUrl && (
-          <video
-            src={videoUrl}
-            controls
-            autoPlay
-            playsInline
-            className="w-full flex-1 object-contain"
-          />
+          videoUrl.includes("player.cloudinary.com") || videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be") || videoUrl.includes("vimeo.com") ? (
+            <iframe
+              src={videoUrl}
+              allow="autoplay; fullscreen; encrypted-media"
+              allowFullScreen
+              className="aspect-video w-full"
+            />
+          ) : (
+            <video
+              src={videoUrl}
+              controls
+              autoPlay
+              playsInline
+              className="w-full flex-1 object-contain"
+            />
+          )
         )}
       </dialog>
     </section>
