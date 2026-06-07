@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { logout } from "@/lib/services/auth.service";
 import { siteConfig } from "@/lib/constants/site";
-import { getMyUzmanNotifications } from "@/lib/services/uzman.service";
 import { getAssignedQuestions } from "@/lib/services/forum.service";
 
 type NavItem = { label: string; href: string; badge?: number };
@@ -43,18 +42,15 @@ const groups: NavGroup[] = [
 interface UzmanSidebarProps {
   open: boolean;
   onClose: () => void;
+  unreadNotifCount?: number;
 }
 
-export function UzmanSidebar({ open, onClose }: UzmanSidebarProps) {
+export function UzmanSidebar({ open, onClose, unreadNotifCount = 0 }: UzmanSidebarProps) {
   const pathname = usePathname();
   const { displayName } = useAuthStore();
-  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [pendingForumCount, setPendingForumCount] = useState(0);
 
   useEffect(() => {
-    getMyUzmanNotifications()
-      .then((notifs) => setUnreadNotifCount(notifs.filter((n) => !n.isRead).length))
-      .catch(() => {});
     getAssignedQuestions()
       .then((qs) => setPendingForumCount(qs.filter((q) => q.status === "ATANDI").length))
       .catch(() => {});

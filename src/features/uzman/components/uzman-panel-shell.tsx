@@ -1,20 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { toast } from "sonner";
+import { Info, AlertTriangle } from "lucide-react";
 import { UzmanSidebar } from "@/features/uzman/components/uzman-sidebar";
 import { UzmanAuthGuard } from "@/features/uzman/components/uzman-auth-guard";
 import { DangerPanicOverlay } from "@/features/uzman/components/danger-panic-overlay";
-import { subscribeToNotificationStream } from "@/lib/services/uzman.service";
+import { subscribeToNotificationStream, getMyUzmanNotifications } from "@/lib/services/uzman.service";
 
 export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [panicMessage, setPanicMessage] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    getMyUzmanNotifications()
+      .then((notifs) => setUnreadCount(notifs.filter((n) => !n.isRead).length))
+      .catch(() => {});
+  }, []);
+
+  // Bildirimler sayfasını ziyaret edince sayacı sıfırla
+  useEffect(() => {
+    if (pathname === "/uzman/bildirimler") {
+      setUnreadCount(0);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const unsub = subscribeToNotificationStream((data) => {
+      setUnreadCount((prev) => prev + 1);
       if (data.type === "DANGER_PANIC") {
         setPanicMessage(data.message);
+      } else if (data.type === "WARNING") {
+        toast.warning(data.message, {
+          icon: <AlertTriangle className="size-4 text-amber-600" />,
+          duration: 10000,
+          description: "Admin uyarısı",
+        });
+      } else if (data.type === "INFO") {
+        toast.info(data.message, {
+          icon: <Info className="size-4 text-blue-600" />,
+          duration: 5000,
+          description: "Admin bildirimi",
+        });
       }
     });
     return unsub;
@@ -23,7 +53,7 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
   return (
     <UzmanAuthGuard>
       <div className="flex h-screen overflow-hidden bg-muted">
-        <UzmanSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <UzmanSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} unreadNotifCount={unreadCount} />
 
         {sidebarOpen && (
           <button
