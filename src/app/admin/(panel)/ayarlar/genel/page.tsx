@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
 
-type WheelSegment = { label: string; description: string };
+type WheelSegment = { label: string; description: string; isWinner?: boolean };
 
 type LoginPopupSettings = {
   title: string;
@@ -25,6 +25,7 @@ type Settings = {
   videoUrl?: string | null;
   announcementItems?: string[];
   wheelSegments?: WheelSegment[];
+  wheelWinnerIndices?: number[];
   loginPopupSettings?: LoginPopupSettings;
 };
 
@@ -37,6 +38,7 @@ export default function AyarlarGenelPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [savingVideo, setSavingVideo] = useState(false);
   const [wheelSegments, setWheelSegments] = useState<WheelSegment[]>([]);
+  const [wheelWinnerIndices, setWheelWinnerIndices] = useState<number[]>([]);
   const [savingWheel, setSavingWheel] = useState(false);
   const [popupTitle, setPopupTitle] = useState("");
   const [popupDescription, setPopupDescription] = useState("");
@@ -58,6 +60,7 @@ export default function AyarlarGenelPage() {
         setVideoUrl(s.videoUrl ?? "");
         setItems(s.announcementItems ?? []);
         setWheelSegments(s.wheelSegments ?? []);
+        setWheelWinnerIndices(s.wheelWinnerIndices ?? []);
         const p = s.loginPopupSettings;
         setPopupTitle(p?.title ?? "Ücretsiz Ön Görüşme\nHakkınız Hazır");
         setPopupDescription(p?.description ?? "Platforma hoş geldiniz. Size özel ücretsiz ön görüşme hakkınızı kullanarak doğru uzmanı bulmanıza yardımcı olalım.");
@@ -152,14 +155,26 @@ export default function AyarlarGenelPage() {
     }
   }
 
+  function toggleWinner(index: number) {
+    setWheelWinnerIndices((prev) => {
+      if (prev.includes(index)) return prev.filter((i) => i !== index);
+      if (prev.length >= 2) return prev; // maks 2 kazanan
+      return [...prev, index];
+    });
+  }
+
   async function handleSaveWheel() {
+    if (wheelWinnerIndices.length === 0) {
+      toast.error("En az 1 kazanan dilim seçmelisiniz.");
+      return;
+    }
     setSavingWheel(true);
     try {
       const token = getAccessToken();
       await apiFetch("/admin/settings", {
         method: "PUT",
         token,
-        body: { wheelSegments },
+        body: { wheelSegments, wheelWinnerIndices },
       });
       toast.success("Şans çarkı kaydedildi.");
     } catch (err) {
@@ -371,39 +386,64 @@ export default function AyarlarGenelPage() {
             <Dices className="size-4 text-primary" />
             <h2 className="text-sm font-bold text-primary-hover">Şans Çarkı Dilimleri</h2>
           </div>
-          <p className="mb-4 text-xs text-muted-foreground">
-            Min 2, maks 8 dilim. Kısa etiket (maks 8 karakter) ve açıklama girin.
+          <p className="mb-1 text-xs text-muted-foreground">
+            Min 2, maks 8 dilim. Kısa etiket (maks 10 karakter) ve açıklama girin.
+          </p>
+          <p className="mb-4 text-xs font-medium text-[#016a59]">
+            ★ işaretli dilimler çevrildiğinde her zaman çıkar — min 1, maks 2 seçin.
           </p>
 
           <div className="space-y-2">
-            {wheelSegments.map((seg, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={seg.label}
-                  maxLength={10}
-                  onChange={(e) => setWheelSegments((prev) => prev.map((s, idx) => idx === i ? { ...s, label: e.target.value } : s))}
-                  placeholder="Etiket"
-                  className="w-28 shrink-0 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
-                />
-                <input
-                  type="text"
-                  value={seg.description}
-                  onChange={(e) => setWheelSegments((prev) => prev.map((s, idx) => idx === i ? { ...s, description: e.target.value } : s))}
-                  placeholder="Açıklama"
-                  className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
-                />
-                <button
-                  type="button"
-                  disabled={wheelSegments.length <= 2}
-                  onClick={() => setWheelSegments((prev) => prev.filter((_, idx) => idx !== i))}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive disabled:opacity-30"
-                  aria-label="Kaldır"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-            ))}
+            {wheelSegments.map((seg, i) => {
+              const isWinner = wheelWinnerIndices.includes(i);
+              return (
+                <div key={i} className={`flex items-center gap-2 rounded-xl p-1 transition-colors ${isWinner ? "bg-[#016a59]/8 ring-1 ring-[#016a59]/20" : ""}`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleWinner(i)}
+                    title={isWinner ? "Kazanan — tıkla kaldır" : wheelWinnerIndices.length >= 2 ? "Maks 2 kazanan seçilebilir" : "Kazanan olarak işaretle"}
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-xl border text-base transition-colors ${
+                      isWinner
+                        ? "border-[#016a59] bg-[#016a59] text-white"
+                        : wheelWinnerIndices.length >= 2
+                          ? "cursor-not-allowed border-border/40 text-muted-foreground/30"
+                          : "border-border/60 text-muted-foreground hover:border-[#016a59]/40 hover:text-[#016a59]"
+                    }`}
+                  >
+                    ★
+                  </button>
+                  <input
+                    type="text"
+                    value={seg.label}
+                    maxLength={10}
+                    onChange={(e) => setWheelSegments((prev) => prev.map((s, idx) => idx === i ? { ...s, label: e.target.value } : s))}
+                    placeholder="Etiket"
+                    className="w-28 shrink-0 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
+                  />
+                  <input
+                    type="text"
+                    value={seg.description}
+                    onChange={(e) => setWheelSegments((prev) => prev.map((s, idx) => idx === i ? { ...s, description: e.target.value } : s))}
+                    placeholder="Açıklama"
+                    className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
+                  />
+                  <button
+                    type="button"
+                    disabled={wheelSegments.length <= 2}
+                    onClick={() => {
+                      setWheelSegments((prev) => prev.filter((_, idx) => idx !== i));
+                      setWheelWinnerIndices((prev) =>
+                        prev.filter((wi) => wi !== i).map((wi) => (wi > i ? wi - 1 : wi))
+                      );
+                    }}
+                    className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition hover:border-destructive/30 hover:text-destructive disabled:opacity-30"
+                    aria-label="Kaldır"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           {wheelSegments.length < 8 && (
@@ -421,7 +461,7 @@ export default function AyarlarGenelPage() {
             <button
               type="button"
               onClick={handleSaveWheel}
-              disabled={savingWheel || wheelSegments.length < 2}
+              disabled={savingWheel || wheelSegments.length < 2 || wheelWinnerIndices.length === 0}
               className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover disabled:opacity-60"
             >
               {savingWheel ? <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Save className="size-4" />}
