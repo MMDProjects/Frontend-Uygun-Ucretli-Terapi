@@ -2,8 +2,6 @@ import { getOptionalApiBase } from "@/lib/http-client";
 import { getAccessToken } from "@/lib/auth-cookies";
 import type { ExpertDetail, ExpertListItem } from "@/types/dto/expert-list";
 
-const PRIORITY_STORAGE_KEY = "psikolog-admin-expert-priority-scores";
-
 export function clampExpertPriorityScore(raw: number): number {
   const n = Math.round(Number(raw));
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -19,32 +17,6 @@ export function sortExpertsByPriority(items: ExpertListItem[]): ExpertListItem[]
   });
 }
 
-function readStoredPriorityMap(): Record<string, number> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(PRIORITY_STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return {};
-    const out: Record<string, number> = {};
-    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-      const n = clampExpertPriorityScore(Number(v));
-      out[k] = n;
-    }
-    return out;
-  } catch {
-    return {};
-  }
-}
-
-function persistStoredPriorityMap(map: Record<string, number>): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(PRIORITY_STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    /* ignore quota / private mode */
-  }
-}
 
 interface BackendExpert {
   id: string;
@@ -69,12 +41,6 @@ interface BackendExpert {
 }
 
 function mapToListItem(expert: BackendExpert): ExpertListItem {
-  const storedPriority = readStoredPriorityMap()[expert.id];
-  const priorityScore =
-    storedPriority !== undefined
-      ? storedPriority
-      : clampExpertPriorityScore(expert.priorityScore ?? 0);
-
   return {
     id: expert.id,
     userId: expert.user.id,
@@ -82,7 +48,7 @@ function mapToListItem(expert: BackendExpert): ExpertListItem {
     email: expert.user.email,
     status: expert.user.isActive ? "active" : "inactive",
     registeredAt: expert.createdAt,
-    priorityScore,
+    priorityScore: clampExpertPriorityScore(expert.priorityScore ?? 0),
     isPublished: expert.isPublished ?? false,
   };
 }
@@ -229,23 +195,17 @@ export async function updateExpertPriorityScore(
   rawScore: number
 ): Promise<void> {
   const priorityScore = clampExpertPriorityScore(rawScore);
-  const map = readStoredPriorityMap();
-  map[expertId] = priorityScore;
-  persistStoredPriorityMap(map);
-
   const base = getOptionalApiBase();
   if (!base) return;
 
-  try {
-    await fetch(`${base}/admin/experts/${expertId}/priority`, {
-      method: "PATCH",
-      headers: {
-        ...authHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ priorityScore }),
-    });
-  } catch {
-    /* local overlay remains authoritative for ordering */
+  const res = await fetch(`${base}/admin/experts/${expertId}/priority`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ priorityScore }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Öncelik skoru güncellenemedi");
   }
 }

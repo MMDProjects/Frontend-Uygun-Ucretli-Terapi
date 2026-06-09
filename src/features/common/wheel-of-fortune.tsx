@@ -61,6 +61,7 @@ function WheelSVG({ segments }: { segments: Segment[] }) {
 
 export function WheelOfFortune({ onClose }: { onClose: () => void }) {
   const [segments, setSegments]               = useState<Segment[]>(DEFAULT_SEGMENTS);
+  const [winnerIndices, setWinnerIndices]      = useState<number[]>([]);
   const [spinning, setSpinning]               = useState(false);
   const [result, setResult]                   = useState<Segment | null>(null);
   const [currentRotation, setCurrentRotation] = useState(0);
@@ -81,6 +82,9 @@ export function WheelOfFortune({ onClose }: { onClose: () => void }) {
             }))
           );
         }
+        if (Array.isArray(data.wheelWinnerIndices) && data.wheelWinnerIndices.length > 0) {
+          setWinnerIndices(data.wheelWinnerIndices as number[]);
+        }
       })
       .catch(() => {});
   }, []);
@@ -90,7 +94,13 @@ export function WheelOfFortune({ onClose }: { onClose: () => void }) {
     setSpinning(true);
     const total = segments.length;
     const angle = 360 / total;
-    const winIndex   = Math.floor(Math.random() * total);
+
+    // Kazanan havuzundan (admin seçimi) rastgele biri, yoksa tamamen rastgele
+    const pool = winnerIndices.filter((i) => i >= 0 && i < total);
+    const winIndex = pool.length > 0
+      ? pool[Math.floor(Math.random() * pool.length)]
+      : Math.floor(Math.random() * total);
+
     const extraSpins = 5 + Math.floor(Math.random() * 3);
     const target     = currentRotation + extraSpins * 360 + (360 - winIndex * angle - angle / 2);
 
