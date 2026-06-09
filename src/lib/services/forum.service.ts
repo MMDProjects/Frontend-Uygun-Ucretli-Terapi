@@ -44,6 +44,24 @@ export async function createQuestion(dto: {
   return apiFetch("/forum/questions", { method: "POST", body: dto, token });
 }
 
+export type MyQuestion = {
+  id: string;
+  title: string;
+  content: string;
+  status: "ONAY_BEKLIYOR" | "ATANDI" | "CEVAPLANDI";
+  createdAt: string;
+};
+
+export async function getMyQuestions(): Promise<MyQuestion[]> {
+  const token = getAccessToken();
+  return apiFetch("/forum/my-questions", { token });
+}
+
+export async function deleteQuestion(questionId: string): Promise<void> {
+  const token = getAccessToken();
+  await apiFetch(`/forum/questions/${questionId}`, { method: "DELETE", token });
+}
+
 export async function createAnswer(questionId: string, content: string): Promise<void> {
   const token = getAccessToken();
   await apiFetch(`/forum/questions/${questionId}/answers`, {

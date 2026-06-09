@@ -5,20 +5,24 @@ import Link from "next/link";
 import {
   MessageCircle, ChevronDown, ChevronUp, Clock,
   Search, ArrowDownWideNarrow, X,
-  ChevronLeft, ChevronRight, PenLine, ShieldCheck,
+  ChevronLeft, ChevronRight, PenLine, ShieldCheck, Trash2, Loader2,
 } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { toast } from "sonner";
 import {
   getForumQuestions,
   getAssignedQuestions,
+  getMyQuestions,
+  deleteQuestion,
   type ForumQuestion,
   type AssignedQuestion,
+  type MyQuestion,
 } from "@/lib/services/forum.service";
 import { cn } from "@/lib/utils";
 
-type ForumTab = "public" | "assigned";
+type ForumTab = "public" | "assigned" | "myquestions";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -194,6 +198,75 @@ function AssignedQuestionCard({ q }: { q: AssignedQuestion }) {
   );
 }
 
+const STATUS_LABELS: Record<MyQuestion["status"], { label: string; className: string }> = {
+  ONAY_BEKLIYOR: { label: "Onay Bekliyor", className: "border-amber-200 bg-amber-50 text-amber-700" },
+  ATANDI: { label: "Uzmana Atandı", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  CEVAPLANDI: { label: "Yanıtlandı", className: "border-green-200 bg-green-50 text-green-700" },
+};
+
+function MyQuestionCard({ q, onDelete }: { q: MyQuestion; onDelete: (id: string) => void }) {
+  const [deleting, setDeleting] = useState(false);
+  const s = STATUS_LABELS[q.status];
+
+  async function handleDelete() {
+    if (!confirm("Bu soruyu silmek istediğinizden emin misiniz?")) return;
+    setDeleting(true);
+    try {
+      await deleteQuestion(q.id);
+      onDelete(q.id);
+      toast.success("Soru silindi.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Soru silinemedi");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <article className="overflow-hidden rounded-[2rem] border border-border/60 bg-white shadow-sm lg:rounded-[2.25rem]">
+      <div className="flex items-start gap-3 p-5 pb-4">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f0ee] text-sm font-bold text-primary-hover">
+          <MessageCircle className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <span className={cn("rounded-full border px-2 py-0.5 font-semibold text-[10px]", s.className)}>
+              {s.label}
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              <Clock className="size-3" />
+              {formatDateShort(q.createdAt)}
+            </span>
+          </div>
+          <h2 className="mt-1 font-semibold text-foreground">{q.title}</h2>
+          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{q.content}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between border-t border-border/40 px-5 py-3">
+        <Link
+          href={`/forum/konu/${q.id}`}
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:text-primary-hover"
+        >
+          <MessageCircle className="size-3.5" />
+          Görüntüle
+        </Link>
+        {q.status === "ONAY_BEKLIYOR" && (
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={handleDelete}
+            className="inline-flex items-center gap-1 rounded-xl border border-destructive/30 px-3 py-1 text-xs font-medium text-destructive transition hover:bg-destructive/5 disabled:opacity-50"
+          >
+            {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+            Sil
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
 export default function ForumPage() {
   const { role } = useAuthStore();
 
@@ -208,6 +281,9 @@ export default function ForumPage() {
   const [assigned, setAssigned] = useState<AssignedQuestion[]>([]);
   const [assignedLoading, setAssignedLoading] = useState(false);
   const [assignedError, setAssignedError] = useState("");
+
+  const [myQuestions, setMyQuestions] = useState<MyQuestion[]>([]);
+  const [myQuestionsLoading, setMyQuestionsLoading] = useState(false);
 
   const [query, setQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -224,6 +300,15 @@ export default function ForumPage() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [page]);
+
+  useEffect(() => {
+    if (role !== "danisan" || activeTab !== "myquestions") return;
+    setMyQuestionsLoading(true);
+    getMyQuestions()
+      .then(setMyQuestions)
+      .catch(() => toast.error("Sorularınız yüklenemedi."))
+      .finally(() => setMyQuestionsLoading(false));
+  }, [role, activeTab]);
 
   useEffect(() => {
     if (role !== "uzman" || activeTab !== "assigned") return;
@@ -389,6 +474,32 @@ export default function ForumPage() {
             </div>
           </div>
 
+          {/* Danışan sekme bar */}
+          {role === "danisan" && (
+            <div className="mt-6 flex gap-1 rounded-full border border-white/40 bg-white/30 p-1 w-fit backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={() => setActiveTab("public")}
+                className={cn(
+                  "rounded-full px-5 py-1.5 text-sm font-medium transition",
+                  activeTab === "public" ? "bg-primary text-white shadow-sm" : "text-primary-hover hover:bg-white/50"
+                )}
+              >
+                Tüm Sorular
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("myquestions")}
+                className={cn(
+                  "rounded-full px-5 py-1.5 text-sm font-medium transition",
+                  activeTab === "myquestions" ? "bg-primary text-white shadow-sm" : "text-primary-hover hover:bg-white/50"
+                )}
+              >
+                Sorularım
+              </button>
+            </div>
+          )}
+
           {/* Uzman sekme bar — hero altı */}
           {role === "uzman" && (
             <div className="mt-6 flex gap-1 rounded-full border border-white/40 bg-white/30 p-1 w-fit backdrop-blur-sm">
@@ -449,6 +560,37 @@ export default function ForumPage() {
               <div className="space-y-3">
                 {assigned.map((q) => (
                   <AssignedQuestionCard key={q.id} q={q} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sorularım — danışan */}
+      {activeTab === "myquestions" && (
+        <div className="bg-[#e6f0ee]">
+          <div className="page-shell py-6">
+            {myQuestionsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => <QuestionCardSkeleton key={i} />)}
+              </div>
+            ) : myQuestions.length === 0 ? (
+              <div className="flex flex-col items-center gap-4 py-20 text-center">
+                <MessageCircle className="size-12 text-muted-foreground" />
+                <p className="font-semibold">Henüz soru sormadınız</p>
+                <Link href="/forum/yeni-konu" className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
+                  İlk soruyu sor
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myQuestions.map((q) => (
+                  <MyQuestionCard
+                    key={q.id}
+                    q={q}
+                    onDelete={(id) => setMyQuestions((prev) => prev.filter((x) => x.id !== id))}
+                  />
                 ))}
               </div>
             )}

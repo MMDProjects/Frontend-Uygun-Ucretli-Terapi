@@ -77,6 +77,20 @@ export async function assignForumQuestion(
   }
 }
 
+export async function deleteAdminForumQuestion(questionId: string): Promise<void> {
+  const base = getOptionalApiBase();
+  if (!base) throw new Error("API URL tanımlı değil");
+
+  const res = await fetch(`${base}/admin/forum/questions/${questionId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(err?.message ?? res.statusText);
+  }
+}
+
 export async function approveForumAnswer(answerId: string): Promise<void> {
   const base = getOptionalApiBase();
   if (!base) throw new Error("API URL tanımlı değil");
