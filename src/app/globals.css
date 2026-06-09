@@ -432,6 +432,28 @@ select {
   padding-top: var(--site-header-height);
 }
 
+/* Hoş geldiniz onboarding kartı giriş animasyonu */
+@keyframes onboard-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-onboard-in {
+  animation: onboard-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-onboard-in {
+    animation: none;
+  }
+}
+
 /* KVKK DB-rendered HTML içeriği */
 .kvkk-content p { margin-bottom: 0.75rem; }
 .kvkk-content p:last-child { margin-bottom: 0; }

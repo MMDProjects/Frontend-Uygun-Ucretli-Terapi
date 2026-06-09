@@ -1,28 +1,7 @@
 "use client";
 
-import Link from "next/link";
-
-import { useAuthStore } from "@/lib/stores/auth-store";
-
+// Hoş geldiniz mesajı floating WelcomeOnboardingCard'a taşındı (layout.tsx).
+// Bu bileşen artık kullanılmıyor; import kırılmaları için boş bırakıldı.
 export function HomePersonalizedStrip() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const displayName = useAuthStore((s) => s.displayName);
-
-  if (!isAuthenticated) return null;
-
-  return (
-    <div
-      className="mb-6 rounded-2xl border border-border bg-muted/60 px-4 py-3 text-sm text-muted-foreground sm:mb-8"
-      role="status"
-    >
-      {displayName ? (
-        <span className="font-medium text-foreground">Merhaba, {displayName}. </span>
-      ) : null}
-      Test arşivinizi ve taleplerinizi aynı site üzerinden yönetirsiniz.{" "}
-      <Link href="/testler" className="font-semibold text-primary underline-offset-2 hover:underline">
-        Önceki sonuçlarım
-      </Link>{" "}
-      bölümüne göz atabilirsiniz.
-    </div>
-  );
+  return null;
 }
