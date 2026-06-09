@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -47,6 +47,7 @@ interface UzmanSidebarProps {
 
 export function UzmanSidebar({ open, onClose, unreadNotifCount = 0 }: UzmanSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { displayName } = useAuthStore();
   const [pendingForumCount, setPendingForumCount] = useState(0);
 
@@ -167,7 +168,7 @@ export function UzmanSidebar({ open, onClose, unreadNotifCount = 0 }: UzmanSideb
               </Link>
               <button
                 type="button"
-                onClick={() => logout()}
+                onClick={() => { void logout().then(() => router.push("/giris")); }}
                 className="rounded-md p-1 text-red-400 transition-colors hover:bg-white/10 hover:text-red-300"
                 aria-label="Cikis yap"
               >

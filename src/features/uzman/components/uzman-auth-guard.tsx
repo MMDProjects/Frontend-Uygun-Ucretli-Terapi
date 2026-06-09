@@ -11,7 +11,7 @@ export function UzmanAuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated || role !== "uzman") {
-      router.replace("/uzman/giris");
+      router.replace("/giris");
     }
   }, [isAuthenticated, isLoading, role, router]);
 
