@@ -5,7 +5,6 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteShell } from "@/components/layout/site-shell";
 import { AuthInitializer } from "@/components/layout/auth-initializer";
-import { WelcomeOnboardingCard } from "@/components/common/welcome-onboarding-card";
 import { siteConfig } from "@/lib/constants/site";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -58,7 +57,6 @@ export default function RootLayout({
         </a>
         <AuthInitializer />
         <SiteShell>{children}</SiteShell>
-        <WelcomeOnboardingCard />
         <Toaster />
       </body>
     </html>
