@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, UserCheck } from "lucide-react";
+import { Loader2, UserCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useForumQuestions } from "@/hooks/use-forum-questions";
@@ -154,7 +154,23 @@ export function ForumQuestionsView() {
     refetch,
     assign,
     approveAnswer,
+    deleteQuestion,
   } = useForumQuestions();
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(questionId: string) {
+    if (!confirm("Bu soruyu silmek istediğinizden emin misiniz?")) return;
+    setDeletingId(questionId);
+    try {
+      await deleteQuestion(questionId);
+      toast.success("Soru silindi.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Silme başarısız");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const [experts, setExperts] = useState<ExpertListItem[]>([]);
   const [assignTarget, setAssignTarget] = useState<AdminForumQuestion | null>(
@@ -357,6 +373,21 @@ export function ForumQuestionsView() {
                       Uzmana Ata
                     </Button>
                   )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={deletingId === q.id}
+                    onClick={() => void handleDelete(q.id)}
+                    className="border-destructive/30 text-destructive hover:bg-destructive/5 hover:border-destructive/50"
+                  >
+                    {deletingId === q.id ? (
+                      <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="mr-1.5 size-3.5" />
+                    )}
+                    Sil
+                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -5,6 +5,7 @@ import {
   listAdminForumQuestions,
   assignForumQuestion,
   approveForumAnswer,
+  deleteAdminForumQuestion,
   type AdminForumQuestion,
 } from "@/services/forum/forum-admin.service";
 
@@ -19,6 +20,7 @@ interface UseForumQuestionsResult {
   refetch: () => Promise<void>;
   assign: (questionId: string, expertProfileId: string) => Promise<void>;
   approveAnswer: (answerId: string, questionId: string) => Promise<void>;
+  deleteQuestion: (questionId: string) => Promise<void>;
 }
 
 export function useForumQuestions(): UseForumQuestionsResult {
@@ -77,6 +79,11 @@ export function useForumQuestions(): UseForumQuestionsResult {
     []
   );
 
+  const deleteQuestion = useCallback(async (questionId: string) => {
+    await deleteAdminForumQuestion(questionId);
+    setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+  }, []);
+
   useEffect(() => {
     void load(activeTab);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -90,5 +97,6 @@ export function useForumQuestions(): UseForumQuestionsResult {
     refetch: () => load(activeTab),
     assign,
     approveAnswer,
+    deleteQuestion,
   };
 }
