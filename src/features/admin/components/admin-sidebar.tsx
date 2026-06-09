@@ -18,7 +18,6 @@ const groups: NavGroup[] = [
     title: "Kullanıcı Yönetimi",
     items: [
       { label: "Danışanlar", href: "/admin/kullanicilar/danisanlar" },
-      { label: "Admin / Personel", href: "/admin/kullanicilar/adminler" },
     ],
   },
   {

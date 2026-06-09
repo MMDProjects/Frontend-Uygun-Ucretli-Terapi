@@ -9,13 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -26,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ROLE_COLORS, ROLE_LABELS } from "@/lib/danisan-user-meta";
-import type { DanisanRole, DanisanUser } from "@/types/dto/user-list";
+import type { DanisanUser } from "@/types/dto/user-list";
 
 interface DanisanUsersTableProps {
   users: DanisanUser[];
@@ -35,12 +28,9 @@ interface DanisanUsersTableProps {
   onRefresh: () => void;
   onOpenDetail: (user: DanisanUser) => void;
   onOpenWarning: (user: DanisanUser) => void;
-  onRoleChange: (userId: string, role: DanisanRole) => void;
   onStatusToggle: (userId: string) => void;
   onNotifyStub: (user: DanisanUser) => void;
 }
-
-const ROLE_OPTIONS: DanisanRole[] = ["danisan", "premium_danisan", "guest"];
 
 export function DanisanUsersTable({
   users,
@@ -49,7 +39,6 @@ export function DanisanUsersTable({
   onRefresh,
   onOpenDetail,
   onOpenWarning,
-  onRoleChange,
   onStatusToggle,
   onNotifyStub,
 }: DanisanUsersTableProps) {
@@ -83,6 +72,7 @@ export function DanisanUsersTable({
 
         {!loading && !error && users.length > 0 ? (
           <>
+            {/* Mobil */}
             <div className="grid gap-4 md:hidden">
               {users.map((user) => (
                 <Card key={user.id} className="p-4">
@@ -108,26 +98,11 @@ export function DanisanUsersTable({
                     </div>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Select
-                        value={user.role}
-                        onValueChange={(value) =>
-                          onRoleChange(user.id, value as DanisanRole)
-                        }
+                      <span
+                        className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[user.role].bg} ${ROLE_COLORS[user.role].text}`}
                       >
-                        <SelectTrigger
-                          className={`w-[200px] ${ROLE_COLORS[user.role].bg} ${ROLE_COLORS[user.role].text}`}
-                          size="sm"
-                        >
-                          <SelectValue placeholder="Rol" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ROLE_OPTIONS.map((r) => (
-                            <SelectItem key={r} value={r}>
-                              {ROLE_LABELS[r]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        {ROLE_LABELS[user.role]}
+                      </span>
                       <Button
                         type="button"
                         variant="outline"
@@ -143,6 +118,7 @@ export function DanisanUsersTable({
               ))}
             </div>
 
+            {/* Masaüstü */}
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
@@ -169,27 +145,12 @@ export function DanisanUsersTable({
                       <TableCell className="text-muted-foreground">
                         {user.email}
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Select
-                          value={user.role}
-                          onValueChange={(value) =>
-                            onRoleChange(user.id, value as DanisanRole)
-                          }
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[user.role].bg} ${ROLE_COLORS[user.role].text}`}
                         >
-                          <SelectTrigger
-                            className={`w-[200px] ${ROLE_COLORS[user.role].bg} ${ROLE_COLORS[user.role].text}`}
-                            size="sm"
-                          >
-                            <SelectValue placeholder="Rol seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ROLE_OPTIONS.map((r) => (
-                              <SelectItem key={r} value={r}>
-                                {ROLE_LABELS[r]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          {ROLE_LABELS[user.role]}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <Badge
