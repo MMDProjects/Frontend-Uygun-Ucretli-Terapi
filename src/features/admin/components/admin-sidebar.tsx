@@ -82,7 +82,7 @@ export function AdminSidebar() {
             <span className="block truncate text-sm font-semibold leading-tight text-white">
               {siteConfig.brandDisplayName}
             </span>
-            <span className="block text-[10px] text-white/50">Yonetim Paneli</span>
+            <span className="block text-[10px] text-white/50">Yönetim Paneli</span>
           </div>
         </Link>
       </div>
@@ -158,7 +158,7 @@ export function AdminSidebar() {
               type="button"
               onClick={() => logout()}
               className="rounded-md p-1 text-red-400 transition-colors hover:bg-white/10 hover:text-red-300"
-              aria-label="Cikis yap"
+              aria-label="Çıkış yap"
             >
               <LogOut className="size-4" />
             </button>

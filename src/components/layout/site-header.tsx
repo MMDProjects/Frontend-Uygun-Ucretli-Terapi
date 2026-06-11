@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, LogOut, User, FlaskConical, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, User, FlaskConical, LayoutDashboard, UserCheck } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ function UserAccountMenu() {
   const danisanMenuItems = [
     { href: "/profilim", label: "Profilim", icon: User },
     { href: "/testlerim", label: "Testlerim", icon: FlaskConical },
+    { href: "/uzman-basvurusu", label: "Uzman Ol", icon: UserCheck },
   ];
 
   const uzmanMenuItems = [
@@ -249,7 +250,23 @@ export function SiteHeader() {
                 >
                   Testlerim
                 </Link>
+                <Link
+                  href="/uzman-basvurusu"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-5 py-3 text-sm font-medium text-primary transition hover:bg-muted"
+                >
+                  Uzman Ol
+                </Link>
               </>
+            )}
+            {!isAuthenticated && (
+              <Link
+                href="/uzman-basvurusu"
+                onClick={() => setMobileOpen(false)}
+                className="block border-t border-border/50 px-5 py-3 text-sm font-medium text-primary transition hover:bg-muted"
+              >
+                Uzman Ol
+              </Link>
             )}
           </nav>
         </div>
