@@ -18,7 +18,6 @@ const groups: NavGroup[] = [
     title: "Kullanıcı Yönetimi",
     items: [
       { label: "Danışanlar", href: "/admin/kullanicilar/danisanlar" },
-      { label: "Admin / Personel", href: "/admin/kullanicilar/adminler" },
     ],
   },
   {
@@ -34,7 +33,6 @@ const groups: NavGroup[] = [
     title: "İçerik",
     items: [
       { label: "Blog Yönetimi", href: "/admin/icerik/blog" },
-      { label: "Sayfa / Sabit İçerik", href: "/admin/icerik/sayfalar" },
       { label: "KVKK Metni", href: "/admin/icerik/kvkk" },
       { label: "SSS Yönetimi", href: "/admin/icerik/sss" },
       { label: "Paketler", href: "/admin/icerik/paketler" },

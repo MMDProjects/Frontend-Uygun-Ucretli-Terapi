@@ -1,9 +1,9 @@
 "use client";
 
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Menu, X, LogOut, User, FlaskConical, LayoutDashboard, UserCheck } from "lucide-react";
+import { Menu, X, LogOut, User, FlaskConical, LayoutDashboard, type LucideIcon } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
 import { Button } from "@/components/ui/button";
@@ -52,14 +52,16 @@ function UserAccountMenu() {
         .toUpperCase()
     : "K";
 
-  const danisanMenuItems = [
+  type MenuItem = { href: string; label: string; icon: LucideIcon; newTab?: boolean };
+
+  const danisanMenuItems: MenuItem[] = [
     { href: "/profilim", label: "Profilim", icon: User },
     { href: "/testlerim", label: "Testlerim", icon: FlaskConical },
     { href: "/uzman-basvurusu", label: "Uzman Ol", icon: UserCheck },
   ];
 
-  const uzmanMenuItems = [
-    { href: "/uzman/dashboard", label: "Uzman Paneli", icon: LayoutDashboard },
+  const uzmanMenuItems: MenuItem[] = [
+    { href: "/uzman/dashboard", label: "Uzman Paneli", icon: LayoutDashboard, newTab: true },
   ];
 
   const userMenuItems = role === "uzman" ? uzmanMenuItems : danisanMenuItems;
@@ -94,10 +96,11 @@ function UserAccountMenu() {
             </p>
           </div>
 
-          {userMenuItems.map(({ href, label, icon: Icon }) => (
+          {userMenuItems.map(({ href, label, icon: Icon, newTab }) => (
             <Popover.Close asChild key={href}>
               <Link
                 href={href}
+                {...(newTab ? { target: "_blank", rel: "noreferrer" } : {})}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-primary"
               >
                 <Icon className="size-4 shrink-0" />
@@ -228,6 +231,8 @@ export function SiteHeader() {
             {isAuthenticated && role === "uzman" && (
               <Link
                 href="/uzman/dashboard"
+                target="_blank"
+                rel="noreferrer"
                 onClick={() => setMobileOpen(false)}
                 className="block border-t border-border/50 px-5 py-3 text-sm font-medium text-primary transition hover:bg-muted"
               >

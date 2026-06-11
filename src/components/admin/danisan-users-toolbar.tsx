@@ -12,18 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import type { DanisanRole } from "@/types/dto/user-list";
-import { ROLE_LABELS } from "@/lib/danisan-user-meta";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { cn } from "@/lib/utils";
-
-const ROLES: DanisanRole[] = ["danisan", "premium_danisan", "guest"];
 
 interface DanisanUsersToolbarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  selectedRoles: DanisanRole[];
-  onRoleToggle: (role: DanisanRole, checked: boolean) => void;
   selectedStatuses: Array<"active" | "inactive">;
   onStatusToggle: (status: "active" | "inactive", checked: boolean) => void;
   onClearFilters: () => void;
@@ -34,18 +28,16 @@ interface DanisanUsersToolbarProps {
 export function DanisanUsersToolbar({
   searchQuery,
   onSearchChange,
-  selectedRoles,
-  onRoleToggle,
   selectedStatuses,
   onStatusToggle,
   onClearFilters,
   onRefresh,
   loading,
 }: DanisanUsersToolbarProps) {
-  const filterCount = selectedRoles.length + selectedStatuses.length;
+  const filterCount = selectedStatuses.length;
 
   return (
-    <PageHeader title="Danışan yönetimi" description="Platformdaki danışan hesaplarını görüntüleyin, rol ve durum değişikliklerini yönetin.">
+    <PageHeader title="Danışan yönetimi" description="Platformdaki danışan hesaplarını görüntüleyin ve durum değişikliklerini yönetin.">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           placeholder="Danışan ara (isim, e-posta, ID)…"
@@ -70,21 +62,7 @@ export function DanisanUsersToolbar({
               </Badge>
             ) : null}
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel>Rol</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {ROLES.map((role) => (
-              <DropdownMenuCheckboxItem
-                key={role}
-                checked={selectedRoles.includes(role)}
-                onCheckedChange={(checked) =>
-                  onRoleToggle(role, Boolean(checked))
-                }
-              >
-                {ROLE_LABELS[role]}
-              </DropdownMenuCheckboxItem>
-            ))}
-            <DropdownMenuSeparator />
+          <DropdownMenuContent className="w-48" align="end">
             <DropdownMenuLabel>Durum</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
@@ -106,7 +84,13 @@ export function DanisanUsersToolbar({
             {filterCount > 0 ? (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItemClear onClear={onClearFilters} />
+                <button
+                  type="button"
+                  className="w-full rounded-md px-1.5 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
+                  onClick={onClearFilters}
+                >
+                  Filtreleri temizle
+                </button>
               </>
             ) : null}
           </DropdownMenuContent>
@@ -125,17 +109,5 @@ export function DanisanUsersToolbar({
         </Button>
       </div>
     </PageHeader>
-  );
-}
-
-function DropdownMenuItemClear({ onClear }: { onClear: () => void }) {
-  return (
-    <button
-      type="button"
-      className="w-full rounded-md px-1.5 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10"
-      onClick={onClear}
-    >
-      Filtreleri temizle
-    </button>
   );
 }
