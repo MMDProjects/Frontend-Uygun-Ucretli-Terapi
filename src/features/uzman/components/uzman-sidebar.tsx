@@ -24,14 +24,14 @@ const groups: NavGroup[] = [
     ],
   },
   {
-    title: "Danisanlar",
+    title: "Danışanlar",
     items: [
-      { label: "Musaitlik", href: "/uzman/musaitlik" },
+      { label: "Müsaitlik", href: "/uzman/musaitlik" },
       { label: "Forum Soruları", href: "/uzman/forum" },
     ],
   },
   {
-    title: "Icerik",
+    title: "İçerik",
     items: [
       { label: "Blog Yazılarım", href: "/uzman/blog" },
       { label: "Bildirimler", href: "/uzman/bildirimler" },
@@ -170,7 +170,7 @@ export function UzmanSidebar({ open, onClose, unreadNotifCount = 0 }: UzmanSideb
                 type="button"
                 onClick={() => { void logout().then(() => router.push("/giris")); }}
                 className="rounded-md p-1 text-red-400 transition-colors hover:bg-white/10 hover:text-red-300"
-                aria-label="Cikis yap"
+                aria-label="Çıkış yap"
               >
                 <LogOut className="size-4" />
               </button>
