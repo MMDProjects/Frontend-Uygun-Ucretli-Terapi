@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X, LogOut, User, FlaskConical, LayoutDashboard, type LucideIcon } from "lucide-react";
+import { Menu, X, LogOut, User, UserCheck, FlaskConical, LayoutDashboard, type LucideIcon } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
 import { Button } from "@/components/ui/button";
