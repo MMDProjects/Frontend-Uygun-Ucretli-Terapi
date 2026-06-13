@@ -118,10 +118,18 @@ export async function refreshSession(): Promise<void> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return;
   try {
-    const data = await apiFetch<AuthResponse>("/auth/refresh", {
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+    const res = await fetch(`${apiUrl}/auth/refresh`, {
       method: "POST",
-      body: { refreshToken },
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
     });
+    if (!res.ok) {
+      clearTokens();
+      useAuthStore.getState().clearSession();
+      return;
+    }
+    const data = (await res.json()) as AuthResponse;
     applySession(data);
   } catch (e) {
     // TypeError = network/fetch failure (backend offline) — keep session intact

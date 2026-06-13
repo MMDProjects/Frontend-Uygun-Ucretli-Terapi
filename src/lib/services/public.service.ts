@@ -98,7 +98,7 @@ export async function getExpertBlogs(expertId: string): Promise<ApiExpertBlog[]>
 }
 
 export async function getTags(): Promise<ApiTag[]> {
-  return apiFetch("/admin/tags");
+  return apiFetch("/experts/tags");
 }
 
 // ─── Blog ─────────────────────────────────────────────────────────────────────
