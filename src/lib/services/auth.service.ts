@@ -20,7 +20,7 @@ function applySession(data: AuthResponse) {
     userId: data.user.id,
     displayName: `${data.user.firstName} ${data.user.lastName}`.trim(),
     email: data.user.email,
-    role: data.user.role.toLowerCase() as UserRole,
+    role: (data.user.role ?? "").toLowerCase() as UserRole,
   });
 }
 

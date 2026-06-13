@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send, Loader2, CheckCheck, Clock } from "lucide-react";
@@ -48,13 +48,14 @@ export default function AdminBildirimlerPage() {
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { type: "INFO" },
+    defaultValues: { type: "INFO", userId: "", message: "" },
   });
 
   // Load experts
@@ -212,21 +213,27 @@ export default function AdminBildirimlerPage() {
                     <Loader2 className="size-4 animate-spin" /> Uzmanlar yükleniyor…
                   </div>
                 ) : (
-                  <Select
-                    value={watch("userId") ?? ""}
-                    onValueChange={(v) => { if (v) setValue("userId", v, { shouldValidate: true }); }}
-                  >
-                    <SelectTrigger className="h-10 rounded-xl">
-                      <SelectValue placeholder="Uzman seçin…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {experts.map((e) => (
-                        <SelectItem key={e.id} value={e.user.id}>
-                          {e.user.firstName} {e.user.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={control}
+                    name="userId"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={(v) => { if (v) field.onChange(v); }}
+                      >
+                        <SelectTrigger className="h-10 rounded-xl">
+                          <SelectValue placeholder="Uzman seçin…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {experts.map((e) => (
+                            <SelectItem key={e.id} value={e.user.id}>
+                              {e.user.firstName} {e.user.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 )}
                 {errors.userId && <p className="text-xs text-destructive">{errors.userId.message}</p>}
               </div>
