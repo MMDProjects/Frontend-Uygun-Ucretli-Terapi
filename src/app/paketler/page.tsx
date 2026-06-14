@@ -151,8 +151,7 @@ export default async function PackagesPage() {
               Paketler
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Seans ve ücret bilgileri yalnızca bu sayfada gösterilir. Size
-              uygun paketi seçerek sürece net bir planla başlayabilirsiniz.
+              Size uygun paketi seçerek sürece net bir planla başlayabilirsiniz.
             </p>
           </div>
         </div>

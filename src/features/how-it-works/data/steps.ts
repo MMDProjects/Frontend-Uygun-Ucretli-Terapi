@@ -72,7 +72,7 @@ export const HOW_IT_WORKS_STEPS: readonly HowItWorksStep[] = [
     cardTagline: "Fiyatlar tek sayfada",
     summary: "Seans paketlerini ve güncel ücretleri Paketler’de gör.",
     detail:
-      "Uzman kartında fiyat gösterilmez; tüm paket adları, seans sayıları ve fiyatlar yalnızca Paketler sayfasında listelenir. Admin güncellemeleri anında buraya yansır.",
+      "Tüm paket adları, seans sayıları ve fiyatlar Paketler sayfasında listelenir. Admin güncellemeleri anında buraya yansır.",
     Icon: Package,
     imageSrc: "/undraw_questions_52ic (1).svg",
     imageAlt: "Paket ve planlama adımını temsil eden görsel",

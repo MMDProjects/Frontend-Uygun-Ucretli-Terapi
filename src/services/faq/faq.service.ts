@@ -12,17 +12,25 @@ interface BackendSss {
 
 function pageToCategory(page: string): string {
   switch (page) {
-    case "TESTLER": return "testler";
-    case "PAKETLER": return "paketler";
-    default: return "genel";
+    case "TESTLER":   return "testler";
+    case "PAKETLER":  return "paketler";
+    case "RANDEVU":   return "randevu";
+    case "ODEME":     return "odeme";
+    case "UZMAN":     return "uzman";
+    case "GIZLILIK":  return "gizlilik";
+    default:          return "genel";
   }
 }
 
 function categoryToPage(category: string): string {
   switch (category.toLowerCase()) {
-    case "testler": return "TESTLER";
-    case "paketler": return "PAKETLER";
-    default: return "GENEL";
+    case "testler":   return "TESTLER";
+    case "paketler":  return "PAKETLER";
+    case "randevu":   return "RANDEVU";
+    case "odeme":     return "ODEME";
+    case "uzman":     return "UZMAN";
+    case "gizlilik":  return "GIZLILIK";
+    default:          return "GENEL";
   }
 }
 

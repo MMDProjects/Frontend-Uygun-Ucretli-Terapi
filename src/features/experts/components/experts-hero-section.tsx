@@ -37,9 +37,8 @@ export function ExpertsHeroSection() {
               Uzmanlarımız
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Admin onaylı profiller; uzmanlık alanları ve yıldız puanıyla
-              güvenilir eşleşme. Filtreleyin veya sıralayın — fiyat bilgisi
-              yalnızca paketler sayfasında yer alır.
+              Onaylı profiller; uzmanlık alanları ve yıldız puanıyla güvenilir
+              eşleşme. Filtreleyin veya sıralayın.
             </p>
           </div>
 

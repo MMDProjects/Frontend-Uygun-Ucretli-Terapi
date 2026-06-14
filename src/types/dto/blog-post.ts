@@ -8,4 +8,5 @@ export interface BlogPostDto {
   expertName: string;
   publishedAt: string;
   status: BlogPostStatus;
+  coverImageUrl?: string | null;
 }

@@ -8,4 +8,5 @@ export interface BlogApprovalDto {
   authorName: string;
   submittedAt: string;
   status: BlogApprovalStatus;
+  coverImageUrl?: string | null;
 }

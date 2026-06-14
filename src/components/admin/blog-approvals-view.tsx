@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Trash2 } from "lucide-react";
+import { ImagePlus, Loader2, Trash2, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { useBlogApprovals } from "@/hooks/use-blog-approvals";
 import {
@@ -135,6 +136,10 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
   } = useBlogApprovals();
   const [selected, setSelected] = useState<BlogApprovalDto | null>(null);
   const [rejectTarget, setRejectTarget] = useState<BlogApprovalDto | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const revisionForm = useForm<BlogAdminRevisionForm>({
     resolver: zodResolver(blogAdminRevisionSchema),
@@ -148,8 +153,41 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
         excerpt: selected.excerpt,
         content: selected.content,
       });
+      setCoverFile(null);
+      setCoverPreview(null);
     }
   }, [selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- sync when opening another post
+
+  function handleCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  }
+
+  async function handleCoverUpload() {
+    if (!selected || !coverFile) return;
+    setCoverUploading(true);
+    try {
+      const token = getAccessToken();
+      const formData = new FormData();
+      formData.append("cover", coverFile);
+      const result = await apiFetch<{ coverImageUrl: string }>(`/admin/blogs/${selected.id}/cover`, {
+        method: "POST",
+        token,
+        body: formData,
+      });
+      updateLocalApproval(selected.id, {});
+      setSelected((s) => s ? { ...s, coverImageUrl: result.coverImageUrl } : s);
+      setCoverFile(null);
+      setCoverPreview(null);
+      toast.success("Kapak resmi güncellendi.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Resim yüklenemedi");
+    } finally {
+      setCoverUploading(false);
+    }
+  }
 
   const handleApprove = async (id: string) => {
     try {
@@ -362,6 +400,68 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
                     </p>
                   ) : null}
                 </div>
+                <div className="grid gap-2">
+                  <Label>Kapak Resmi</Label>
+                  {(coverPreview ?? selected.coverImageUrl) ? (
+                    <div className="relative aspect-[16/6] w-full overflow-hidden rounded-lg border border-border">
+                      <Image
+                        src={coverPreview ?? selected.coverImageUrl!}
+                        alt="Kapak resmi"
+                        fill
+                        className="object-cover"
+                      />
+                      {coverPreview && (
+                        <button
+                          type="button"
+                          onClick={() => { setCoverFile(null); setCoverPreview(null); }}
+                          className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+                          aria-label="Seçimi iptal et"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => coverInputRef.current?.click()}
+                      className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted/20 py-6 transition hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <ImagePlus className="size-6 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Kapak resmi eklemek için tıklayın</span>
+                    </button>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => coverInputRef.current?.click()}
+                    >
+                      {selected.coverImageUrl ? "Resmi Değiştir" : "Resim Seç"}
+                    </Button>
+                    {coverFile && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={coverUploading}
+                        onClick={() => void handleCoverUpload()}
+                      >
+                        {coverUploading ? (
+                          <><Loader2 className="mr-1.5 size-3.5 animate-spin" />Yükleniyor</>
+                        ) : "Resmi Kaydet"}
+                      </Button>
+                    )}
+                    <input
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={handleCoverChange}
+                    />
+                  </div>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="blog-edit-content">İçerik</Label>
                   <Textarea
