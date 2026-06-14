@@ -1,8 +1,3 @@
-"use client";
-
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { ApiSss } from "@/lib/services/public.service";
 
 const PAGE_LABELS: Record<string, string> = {
@@ -15,11 +10,28 @@ const PAGE_LABELS: Record<string, string> = {
   GIZLILIK: "Gizlilik ve Güvenlik",
 };
 
+type Group = { page: string; label: string; items: ApiSss[] };
+
+function groupByCategory(sortedItems: ApiSss[]): Group[] {
+  const order: string[] = [];
+  const map = new Map<string, ApiSss[]>();
+  for (const item of sortedItems) {
+    if (!map.has(item.page)) {
+      order.push(item.page);
+      map.set(item.page, []);
+    }
+    map.get(item.page)!.push(item);
+  }
+  return order.map((page) => ({
+    page,
+    label: PAGE_LABELS[page] ?? page,
+    items: map.get(page)!,
+  }));
+}
+
 type Props = { items: ApiSss[] };
 
 export function SssFullList({ items }: Props) {
-  const [openId, setOpenId] = useState<string | null>(null);
-
   if (items.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-muted-foreground">
@@ -28,53 +40,36 @@ export function SssFullList({ items }: Props) {
     );
   }
 
+  const groups = groupByCategory(items);
+
   return (
-    <div className="space-y-2">
-      {items.map((item) => {
-        const isOpen = openId === item.id;
-        const label = PAGE_LABELS[item.page] ?? item.page;
-        return (
-          <div
-            key={item.id}
-            className={cn(
-              "overflow-hidden rounded-2xl border transition-colors",
-              isOpen
-                ? "border-primary/30 bg-primary/5"
-                : "border-border/60 bg-white",
-            )}
-          >
-            <button
-              type="button"
-              onClick={() => setOpenId(isOpen ? null : item.id)}
-              className="flex w-full items-start justify-between gap-4 px-5 py-4 text-left"
-              aria-expanded={isOpen}
+    <div className="space-y-12">
+      {groups.map((group) => (
+        <section key={group.page} aria-labelledby={`cat-${group.page}`}>
+          <div className="mb-6 flex items-center gap-3">
+            <span
+              id={`cat-${group.page}`}
+              className="inline-flex shrink-0 items-center rounded-full bg-[#e6f0ee] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#014a3e]"
             >
-              <div className="flex flex-col gap-1.5">
-                <span className="inline-flex w-fit items-center rounded-full bg-[#e6f0ee] px-2.5 py-0.5 text-xs font-medium text-[#014a3e]">
-                  {label}
-                </span>
-                <span className="text-sm font-semibold text-primary-hover">
+              {group.label}
+            </span>
+            <div className="h-px flex-1 bg-border/50" />
+          </div>
+
+          <div className="divide-y divide-border/40">
+            {group.items.map((item) => (
+              <div key={item.id} className="py-5 first:pt-0">
+                <p className="font-semibold leading-6 text-[#014a3e]">
                   {item.question}
-                </span>
-              </div>
-              <ChevronDown
-                className={cn(
-                  "mt-1 size-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                  isOpen && "rotate-180",
-                )}
-                aria-hidden
-              />
-            </button>
-            {isOpen && (
-              <div className="px-5 pb-5">
-                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                </p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground whitespace-pre-line">
                   {item.answer}
                 </p>
               </div>
-            )}
+            ))}
           </div>
-        );
-      })}
+        </section>
+      ))}
     </div>
   );
 }
