@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { listBlogPosts } from "@/services/blog/blog-posts.service";
+import { apiFetch } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth-cookies";
 import type { BlogPostDto } from "@/types/dto/blog-post";
 
 interface UseBlogPostsResult {
@@ -9,6 +11,7 @@ interface UseBlogPostsResult {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  remove: (id: string) => Promise<void>;
 }
 
 export function useBlogPosts(): UseBlogPostsResult {
@@ -34,5 +37,11 @@ export function useBlogPosts(): UseBlogPostsResult {
     void load();
   }, [load]);
 
-  return { posts, loading, error, refetch: load };
+  const remove = useCallback(async (id: string) => {
+    const token = getAccessToken();
+    await apiFetch(`/admin/blogs/${id}`, { method: "DELETE", token });
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  return { posts, loading, error, refetch: load, remove };
 }
