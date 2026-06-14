@@ -36,6 +36,7 @@ export type ApiBlog = {
   title: string;
   content: string;
   coverImageUrl?: string | null;
+  authorName?: string | null;
   createdAt: string;
   expertProfile: {
     title: string;
