@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 const STATS = [
-  { value: "150+", label: "Uzman", description: "Admin onaylı, belgelenmiş profesyoneller" },
+  { value: "30+", label: "Uzman", description: "Admin onaylı, belgelenmiş profesyoneller" },
   { value: "5.000+", label: "Danışan", description: "Platforma güvenen kullanıcılar" },
   { value: "4.8", label: "Ortalama Puan", description: "Onaylı danışan yorumlarına göre" },
   { value: "0 TL", label: "Ön Görüşme", description: "İlk tanışma görüşmesi tamamen ücretsiz" },

@@ -3,17 +3,17 @@ export const siteConfig = {
   description:
     "Danisanlarin uzman bulabildigi, testleri cozumleyebildigi ve guven odakli iceriklere ulasabildigi psikolojik danismanlik platformu.",
   /** Ana sayfa ve footer metinleriyle uyumlu kısa marka adı */
-  brandShortName: "PsikoDestek",
+  brandShortName: "Uygun Ücretli Terapi",
   /** Header vb. görünen marka yazısı */
   brandDisplayName: "Uygun Ücretli Terapi",
   brandLogoUrl:
     "https://cdn.fikriorjin.com/themes/b8b168db-c150-4fb9-8be8-c10059a3ab80/uygunu%CC%88cretliterapilogo-vector-01_1.png",
-  siteUrl: "https://www.psikodestek.com",
+  siteUrl: "https://www.psikodestek.com*",
   contact: {
     addressLines: ["Maslak Mahallesi", "İstanbul, Türkiye"],
     phoneDisplay: "+90 (212) 000 00 00",
     phoneHref: "tel:+902120000000",
-    email: "destek@psikodestek.com",
+    email: "uygunucretliterapi@gmail.com",
   },
   socialLinks: [
     {
@@ -22,7 +22,7 @@ export const siteConfig = {
     },
     {
       label: "WhatsApp",
-      href: "https://wa.me/905555555555",
+      href: "https://wa.me/905309172590",
     },
   ],
   navigation: [
@@ -35,5 +35,5 @@ export const siteConfig = {
     { href: "/iletisim", label: "İletişim" },
     { href: "/kurumsal", label: "Kurumsal" },
   ],
-  whatsappHref: "https://wa.me/905555555555?text=Merhaba%2C%20ucretsiz%20on%20gorusme%20icin%20iletisime%20gecmek%20istiyorum.",
+  whatsappHref: "https://wa.me/905309172590?text=Merhaba%2C%20ucretsiz%20on%20gorusme%20icin%20iletisime%20gecmek%20istiyorum.",
 } as const;

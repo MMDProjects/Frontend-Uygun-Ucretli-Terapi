@@ -38,7 +38,7 @@ export default function ContactPage() {
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-primary-hover">E-posta</p>
-                  <p className="text-sm text-muted-foreground">info@psikodestek.com — genel bilgi ve talepler için</p>
+                  <p className="text-sm text-muted-foreground">uygunucretliterapi@gmail.com — genel bilgi ve talepler için</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
