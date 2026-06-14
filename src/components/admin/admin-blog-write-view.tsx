@@ -71,7 +71,7 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
           title: title.trim(),
           slug: slug.trim(),
           content: content.trim(),
-          authorName: "Sistem",
+          authorName: "Editör",
         },
       });
       if (coverFile) {
