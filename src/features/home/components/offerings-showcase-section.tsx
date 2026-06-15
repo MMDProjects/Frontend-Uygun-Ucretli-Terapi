@@ -4,24 +4,24 @@ import { SectionHeading } from "@/components/common/section-heading";
 
 const offerings = [
   {
-    title: "Online danismanlik",
+    title: "Online danışmanlık",
     description:
-      "Guvenli gorusme altyapisi ile uzmaninizla surekli ve takip edilebilir bir destek akisi sunariz.",
+      "Güvenli görüşme altyapısı ile uzmanınızla sürekli ve takip edilebilir bir destek akışı sunarız.",
   },
   {
-    title: "Kisisel eslestirme",
+    title: "Kişisel eşleştirme",
     description:
-      "Ihtiyaciniza uygun uzmanlari tek ekranda karsilastirip dogru uzmanla surece hizli baslamanizi saglariz.",
+      "İhtiyacınıza uygun uzmanları tek ekranda karşılaştırıp doğru uzmanla sürece hızlı başlamanızı sağlarız.",
   },
   {
-    title: "Olculebilir ilerleme",
+    title: "Ölçülebilir ilerleme",
     description:
-      "Testler, notlar ve surec odakli yonlendirmeler ile gelisiminizi adim adim gorunur hale getiririz.",
+      "Testler, notlar ve süreç odaklı yönlendirmeler ile gelişiminizi adım adım görünür hale getiririz.",
   },
   {
-    title: "Gizlilik ve guven",
+    title: "Gizlilik ve güven",
     description:
-      "KVKK odakli veri yonetimi ve acik riza akislariyla tum sureci guvenli, seffaf ve kontrollu tutariz.",
+      "KVKK odaklı veri yönetimi ve açık rıza akışlarıyla tüm süreci güvenli, şeffaf ve kontrollü tutarız.",
   },
 ] as const;
 
@@ -31,8 +31,8 @@ export function OfferingsShowcaseSection() {
       <div className="page-shell space-y-8">
         <div className="flex items-start justify-between gap-4">
           <SectionHeading
-            title="Neler sundugumuzu tek bakista gorun"
-            description="Online danismanlik surecinde guvenli gorusme, uzman eslestirme, olculebilir ilerleme ve KVKK uyumlu veri korumasi sunuyoruz."
+            title="Neler sunduğumuzu tek bakışta görün"
+            description="Online danışmanlık sürecinde güvenli görüşme, uzman eşleştirme, ölçülebilir ilerleme ve KVKK uyumlu veri koruması sunuyoruz."
             titleId="home-offerings-heading"
           />
           <div className="hidden rounded-full bg-primary/10 p-3 text-primary md:block">

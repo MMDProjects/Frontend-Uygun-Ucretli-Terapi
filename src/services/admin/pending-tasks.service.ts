@@ -3,6 +3,7 @@ import type { PendingTaskDto } from "@/types/dto/pending-task";
 
 interface DashboardResponse {
   pendingExperts: number;
+  pendingProfileUpdates: number;
   pendingBlogs: number;
   pendingComments: number;
   pendingQuestions: number;
@@ -15,38 +16,45 @@ function mapDashboardToTasks(d: DashboardResponse): PendingTaskDto[] {
   const all: PendingTaskDto[] = [
     {
       type: "uzman_basvuru",
-      count: d.pendingExperts,
+      count: d.pendingExperts ?? 0,
       urgency: "high",
       href: "/admin/uzman-onay/basvurular",
       label: "Uzman onay bekliyor",
     },
     {
+      type: "profil_guncelleme",
+      count: d.pendingProfileUpdates ?? 0,
+      urgency: "high",
+      href: "/admin/uzman-onay/profil-guncellemeleri",
+      label: "Profil güncelleme onay bekliyor",
+    },
+    {
       type: "blog_onay",
-      count: d.pendingBlogs,
+      count: d.pendingBlogs ?? 0,
       urgency: "medium",
       href: "/admin/icerik/blog",
       label: "Blog yazısı incelemede",
     },
     {
       type: "yorum_onay",
-      count: d.pendingComments,
+      count: d.pendingComments ?? 0,
       urgency: "medium",
       href: "/admin/uzmanlar",
       label: "Bekleyen yorum",
     },
     {
       type: "yeni_talep",
-      count: d.newRequests,
+      count: d.newRequests ?? 0,
       urgency: "medium",
       href: "/admin/formlar/talepler",
       label: "Yeni iletişim talebi",
     },
     {
       type: "forum_cevap_onay",
-      count: d.pendingForumAnswers ?? 0,
+      count: (d.pendingForumAnswers ?? 0) + (d.pendingQuestions ?? 0),
       urgency: "low",
       href: "/admin/icerik/forum-sorulari",
-      label: "Forum cevabı onay bekliyor",
+      label: "Forum onay bekliyor",
     },
     {
       type: "yeni_test_sonucu",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Eye, Globe, EyeOff } from "lucide-react";
+import { AlertTriangle, Eye, Globe, EyeOff, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -19,6 +19,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import type { ExpertListItem } from "@/types/dto/expert-list";
 
@@ -99,6 +109,7 @@ interface ExpertsTableProps {
   onOpenWarning: (expert: ExpertListItem) => void;
   onStatusToggle: (expertId: string) => Promise<void>;
   onTogglePublish: (expertId: string, isPublished: boolean) => Promise<void>;
+  onDelete: (expertId: string) => Promise<void>;
 }
 
 export function ExpertsTable({
@@ -111,7 +122,21 @@ export function ExpertsTable({
   onOpenWarning,
   onStatusToggle,
   onTogglePublish,
+  onDelete,
 }: ExpertsTableProps) {
+  const [deleteTarget, setDeleteTarget] = useState<ExpertListItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await onDelete(deleteTarget.id);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
   return (
     <Card>
       <CardHeader>
@@ -211,16 +236,27 @@ export function ExpertsTable({
                         />
                       </div>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => onOpenDetail(expert.id)}
-                    >
-                      <Eye className="mr-1 size-4" />
-                      Detay
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => onOpenDetail(expert.id)}
+                      >
+                        <Eye className="mr-1 size-4" />
+                        Detay
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeleteTarget(expert)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -304,6 +340,16 @@ export function ExpertsTable({
                             onCheckedChange={() => onStatusToggle(expert.id)}
                             aria-label="Uzman durumu"
                           />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon-sm"
+                            title="Uzmanı sil"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() => setDeleteTarget(expert)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -315,5 +361,26 @@ export function ExpertsTable({
         ) : null}
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Uzmanı sil</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong>{deleteTarget?.fullName}</strong> adlı uzman ve tüm ilişkili verileri (profil, belgeler, talepler) kalıcı olarak silinecek. Bu işlem geri alınamaz.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleting}>İptal</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-white hover:bg-destructive/90"
+            disabled={deleting}
+            onClick={() => void handleConfirmDelete()}
+          >
+            {deleting ? "Siliniyor…" : "Evet, sil"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -209,3 +209,30 @@ export async function updateExpertPriorityScore(
     throw new Error(text || "Öncelik skoru güncellenemedi");
   }
 }
+
+export interface CreateExpertByAdminPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
+export async function createExpertByAdmin(
+  payload: CreateExpertByAdminPayload,
+): Promise<{ id: string; userId: string; email: string }> {
+  const base = getOptionalApiBase();
+  if (!base) throw new Error("API bağlantısı bulunamadı");
+
+  const res = await fetch(`${base}/admin/experts`, {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(err?.message || "Uzman oluşturulamadı");
+  }
+
+  return res.json() as Promise<{ id: string; userId: string; email: string }>;
+}

@@ -22,14 +22,7 @@ export function SiteFooter() {
           <div className="space-y-3">
             <p className="text-sm font-semibold text-primary">İletişim</p>
             <address className="not-italic">
-              <p className="text-sm leading-6 text-[#1a1a1a]/85">
-                {siteConfig.contact.addressLines.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </p>
-              <p className="mt-3 text-sm">
+              <p className="text-sm">
                 <a
                   href={siteConfig.contact.phoneHref}
                   className="font-medium text-primary underline-offset-4 hover:underline"
@@ -67,15 +60,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 border-t border-primary/20 pt-6 text-center text-sm text-[#1a1a1a]/75">
-          <p>
-            © {year} {siteConfig.brandShortName}. Tüm hakları saklıdır.{" "}
-            <a
-              href={siteConfig.siteUrl}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {siteConfig.siteUrl.replace(/^https?:\/\//, "")}
-            </a>
-          </p>
+          <p>© {year} {siteConfig.brandShortName}. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </footer>

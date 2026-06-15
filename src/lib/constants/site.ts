@@ -8,17 +8,17 @@ export const siteConfig = {
   brandDisplayName: "Uygun Ücretli Terapi",
   brandLogoUrl:
     "https://cdn.fikriorjin.com/themes/b8b168db-c150-4fb9-8be8-c10059a3ab80/uygunu%CC%88cretliterapilogo-vector-01_1.png",
-  siteUrl: "https://www.psikodestek.com*",
+  siteUrl: "https://uygunucretliterapi.com",
   contact: {
-    addressLines: ["Maslak Mahallesi", "İstanbul, Türkiye"],
-    phoneDisplay: "+90 (212) 000 00 00",
-    phoneHref: "tel:+902120000000",
+    addressLines: [],
+    phoneDisplay: "+90 530 917 25 90",
+    phoneHref: "tel:+905309172590",
     email: "uygunucretliterapi@gmail.com",
   },
   socialLinks: [
     {
       label: "Instagram",
-      href: "https://www.instagram.com/",
+      href: "https://www.instagram.com/uygunucretliterapi/",
     },
     {
       label: "WhatsApp",

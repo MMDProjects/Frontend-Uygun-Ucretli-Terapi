@@ -29,7 +29,7 @@ import { getAccessToken } from "@/lib/auth-cookies";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { getAllAdminNotifications, markAllAdminNotificationsRead } from "@/lib/services/admin.service";
 
-type ExpertItem = { id: string; user: { id: string; firstName: string; lastName: string } };
+type ExpertItem = { id: string; user: { id: string; firstName: string; lastName: string } | null };
 
 const schema = z.object({
   userId: z.string().uuid("Geçerli bir uzman seçin."),
@@ -60,9 +60,8 @@ export default function AdminBildirimlerPage() {
 
   // Load experts
   useEffect(() => {
-    const token = getAccessToken();
-    apiFetch<{ data: ExpertItem[] }>("/admin/experts?limit=200", { token })
-      .then((res) => setExperts(res.data ?? []))
+    apiFetch<{ data: ExpertItem[] }>("/admin/experts?limit=200")
+      .then((res) => setExperts((res.data ?? []).filter((e) => e.user?.id)))
       .catch(() => setExperts([]))
       .finally(() => setLoadingExperts(false));
   }, []);
@@ -225,9 +224,9 @@ export default function AdminBildirimlerPage() {
                           <SelectValue placeholder="Uzman seçin…" />
                         </SelectTrigger>
                         <SelectContent>
-                          {experts.map((e) => (
-                            <SelectItem key={e.id} value={e.user.id}>
-                              {e.user.firstName} {e.user.lastName}
+                          {experts.filter((e) => e.user?.id).map((e) => (
+                            <SelectItem key={e.id} value={e.user!.id}>
+                              {e.user!.firstName} {e.user!.lastName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -269,7 +268,7 @@ export default function AdminBildirimlerPage() {
                 {errors.message && <p className="text-xs text-destructive">{errors.message.message}</p>}
               </div>
 
-              <Button type="submit" disabled={isSubmitting} className="w-full">
+              <Button type="submit" disabled={isSubmitting || experts.filter((e) => e.user?.id).length === 0} className="w-full">
                 {isSubmitting ? (
                   <><Loader2 className="mr-2 size-4 animate-spin" />Gönderiliyor…</>
                 ) : (

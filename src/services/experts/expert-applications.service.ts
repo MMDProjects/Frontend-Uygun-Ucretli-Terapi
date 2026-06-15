@@ -8,6 +8,7 @@ interface BackendExpert {
   cvUrl: string;
   status: string;
   createdAt: string;
+  createdByAdmin: boolean;
   user: { firstName: string; lastName: string; email: string; phone: string };
 }
 
@@ -56,7 +57,7 @@ export async function listExpertApplications(): Promise<ExpertApplication[]> {
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
-      .filter((e) => e.status === "ONAY_BEKLIYOR")
+      .filter((e) => e.status === "ONAY_BEKLIYOR" && !e.createdByAdmin)
       .map(mapToApplication);
   } catch {
     return [];
