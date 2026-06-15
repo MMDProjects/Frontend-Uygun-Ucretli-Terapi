@@ -138,6 +138,7 @@ export function ExpertsTable({
     }
   };
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Kayıtlı uzman listesi</CardTitle>
@@ -382,5 +383,6 @@ export function ExpertsTable({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+    </>
   );
 }
