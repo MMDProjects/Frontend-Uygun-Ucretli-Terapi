@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, UserPlus } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { toast } from "sonner";
 import { ExpertDetailDialog } from "@/components/admin/expert-detail-dialog";
 import { ExpertsTable } from "@/components/admin/experts-table";
 import { UserWarningDialog } from "@/components/admin/user-warning-dialog";
+import { CreateExpertDialog } from "@/components/admin/create-expert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useExperts } from "@/hooks/use-experts";
@@ -33,6 +34,7 @@ export function ExpertsView() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
   const [warningExpert, setWarningExpert] = useState<ExpertListItem | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const filteredExperts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -97,6 +99,16 @@ export function ExpertsView() {
     }
   };
 
+  const handleDelete = async (expertId: string) => {
+    try {
+      await apiFetch(`/admin/experts/${expertId}`, { method: "DELETE" });
+      toast.success("Uzman silindi.");
+      void refetch();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Uzman silinemedi.");
+    }
+  };
+
   const handleTogglePublish = async (expertId: string, isPublished: boolean) => {
     const selected = filteredExperts.find((x) => x.id === expertId);
     try {
@@ -121,6 +133,10 @@ export function ExpertsView() {
             className="pl-9"
           />
         </div>
+        <Button type="button" onClick={() => setCreateDialogOpen(true)}>
+          <UserPlus className="mr-2 size-4" />
+          Uzman Oluştur
+        </Button>
         <Button type="button" variant="outline" onClick={() => void refetch()}>
           Yenile
         </Button>
@@ -136,6 +152,7 @@ export function ExpertsView() {
         onOpenWarning={handleOpenWarning}
         onStatusToggle={handleStatusToggleRow}
         onTogglePublish={handleTogglePublish}
+        onDelete={handleDelete}
       />
 
       <div className="rounded-lg border border-[#3178C6]/25 bg-[#3178C6]/5 px-4 py-3 text-sm text-[#24292E] dark:border-[#3178C6]/40 dark:text-foreground">
@@ -149,6 +166,12 @@ export function ExpertsView() {
           bilgileri detay penceresinden incelenebilir.
         </p>
       </div>
+
+      <CreateExpertDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={() => void refetch()}
+      />
 
       <UserWarningDialog
         open={warningOpen}
