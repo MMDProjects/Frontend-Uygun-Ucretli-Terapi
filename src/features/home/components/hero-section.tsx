@@ -165,7 +165,7 @@ export function HeroSection() {
             <div className="absolute bottom-22 right-4 z-[1] max-w-[12.5rem] sm:bottom-24 sm:right-5 sm:max-w-[13.5rem]">
               <div className="w-full rounded-[2rem] border border-border/60 bg-white p-3.5 shadow-md sm:p-4">
                 <p className="text-[2rem] font-bold tabular-nums text-primary sm:text-3xl">
-                  50+
+                  30+
                 </p>
                 <p className="mt-1 text-[0.95rem] leading-snug text-muted-foreground sm:text-sm">
                   Onaylı uzmanla güvenilir destek alın
