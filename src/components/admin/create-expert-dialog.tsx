@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createExpertByAdmin } from "@/services/users/experts-list.service";
+import { apiFetch } from "@/lib/api";
 
 const schema = z
   .object({
@@ -62,11 +62,14 @@ export function CreateExpertDialog({ open, onOpenChange, onSuccess }: CreateExpe
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await createExpertByAdmin({
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        password: values.password,
+      await apiFetch("/admin/experts", {
+        method: "POST",
+        body: {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          password: values.password,
+        },
       });
       toast.success(`${values.firstName} ${values.lastName} için uzman hesabı oluşturuldu.`);
       onSuccess();
