@@ -1,7 +1,9 @@
 import { getAccessToken, getRefreshToken, getRole, setTokens, clearTokens } from "@/lib/auth-cookies";
 
 const BASE = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL;
+  const url =
+    (typeof window === "undefined" && process.env.INTERNAL_API_URL) ||
+    process.env.NEXT_PUBLIC_API_URL;
   if (!url) throw new Error("NEXT_PUBLIC_API_URL tanımlı değil");
   return url.replace(/\/$/, "");
 };
