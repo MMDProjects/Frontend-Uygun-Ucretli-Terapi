@@ -3,7 +3,6 @@ import Link from "next/link";
 import { siteConfig } from "@/lib/constants/site";
 
 export function SiteFooter() {
-  const year = new Date().getFullYear();
 
   return (
     <footer className="bg-[#cce1de] text-[#1a1a1a]">
@@ -60,7 +59,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 border-t border-primary/20 pt-6 text-center text-sm text-[#1a1a1a]/75">
-          <p>© {year} {siteConfig.brandShortName}. Tüm hakları saklıdır.</p>
+          <p>© 2022 {siteConfig.brandShortName}. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </footer>
