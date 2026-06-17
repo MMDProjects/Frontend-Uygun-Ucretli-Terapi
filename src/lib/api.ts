@@ -52,7 +52,9 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
     body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  if (res.status === 401 && !_isRetry) {
+  // Sadece gerçek bir auth token gönderdikse 401'de refresh dene.
+  // Token yoksa (login/register gibi public endpoint) 401 = yanlış kimlik → direkt hata.
+  if (res.status === 401 && !_isRetry && resolvedToken) {
     const newToken = await tryRefreshToken();
     if (newToken) {
       return apiFetch<T>(path, { ...opts, token: newToken, _isRetry: true });
