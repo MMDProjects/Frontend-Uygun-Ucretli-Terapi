@@ -54,7 +54,9 @@ export default function UzmanProfilPage() {
         setBio(p.pendingBio ?? p.bio ?? "");
         setOriginalBio(p.pendingBio ?? p.bio ?? "");
         setEducation(p.pendingEducation ?? p.education ?? "");
-        setSelectedTagIds(p.tags.map((t) => t.id));
+        // pendingTagIds varsa onu göster, yoksa onaylı tag'ları
+        const pendingIds = p.pendingTagIds ? (JSON.parse(p.pendingTagIds) as string[]) : null;
+        setSelectedTagIds(pendingIds ?? p.tags.map((t) => t.id));
       })
       .catch(() => toast.error("Profil yüklenemedi."))
       .finally(() => setLoading(false));
@@ -369,9 +371,16 @@ export default function UzmanProfilPage() {
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-foreground">
-              Uzmanlık Alanları <span className="text-destructive">*</span>
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground">
+                Uzmanlık Alanları <span className="text-destructive">*</span>
+              </h3>
+              {profile.pendingTagIds && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                  Onay bekleniyor
+                </span>
+              )}
+            </div>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Min {MIN_KEYWORDS}, maks {MAX_KEYWORDS} alan seçin.
             </p>
