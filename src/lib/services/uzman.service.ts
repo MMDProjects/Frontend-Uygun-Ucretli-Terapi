@@ -54,6 +54,10 @@ export type ApiUzmanProfile = {
   pendingBio: string | null;
   education: string | null;
   avatarUrl: string | null;
+  cvUrl: string | null;
+  certificateUrl: string | null;
+  pendingCvUrl: string | null;
+  pendingCertificateUrl: string | null;
   phone: string | null;
   rating: number;
   priorityScore: number;
@@ -110,6 +114,10 @@ type RawProfile = {
   pendingBio: string | null;
   education: string | null;
   avatarUrl: string | null;
+  cvUrl: string | null;
+  certificateUrl: string | null;
+  pendingCvUrl: string | null;
+  pendingCertificateUrl: string | null;
   phone: string | null;
   rating: number;
   priorityScore: number;
