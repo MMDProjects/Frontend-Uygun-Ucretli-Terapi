@@ -217,6 +217,22 @@ export function ExpertApplicationsView() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {app.title ? (
+                  <p className="text-xs font-medium text-[#016a59]">{app.title}</p>
+                ) : null}
+                {app.tags && app.tags.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {app.tags.map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant="outline"
+                        className="border-[#016a59]/30 bg-[#e6f0ee] text-[#016a59] text-[10px]"
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
                 <dl className="grid gap-1 text-xs text-[#24292E] dark:text-muted-foreground">
                   <div className="flex justify-between gap-2">
                     <dt className="text-muted-foreground">E-posta</dt>
@@ -316,7 +332,41 @@ export function ExpertApplicationsView() {
                 </DialogTitle>
                 <DialogDescription>{formatSubmittedAt(selected.submittedAt)}</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-3 text-sm">
+              <div className="grid gap-3 text-sm max-h-[60vh] overflow-y-auto pr-1">
+                {selected.title ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Unvan</p>
+                    <p className="font-medium">{selected.title}</p>
+                  </div>
+                ) : null}
+                {selected.bio ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Biyografi</p>
+                    <p className="mt-1 leading-relaxed text-[#1a1a1a]">{selected.bio}</p>
+                  </div>
+                ) : null}
+                {selected.education ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Eğitim</p>
+                    <p className="mt-1">{selected.education}</p>
+                  </div>
+                ) : null}
+                {selected.tags && selected.tags.length > 0 ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground mb-2">Uzmanlık alanları</p>
+                    <div className="flex flex-wrap gap-1">
+                      {selected.tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="outline"
+                          className="border-[#016a59]/30 bg-[#e6f0ee] text-[#016a59]"
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div className="rounded-md border bg-muted/20 p-3">
                   <p className="text-xs text-muted-foreground">E-posta</p>
                   <p className="font-medium">{selected.email}</p>
@@ -327,11 +377,23 @@ export function ExpertApplicationsView() {
                 </div>
                 <div className="rounded-md border bg-muted/20 p-3">
                   <p className="text-xs text-muted-foreground">Sertifika dosyası</p>
-                  <p className="font-mono text-xs">{selected.certificateDocument.fileName}</p>
+                  <button
+                    type="button"
+                    className="font-mono text-xs text-[#016a59] underline underline-offset-2 cursor-pointer"
+                    onClick={() => openDocument(selected.certificateDocument, "Sertifika")}
+                  >
+                    {selected.certificateDocument.fileName}
+                  </button>
                 </div>
                 <div className="rounded-md border bg-muted/20 p-3">
                   <p className="text-xs text-muted-foreground">CV dosyası</p>
-                  <p className="font-mono text-xs">{selected.cvDocument.fileName}</p>
+                  <button
+                    type="button"
+                    className="font-mono text-xs text-[#016a59] underline underline-offset-2 cursor-pointer"
+                    onClick={() => openDocument(selected.cvDocument, "CV")}
+                  >
+                    {selected.cvDocument.fileName}
+                  </button>
                 </div>
               </div>
             </>

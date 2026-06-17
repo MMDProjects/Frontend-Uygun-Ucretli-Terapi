@@ -4,12 +4,16 @@ import type { ExpertApplication } from "@/types/dto/expert-application";
 
 interface BackendExpert {
   id: string;
+  title: string;
+  bio: string;
+  education: string | null;
   certificateUrl: string;
   cvUrl: string;
   status: string;
   createdAt: string;
   createdByAdmin: boolean;
   user: { firstName: string; lastName: string; email: string; phone: string };
+  tags: { id: string; name: string }[];
 }
 
 function authHeaders(): HeadersInit {
@@ -30,6 +34,10 @@ function mapToApplication(expert: BackendExpert): ExpertApplication {
     email: expert.user.email,
     submittedAt: expert.createdAt,
     status: "pending",
+    title: expert.title || undefined,
+    bio: expert.bio || undefined,
+    education: expert.education || undefined,
+    tags: expert.tags?.length ? expert.tags : undefined,
     certificateDocument: {
       fileName: expert.certificateUrl ? "sertifika.pdf" : "Belge eklenmemiş",
       url: expert.certificateUrl || undefined,

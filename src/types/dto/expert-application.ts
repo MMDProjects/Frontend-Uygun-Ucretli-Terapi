@@ -19,6 +19,10 @@ export interface ExpertApplication {
   email: string;
   submittedAt: string;
   status: ExpertApplicationStatus;
+  title?: string;
+  bio?: string;
+  education?: string;
+  tags?: { id: string; name: string }[];
   certificateDocument: ExpertApplicationDocument;
   cvDocument: ExpertApplicationDocument;
 }
