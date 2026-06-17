@@ -13,6 +13,7 @@ interface BackendExpert {
   pendingCertificateUrl: string | null;
   pendingCvUrl: string | null;
   status: string;
+  isPublished: boolean;
   createdAt: string;
   user: { firstName: string; lastName: string; email: string; phone: string };
   tags: { id: string; name: string }[];
@@ -70,7 +71,11 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
-      .filter((e) => e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI")
+      .filter(
+        (e) =>
+          (e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI") &&
+          e.isPublished === true,
+      )
       .map(mapToApproval);
   } catch {
     return [];

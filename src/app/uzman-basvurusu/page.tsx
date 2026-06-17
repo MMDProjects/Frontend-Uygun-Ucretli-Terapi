@@ -528,6 +528,7 @@ export default function ExpertApplicationPage() {
       formData.append("password", data.sifre ?? "");
       formData.append("title", data.unvan || "Uzman");
       formData.append("kvkkConsent", "true");
+      if (data.biyografi) formData.append("bio", data.biyografi);
 
       // Etiketler
       data.tagIds?.forEach((id) => formData.append("tagIds", id));
