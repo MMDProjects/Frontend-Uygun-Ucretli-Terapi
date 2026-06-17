@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { AlertCircle, Camera, CheckCircle2, Star, Info } from "lucide-react";
+import { AlertCircle, Camera, CheckCircle2, Star, Info, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,13 +34,13 @@ export default function UzmanProfilPage() {
 
   const [title, setTitle] = useState("");
   const [bio, setBio] = useState("");
+  const [originalBio, setOriginalBio] = useState("");
   const [education, setEducation] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  const [savingDirect, setSavingDirect] = useState(false);
-  const [savingReview, setSavingReview] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,6 +51,7 @@ export default function UzmanProfilPage() {
         setAllTags(tags);
         setTitle(p.title ?? "");
         setBio(p.bio ?? "");
+        setOriginalBio(p.bio ?? "");
         setEducation(p.education ?? "");
         setSelectedTagIds(p.tags.map((t) => t.id));
       })
@@ -60,8 +61,10 @@ export default function UzmanProfilPage() {
 
   const wordCount = countWords(bio);
   const wordCountValid = wordCount >= MIN_WORDS && wordCount <= MAX_WORDS;
-  const keywordsValid =
-    selectedTagIds.length >= MIN_KEYWORDS && selectedTagIds.length <= MAX_KEYWORDS;
+  const keywordsValid = selectedTagIds.length >= MIN_KEYWORDS && selectedTagIds.length <= MAX_KEYWORDS;
+  const bioChanged = bio !== originalBio;
+  const bioInvalid = bioChanged && !wordCountValid;
+  const isSaveDisabled = saving || !keywordsValid || bioInvalid;
 
   function toggleTag(id: string) {
     setSelectedTagIds((prev) =>
@@ -80,38 +83,29 @@ export default function UzmanProfilPage() {
     setAvatarPreview(URL.createObjectURL(file));
   }
 
-  // Direkt güncelleme: unvan, eğitim, etiketler, avatar
-  async function handleSaveDirect() {
-    setSavingDirect(true);
+  async function handleSaveAll() {
+    if (isSaveDisabled) return;
+    setSaving(true);
     try {
       await updateMyUzmanProfile({
         title,
         education,
         tagIds: selectedTagIds,
         avatar: avatarFile ?? undefined,
+        ...(bioChanged ? { bio } : {}),
       });
       setAvatarFile(null);
-      toast.success("Bilgiler kaydedildi.");
+      if (bioChanged) {
+        setOriginalBio(bio);
+        setProfile((p) => p ? { ...p, pendingBio: bio } : p);
+        toast.success("Değişiklikler kaydedildi. Biyografi admin onayına gönderildi.");
+      } else {
+        toast.success("Bilgiler başarıyla kaydedildi.");
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
     } finally {
-      setSavingDirect(false);
-    }
-  }
-
-  // Admin onayına giden güncelleme: biyografi
-  async function handleSaveBio() {
-    if (!wordCountValid) return;
-    setSavingReview(true);
-    try {
-      await updateMyUzmanProfile({ bio });
-      // Mevcut bio değişmez, pendingBio olarak kaydedildi
-      setProfile((p) => p ? { ...p, status: "onay_bekliyor", pendingBio: bio } : p);
-      toast.success("Yeni biyografi admin onayına gönderildi. Mevcut profiliniz yayında kalmaya devam eder.");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
-    } finally {
-      setSavingReview(false);
+      setSaving(false);
     }
   }
 
@@ -132,9 +126,39 @@ export default function UzmanProfilPage() {
     <div className="space-y-6">
       <PageHeader
         title="Profilim"
-        description="Unvan, eğitim ve fotoğraf değişiklikleri anında kaydedilir. Biyografi değişikliği admin onayına gider."
+        description="Unvan, eğitim ve fotoğraf anında kaydedilir. Biyografi değişikliği admin onayına gider."
       >
-        <ProfileStatusBadge status={profile.status} />
+        <div className="flex items-center gap-3">
+          <ProfileStatusBadge status={profile.status} />
+          <Button
+            size="sm"
+            onClick={handleSaveAll}
+            disabled={isSaveDisabled}
+            className={cn(
+              "gap-1.5",
+              bioChanged
+                ? "bg-amber-600 hover:bg-amber-700 text-white"
+                : "bg-primary hover:bg-[#014a3e] text-white"
+            )}
+          >
+            {saving ? (
+              <>
+                <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Kaydediliyor…
+              </>
+            ) : bioChanged ? (
+              <>
+                <Send className="size-3.5" />
+                Kaydet & Onaya Gönder
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="size-3.5" />
+                Değişiklikleri Kaydet
+              </>
+            )}
+          </Button>
+        </div>
       </PageHeader>
 
       {profile.adminNote && (
@@ -147,7 +171,7 @@ export default function UzmanProfilPage() {
         </div>
       )}
 
-      {/* Photo */}
+      {/* Profil Fotoğrafı */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <h3 className="mb-4 text-sm font-bold text-foreground">Profil Fotoğrafı</h3>
         <div className="flex items-center gap-5">
@@ -177,24 +201,18 @@ export default function UzmanProfilPage() {
             <p className="mt-0.5 text-xs text-muted-foreground">
               Minimum 400×400px, kurumsal fotoğraf. JPG veya PNG.
             </p>
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2">
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 className="rounded-xl border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-primary"
               >
-                {avatarFile ? avatarFile.name : "Dosya Seç"}
+                {avatarFile ? (
+                  <span className="text-primary">{avatarFile.name} seçildi</span>
+                ) : (
+                  "Dosya Seç"
+                )}
               </button>
-              {avatarFile && (
-                <button
-                  type="button"
-                  onClick={handleSaveDirect}
-                  disabled={savingDirect}
-                  className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#014a3e] disabled:opacity-50"
-                >
-                  {savingDirect ? "Kaydediliyor…" : "Fotoğrafı Kaydet"}
-                </button>
-              )}
             </div>
             <input
               ref={avatarInputRef}
@@ -207,7 +225,7 @@ export default function UzmanProfilPage() {
         </div>
       </div>
 
-      {/* Basic info */}
+      {/* Temel Bilgiler */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <h3 className="mb-4 text-sm font-bold text-foreground">Temel Bilgiler</h3>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -246,7 +264,7 @@ export default function UzmanProfilPage() {
         </div>
       </div>
 
-      {/* Education */}
+      {/* Eğitim */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <h3 className="mb-4 text-sm font-bold text-foreground">Eğitim</h3>
         <Textarea
@@ -258,8 +276,11 @@ export default function UzmanProfilPage() {
         />
       </div>
 
-      {/* Bio */}
-      <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-5">
+      {/* Biyografi */}
+      <div className={cn(
+        "rounded-2xl border p-5 transition-colors",
+        bioChanged ? "border-amber-200 bg-amber-50/50" : "border-border/60 bg-white"
+      )}>
         {profile.pendingBio ? (
           <div className="mb-4 rounded-xl border border-amber-200 bg-amber-100 p-3">
             <div className="mb-1.5 flex items-center gap-1.5">
@@ -269,26 +290,23 @@ export default function UzmanProfilPage() {
             <p className="text-xs text-amber-700 line-clamp-3">{profile.pendingBio}</p>
             <p className="mt-1.5 text-[10px] text-amber-600">Onaylanana kadar mevcut biyografiniz sitede görünmeye devam eder.</p>
           </div>
-        ) : (
+        ) : bioChanged ? (
           <div className="mb-3 flex items-center gap-2">
             <Info className="size-4 shrink-0 text-amber-600" />
             <p className="text-xs text-amber-700 font-medium">
-              Biyografi değişikliği admin onayına gider. Mevcut biyografiniz onaylanana kadar sitede görünmeye devam eder.
+              Biyografi değişikliği admin onayına gider. Üst sağdaki butona tıklayarak gönderin.
             </p>
           </div>
-        )}
-        <div className="mb-4 flex items-center justify-between">
+        ) : null}
+
+        <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-bold text-foreground">
             Tanıtım Yazısı <span className="text-destructive">*</span>
           </h3>
-          <span
-            className={cn(
-              "text-xs font-semibold",
-              wordCount < MIN_WORDS || wordCount > MAX_WORDS
-                ? "text-destructive"
-                : "text-green-600"
-            )}
-          >
+          <span className={cn(
+            "text-xs font-semibold",
+            wordCount < MIN_WORDS || wordCount > MAX_WORDS ? "text-destructive" : "text-green-600"
+          )}>
             {wordCount} / {MAX_WORDS} kelime
           </span>
         </div>
@@ -299,7 +317,7 @@ export default function UzmanProfilPage() {
           className="rounded-xl resize-none bg-white"
           placeholder="Kendinizi danışanlarınıza tanıtın…"
         />
-        {wordCount < MIN_WORDS && (
+        {wordCount < MIN_WORDS && bioChanged && (
           <p className="mt-1.5 text-xs text-destructive">
             En az {MIN_WORDS} kelime gereklidir. ({MIN_WORDS - wordCount} kelime daha)
           </p>
@@ -309,27 +327,9 @@ export default function UzmanProfilPage() {
             En fazla {MAX_WORDS} kelime olabilir. ({wordCount - MAX_WORDS} kelime fazla)
           </p>
         )}
-        <div className="mt-3 flex justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSaveBio}
-            disabled={savingReview || !wordCountValid}
-            className="border-amber-300 text-amber-800 hover:bg-amber-50"
-          >
-            {savingReview ? (
-              <>
-                <span className="size-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
-                Gönderiliyor…
-              </>
-            ) : (
-              "Biyografi Onaya Gönder"
-            )}
-          </Button>
-        </div>
       </div>
 
-      {/* Tags */}
+      {/* Uzmanlık Alanları */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
@@ -340,12 +340,10 @@ export default function UzmanProfilPage() {
               Min {MIN_KEYWORDS}, maks {MAX_KEYWORDS} alan seçin.
             </p>
           </div>
-          <span
-            className={cn(
-              "text-xs font-semibold",
-              !keywordsValid ? "text-destructive" : "text-green-600"
-            )}
-          >
+          <span className={cn(
+            "text-xs font-semibold",
+            !keywordsValid ? "text-destructive" : "text-green-600"
+          )}>
             {selectedTagIds.length} / {MAX_KEYWORDS}
           </span>
         </div>
@@ -373,33 +371,16 @@ export default function UzmanProfilPage() {
             );
           })}
         </div>
+        {!keywordsValid && (
+          <p className="mt-2 text-xs text-destructive">
+            En az {MIN_KEYWORDS} uzmanlık alanı seçiniz.
+          </p>
+        )}
       </div>
 
-      {/* Bottom actions */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          <span className="text-destructive">*</span> zorunlu alan
-        </p>
-        <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            onClick={handleSaveDirect}
-            disabled={savingDirect || (selectedTagIds.length > 0 && !keywordsValid)}
-          >
-            {savingDirect ? (
-              <>
-                <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Kaydediliyor…
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="mr-1.5 size-4" />
-                Bilgileri Kaydet
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        <span className="text-destructive">*</span> zorunlu alan
+      </p>
     </div>
   );
 }
