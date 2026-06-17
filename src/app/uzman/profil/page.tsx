@@ -49,10 +49,11 @@ export default function UzmanProfilPage() {
       .then(([p, tags]) => {
         setProfile(p);
         setAllTags(tags);
-        setTitle(p.title ?? "");
-        setBio(p.bio ?? "");
-        setOriginalBio(p.bio ?? "");
-        setEducation(p.education ?? "");
+        // Input'larda pending varsa onu göster (uzman en son gönderdiğini görür)
+        setTitle(p.pendingTitle ?? p.title ?? "");
+        setBio(p.pendingBio ?? p.bio ?? "");
+        setOriginalBio(p.pendingBio ?? p.bio ?? "");
+        setEducation(p.pendingEducation ?? p.education ?? "");
         setSelectedTagIds(p.tags.map((t) => t.id));
       })
       .catch(() => toast.error("Profil yüklenemedi."))
@@ -161,6 +162,19 @@ export default function UzmanProfilPage() {
         </div>
       </PageHeader>
 
+      {/* Genel onay bekleniyor banner */}
+      {(profile.pendingTitle || profile.pendingBio || profile.pendingEducation) && !profile.adminNote && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <Info className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Değişiklikler admin onayında</p>
+            <p className="mt-0.5 text-xs text-amber-700">
+              Gönderdiğiniz değişiklikler admin onayına alındı. Onaylanana kadar sitede eski bilgileriniz görünmeye devam eder.
+            </p>
+          </div>
+        </div>
+      )}
+
       {profile.adminNote && (
         <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
           <AlertCircle className="mt-0.5 size-4 shrink-0 text-red-600" />
@@ -232,6 +246,11 @@ export default function UzmanProfilPage() {
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">
               Unvan <span className="text-destructive">*</span>
+              {profile.pendingTitle && (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                  Onay bekleniyor
+                </span>
+              )}
             </Label>
             <Input
               value={title}
@@ -239,6 +258,11 @@ export default function UzmanProfilPage() {
               className="h-10 rounded-xl"
               placeholder="Klinik Psikolog"
             />
+            {profile.pendingTitle && profile.title && (
+              <p className="text-[10px] text-muted-foreground">
+                Sitede görünen: <span className="font-medium">{profile.title}</span>
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Yıldız Puanı</Label>
@@ -266,7 +290,14 @@ export default function UzmanProfilPage() {
 
       {/* Eğitim */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
-        <h3 className="mb-4 text-sm font-bold text-foreground">Eğitim</h3>
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-foreground">Eğitim</h3>
+          {profile.pendingEducation && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              Onay bekleniyor
+            </span>
+          )}
+        </div>
         <Textarea
           value={education}
           onChange={(e) => setEducation(e.target.value)}
@@ -274,6 +305,11 @@ export default function UzmanProfilPage() {
           className="rounded-xl resize-none"
           placeholder="Üniversite, bölüm, yıl…"
         />
+        {profile.pendingEducation && profile.education && (
+          <p className="mt-1.5 text-[10px] text-muted-foreground">
+            Sitede görünen: <span className="font-medium">{profile.education}</span>
+          </p>
+        )}
       </div>
 
       {/* Biyografi */}
