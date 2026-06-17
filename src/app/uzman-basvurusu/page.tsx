@@ -530,6 +530,20 @@ export default function ExpertApplicationPage() {
       formData.append("kvkkConsent", "true");
       if (data.biyografi) formData.append("bio", data.biyografi);
 
+      // Eğitim bilgisi
+      const educationParts: string[] = [];
+      if (data.lisansUni || data.lisansBolum) {
+        educationParts.push(
+          `Lisans: ${data.lisansUni} - ${data.lisansBolum}${data.lisansYil ? ` (${data.lisansYil})` : ""}`.trim(),
+        );
+      }
+      if (data.ylUni || data.ylBolum) {
+        educationParts.push(
+          `Yüksek Lisans: ${data.ylUni} - ${data.ylBolum}${data.ylYil ? ` (${data.ylYil})` : ""}`.trim(),
+        );
+      }
+      if (educationParts.length > 0) formData.append("education", educationParts.join("\n"));
+
       // Etiketler
       data.tagIds?.forEach((id) => formData.append("tagIds", id));
 
