@@ -25,4 +25,12 @@ export interface ExpertApplication {
   tags?: { id: string; name: string }[];
   certificateDocument: ExpertApplicationDocument;
   cvDocument: ExpertApplicationDocument;
+  city?: string;
+  district?: string;
+  age?: number;
+  gender?: string;
+  website?: string;
+  instagram?: string;
+  experienceDuration?: string;
+  registrationCertificates?: { ad: string; kurum: string }[];
 }

@@ -375,6 +375,55 @@ export function ExpertApplicationsView() {
                   <p className="text-xs text-muted-foreground">Telefon</p>
                   <p className="font-medium">{selected.phone}</p>
                 </div>
+                {(selected.city || selected.district) ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Konum</p>
+                    <p className="font-medium">{[selected.city, selected.district].filter(Boolean).join(" / ")}</p>
+                  </div>
+                ) : null}
+                {selected.age ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Yaş</p>
+                    <p className="font-medium">{selected.age}</p>
+                  </div>
+                ) : null}
+                {selected.gender ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Cinsiyet</p>
+                    <p className="font-medium">{selected.gender}</p>
+                  </div>
+                ) : null}
+                {selected.experienceDuration ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Deneyim Süresi</p>
+                    <p className="font-medium">{selected.experienceDuration}</p>
+                  </div>
+                ) : null}
+                {selected.website ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Kişisel Site</p>
+                    <a href={selected.website} target="_blank" rel="noopener noreferrer" className="font-medium text-[#016a59] underline underline-offset-2 break-all">{selected.website}</a>
+                  </div>
+                ) : null}
+                {selected.instagram ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground">Instagram</p>
+                    <p className="font-medium">{selected.instagram}</p>
+                  </div>
+                ) : null}
+                {selected.registrationCertificates && selected.registrationCertificates.length > 0 ? (
+                  <div className="rounded-md border bg-muted/20 p-3">
+                    <p className="text-xs text-muted-foreground mb-2">Sertifikalar (metin)</p>
+                    <ul className="space-y-1">
+                      {selected.registrationCertificates.map((cert, i) => (
+                        <li key={i} className="text-sm">
+                          <span className="font-medium">{cert.ad}</span>
+                          {cert.kurum ? <span className="text-muted-foreground"> — {cert.kurum}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div className="rounded-md border bg-muted/20 p-3">
                   <p className="text-xs text-muted-foreground">Sertifika dosyası</p>
                   <button

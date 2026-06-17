@@ -544,6 +544,21 @@ export default function ExpertApplicationPage() {
       }
       if (educationParts.length > 0) formData.append("education", educationParts.join("\n"));
 
+      // Kişisel bilgiler
+      if (data.il) formData.append("city", data.il);
+      if (data.ilce) formData.append("district", data.ilce);
+      if (data.yas) formData.append("age", data.yas);
+      if (data.cinsiyet) formData.append("gender", data.cinsiyet);
+      if (data.site) formData.append("website", data.site);
+      if (data.instagram) formData.append("instagram", data.instagram);
+      if (data.deneyim) formData.append("experienceDuration", data.deneyim);
+
+      // Sertifika listesi (metin)
+      const sertCerts = data.sertifikalar?.filter((s) => s.ad || s.kurum);
+      if (sertCerts?.length) {
+        formData.append("registrationCertificates", JSON.stringify(sertCerts));
+      }
+
       // Etiketler
       data.tagIds?.forEach((id) => formData.append("tagIds", id));
 
