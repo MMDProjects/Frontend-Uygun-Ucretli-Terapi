@@ -14,7 +14,9 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, role } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const role = useAuthStore((s) => s.role);
   const { addNotification } = useAdminNotificationStore();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,7 +26,8 @@ export default function AdminLayout({
     if (!isAuthenticated || role !== "admin") {
       router.replace("/admin/giris");
     }
-  }, [isAuthenticated, isLoading, role, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isLoading, role]);
 
   useEffect(() => {
     if (!isAuthenticated || role !== "admin") return;
