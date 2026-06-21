@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 export function UzmanAuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, role } = useAuthStore();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const role = useAuthStore((s) => s.role);
   const router = useRouter();
 
   useEffect(() => {
@@ -13,7 +15,8 @@ export function UzmanAuthGuard({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated || role !== "uzman") {
       router.replace("/giris");
     }
-  }, [isAuthenticated, isLoading, role, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isLoading, role]);
 
   if (isLoading) {
     return (

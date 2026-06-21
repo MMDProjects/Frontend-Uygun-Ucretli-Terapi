@@ -10,6 +10,7 @@ const ADMIN_PROTECTED_PREFIXES = [
   "/admin/kullanicilar",
   "/admin/uzman-onay",
   "/admin/uzmanlar",
+  "/admin/musaitlik",
   "/admin/icerik",
   "/admin/formlar",
   "/admin/ayarlar",
