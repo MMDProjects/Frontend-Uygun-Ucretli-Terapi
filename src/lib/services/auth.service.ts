@@ -125,16 +125,17 @@ export async function refreshSession(): Promise<void> {
       body: JSON.stringify({ refreshToken }),
     });
     if (!res.ok) {
-      clearTokens();
-      useAuthStore.getState().clearSession();
+      // Sadece token geçersizliği (401/403) oturumu sonlandırır.
+      // 5xx veya ağ hataları geçici olabilir — oturumu koruyoruz.
+      if (res.status === 401 || res.status === 403) {
+        clearTokens();
+        useAuthStore.getState().clearSession();
+      }
       return;
     }
     const data = (await res.json()) as AuthResponse;
     applySession(data);
-  } catch (e) {
-    // TypeError = network/fetch failure (backend offline) — keep session intact
-    if (e instanceof TypeError) return;
-    clearTokens();
-    useAuthStore.getState().clearSession();
+  } catch {
+    // TypeError dahil tüm ağ/fetch hataları: oturumu koru, backend geçici kapalı olabilir.
   }
 }
