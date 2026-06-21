@@ -6,6 +6,8 @@ interface BackendBlog {
   id: string;
   title: string;
   content: string;
+  coverImageUrl?: string | null;
+  authorName?: string | null;
   status: string;
   createdAt: string;
   expertProfile: {
@@ -33,7 +35,9 @@ function mapToBlogPost(blog: BackendBlog): BlogPostDto {
     title: blog.title,
     excerpt,
     content: blog.content,
+    coverImageUrl: blog.coverImageUrl ?? null,
     expertName:
+      blog.authorName?.trim() ||
       `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim(),
     publishedAt: blog.createdAt,
     status: mapStatus(blog.status),

@@ -57,16 +57,16 @@ function mapToDetail(expert: BackendExpert): ExpertDetail {
   const listItem = mapToListItem(expert);
   const docs = [];
   if (expert.certificateUrl) {
-    docs.push({ id: "cert", name: "Sertifika", type: "Sertifika", uploadedAt: "" });
+    docs.push({ id: "cert", name: "Sertifika", type: "Sertifika", uploadedAt: "", url: expert.certificateUrl });
   }
   if (expert.cvUrl) {
-    docs.push({ id: "cv", name: "CV / Özgeçmiş", type: "CV", uploadedAt: "" });
+    docs.push({ id: "cv", name: "CV / Özgeçmiş", type: "CV", uploadedAt: "", url: expert.cvUrl });
   }
   if (expert.pendingCertificateUrl) {
-    docs.push({ id: "cert-pending", name: "Sertifika (Onay Bekliyor)", type: "Sertifika", uploadedAt: "" });
+    docs.push({ id: "cert-pending", name: "Sertifika (Onay Bekliyor)", type: "Sertifika", uploadedAt: "", url: expert.pendingCertificateUrl, isPending: true });
   }
   if (expert.pendingCvUrl) {
-    docs.push({ id: "cv-pending", name: "CV (Onay Bekliyor)", type: "CV", uploadedAt: "" });
+    docs.push({ id: "cv-pending", name: "CV (Onay Bekliyor)", type: "CV", uploadedAt: "", url: expert.pendingCvUrl, isPending: true });
   }
   return {
     ...listItem,

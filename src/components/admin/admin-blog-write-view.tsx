@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, ImagePlus, X } from "lucide-react";
+import { ImagePlus, X } from "lucide-react";
 import Image from "next/image";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
@@ -26,7 +26,6 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
   const [slug, setSlug] = useState("");
   const [slugManual, setSlugManual] = useState(false);
   const [content, setContent] = useState("");
-  const [authorName, setAuthorName] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -54,7 +53,6 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
     if (title.trim().length < 5) e.title = "Başlık en az 5 karakter olmalıdır.";
     if (!slug.trim()) e.slug = "Slug boş bırakılamaz.";
     if (content.trim().length < 100) e.content = "İçerik en az 100 karakter olmalıdır.";
-    if (!authorName.trim()) e.authorName = "Yazar adı zorunludur.";
     return e;
   }
 
@@ -73,7 +71,7 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
           title: title.trim(),
           slug: slug.trim(),
           content: content.trim(),
-          authorName: authorName.trim(),
+          authorName: "Editör",
         },
       });
       if (coverFile) {
@@ -83,10 +81,11 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
           method: "POST",
           token,
           body: formData,
-        }).catch(() => {});
+          isFormData: true,
+        });
       }
       toast.success("Blog yazısı yayınlandı.");
-      setTitle(""); setSlug(""); setContent(""); setAuthorName(""); setSlugManual(false);
+      setTitle(""); setSlug(""); setContent(""); setSlugManual(false);
       setCoverFile(null); setCoverPreview(null);
       onPublished?.();
     } catch (err) {
@@ -100,24 +99,6 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
-
-          <div className="space-y-1.5">
-            <Label htmlFor="ab-author">
-              Yazar Adı <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="ab-author"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              placeholder="Mehmet Keşan"
-              className="h-9"
-            />
-            {errors.authorName && (
-              <p className="flex items-center gap-1 text-xs text-destructive">
-                <AlertCircle className="size-3" />{errors.authorName}
-              </p>
-            )}
-          </div>
 
           <div className="space-y-1.5">
             <Label>
@@ -159,7 +140,7 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
             />
             {errors.title && (
               <p className="flex items-center gap-1 text-xs text-destructive">
-                <AlertCircle className="size-3" />{errors.title}
+                {errors.title}
               </p>
             )}
           </div>
@@ -178,7 +159,7 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
             />
             {errors.slug && (
               <p className="flex items-center gap-1 text-xs text-destructive">
-                <AlertCircle className="size-3" />{errors.slug}
+                {errors.slug}
               </p>
             )}
           </div>
@@ -201,7 +182,7 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
             />
             {errors.content && (
               <p className="flex items-center gap-1 text-xs text-destructive">
-                <AlertCircle className="size-3" />{errors.content}
+                {errors.content}
               </p>
             )}
           </div>

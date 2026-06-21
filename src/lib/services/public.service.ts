@@ -36,6 +36,7 @@ export type ApiBlog = {
   title: string;
   content: string;
   coverImageUrl?: string | null;
+  authorName?: string | null;
   createdAt: string;
   expertProfile: {
     title: string;
@@ -50,11 +51,13 @@ export type ApiBlogListResponse = {
   limit: number;
 };
 
+export type SssPage = "GENEL" | "TESTLER" | "PAKETLER" | "RANDEVU" | "ODEME" | "UZMAN" | "GIZLILIK";
+
 export type ApiSss = {
   id: string;
   question: string;
   answer: string;
-  page: "GENEL" | "TESTLER" | "PAKETLER";
+  page: SssPage;
   order: number;
 };
 
@@ -113,7 +116,7 @@ export async function getBlog(slug: string): Promise<ApiBlog> {
 
 // ─── SSS ─────────────────────────────────────────────────────────────────────
 
-export async function getSss(page?: "GENEL" | "TESTLER" | "PAKETLER"): Promise<ApiSss[]> {
+export async function getSss(page?: SssPage): Promise<ApiSss[]> {
   const query = page ? `?page=${page}` : "";
   return apiFetch(`/sss${query}`);
 }

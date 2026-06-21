@@ -6,6 +6,7 @@ interface BackendBlog {
   id: string;
   title: string;
   content: string;
+  coverImageUrl?: string | null;
   status: string;
   adminNote: string | null;
   createdAt: string;
@@ -33,6 +34,7 @@ function mapToBlogApproval(blog: BackendBlog): BlogApprovalDto {
     title: blog.title,
     excerpt,
     content: blog.content,
+    coverImageUrl: blog.coverImageUrl ?? null,
     authorName:
       `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim(),
     submittedAt: blog.createdAt,
