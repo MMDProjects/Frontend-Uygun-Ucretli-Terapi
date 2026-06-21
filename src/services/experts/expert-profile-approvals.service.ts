@@ -70,6 +70,9 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
     if (!res.ok) return [];
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
+    // Profil Onayları kuyruğu: daha önce yayına alınmış (isPublished: true) uzmanların
+    // profil/biyografi/belge güncellemeleri buraya düşer.
+    // Yeni başvurular (isPublished: false, ONAY_BEKLIYOR) "Yeni Başvurular" kuyruğuna aittir.
     return payload.data
       .filter(
         (e) =>

@@ -13,9 +13,12 @@ export function DangerPanicOverlay({ message, onDismiss }: Props) {
       role="alertdialog"
       aria-modal="true"
       aria-label="Acil sistem uyarısı"
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-red-950/90 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center backdrop-blur-sm"
     >
-      <div className="mx-4 w-full max-w-md overflow-hidden rounded-3xl border-2 border-red-500 bg-white shadow-2xl">
+      {/* Yanıp sönen arka plan katmanı */}
+      <div className="absolute inset-0 animate-pulse bg-red-950/90" aria-hidden="true" />
+
+      <div className="relative mx-4 w-full max-w-md overflow-hidden rounded-3xl border-2 border-red-500 bg-white shadow-2xl">
         {/* Kırmızı üst şerit */}
         <div className="flex items-center gap-3 bg-red-600 px-6 py-4">
           <span className="relative flex size-8 items-center justify-center">

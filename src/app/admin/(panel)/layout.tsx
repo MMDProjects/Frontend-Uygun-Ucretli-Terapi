@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminSidebar } from "@/features/admin/components/admin-sidebar";
+import { AdminTopBar } from "@/features/admin/components/admin-topbar";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { subscribeToNotificationStream } from "@/lib/services/admin.service";
@@ -79,7 +80,10 @@ export default function AdminLayout({
       )}
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <AdminTopBar onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+      </div>
     </div>
   );
 }
