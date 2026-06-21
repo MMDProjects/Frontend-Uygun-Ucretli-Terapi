@@ -8,6 +8,7 @@ import { UzmanSidebar } from "@/features/uzman/components/uzman-sidebar";
 import { UzmanAuthGuard } from "@/features/uzman/components/uzman-auth-guard";
 import { DangerPanicOverlay } from "@/features/uzman/components/danger-panic-overlay";
 import { subscribeToNotificationStream, getMyUzmanNotifications } from "@/lib/services/uzman.service";
+import { getAccessToken } from "@/lib/auth-cookies";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
@@ -32,7 +33,8 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    const token = getAccessToken();
+    if (!token) return;
     const unsub = subscribeToNotificationStream((data) => {
       setUnreadCount((prev) => prev + 1);
       if (data.type === "DANGER_PANIC") {
@@ -52,6 +54,7 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
       }
     });
     return unsub;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   return (

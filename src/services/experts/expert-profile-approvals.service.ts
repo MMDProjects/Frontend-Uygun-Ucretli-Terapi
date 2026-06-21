@@ -13,6 +13,7 @@ interface BackendExpert {
   pendingCertificateUrl: string | null;
   pendingCvUrl: string | null;
   status: string;
+  isPublished: boolean;
   createdAt: string;
   user: { firstName: string; lastName: string; email: string; phone: string };
   tags: { id: string; name: string }[];
@@ -69,8 +70,21 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
     if (!res.ok) return [];
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
+    // Profil Onayları kuyruğu: daha önce yayına alınmış (isPublished: true) uzmanların
+    // profil/biyografi/belge güncellemeleri buraya düşer.
+    // Yeni başvurular (isPublished: false, ONAY_BEKLIYOR) "Yeni Başvurular" kuyruğuna aittir.
     return payload.data
-      .filter((e) => e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI")
+      .filter(
+        (e) =>
+          e.isPublished === true &&
+          (e.status === "REVIZE_GONDERILDI" ||
+            (e.status === "ONAY_BEKLIYOR" &&
+              (e.pendingBio !== null ||
+                e.pendingTitle !== null ||
+                e.pendingEducation !== null ||
+                e.pendingCertificateUrl !== null ||
+                e.pendingCvUrl !== null)))
+      )
       .map(mapToApproval);
   } catch {
     return [];
