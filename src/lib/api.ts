@@ -1,4 +1,5 @@
 import { getAccessToken, getRefreshToken, getRole, setTokens, clearTokens } from "@/lib/auth-cookies";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 const BASE = () => {
   const url =
@@ -27,10 +28,17 @@ async function tryRefreshToken(): Promise<string | null> {
     });
     if (!res.ok) {
       clearTokens();
+      useAuthStore.getState().clearSession();
       return null;
     }
-    const data = (await res.json()) as { accessToken: string; refreshToken: string; user: { role: string } };
+    const data = (await res.json()) as { accessToken: string; refreshToken: string; user: { role: string; id: string; email: string; firstName: string; lastName: string } };
     setTokens(data.accessToken, data.refreshToken, data.user.role);
+    useAuthStore.getState().setSession({
+      userId: data.user.id,
+      displayName: `${data.user.firstName} ${data.user.lastName}`.trim(),
+      email: data.user.email,
+      role: data.user.role.toLowerCase() as import("@/lib/stores/auth-store").UserRole,
+    });
     return data.accessToken;
   } catch {
     return null;

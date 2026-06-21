@@ -5,18 +5,14 @@ import { getAccessToken, getRefreshToken, getRole } from "@/lib/auth-cookies";
 import { getMyProfile, refreshSession } from "@/lib/services/auth.service";
 import { useAuthStore, type UserRole } from "@/lib/stores/auth-store";
 
-// StrictMode'da useEffect iki kez çalışır; token rotation yaptığı için
-// ikinci istek geçersiz token ile gelip clearSession() tetikler.
-// Module-level flag ile ilk çalışma tamamlanmadan ikincisini engelle.
-let initialized = false;
-
 export function AuthInitializer() {
   const setLoading = useAuthStore((s) => s.setLoading);
 
   useEffect(() => {
     async function init() {
       if (getAccessToken()) {
-        // Access token geçerli — /me ile store'u doldur, refresh yapma
+        // apiFetch zaten 401'de otomatik refresh + store güncelleme yapıyor.
+        // Başarılı olursa store set edilir; başarısız olursa clearSession zaten çağrılır.
         try {
           const me = await getMyProfile();
           useAuthStore.getState().setSession({
@@ -26,8 +22,8 @@ export function AuthInitializer() {
             role: (getRole() ?? me.role).toLowerCase() as UserRole,
           });
         } catch {
-          // /me başarısız → refresh'e düş
-          if (getRefreshToken()) await refreshSession();
+          // apiFetch 401 → tryRefreshToken → başarısızsa clearSession zaten yapıldı.
+          // Burada tekrar refresh çağırmıyoruz — çift rotation race condition yaratır.
         }
       } else if (getRefreshToken()) {
         // Access token yok ama refresh var → yeni access token al
