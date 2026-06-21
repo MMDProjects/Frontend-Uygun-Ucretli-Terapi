@@ -1,4 +1,4 @@
-import { getAccessToken, getRefreshToken, getRole, setTokens, clearTokens } from "@/lib/auth-cookies";
+import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "@/lib/auth-cookies";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 const BASE = () => {
@@ -17,7 +17,12 @@ type FetchOptions = {
   _isRetry?: boolean;
 };
 
-async function tryRefreshToken(): Promise<string | null> {
+// Aynı anda birden fazla 401 geldiğinde hepsi ayrı refresh isteği açar;
+// backend token rotation yaptığı için ikincisi geçersiz token ile gelip clearSession tetikler.
+// Singleton pattern: devam eden refresh varsa aynı Promise'i paylaş.
+let refreshPromise: Promise<string | null> | null = null;
+
+async function _doRefresh(): Promise<string | null> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
   try {
@@ -31,7 +36,11 @@ async function tryRefreshToken(): Promise<string | null> {
       useAuthStore.getState().clearSession();
       return null;
     }
-    const data = (await res.json()) as { accessToken: string; refreshToken: string; user: { role: string; id: string; email: string; firstName: string; lastName: string } };
+    const data = (await res.json()) as {
+      accessToken: string;
+      refreshToken: string;
+      user: { role: string; id: string; email: string; firstName: string; lastName: string };
+    };
     setTokens(data.accessToken, data.refreshToken, data.user.role);
     useAuthStore.getState().setSession({
       userId: data.user.id,
@@ -43,6 +52,14 @@ async function tryRefreshToken(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+async function tryRefreshToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = _doRefresh().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
 }
 
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
@@ -67,11 +84,8 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
     if (newToken) {
       return apiFetch<T>(path, { ...opts, token: newToken, _isRetry: true });
     }
-    clearTokens();
-    if (typeof window !== "undefined") {
-      const role = getRole();
-      window.location.href = role === "uzman" ? "/uzman/giris" : role === "admin" ? "/admin/giris" : "/giris";
-    }
+    // tryRefreshToken zaten clearTokens + clearSession yaptı.
+    // Hard redirect YOK — AdminLayout/UzmanLayout useEffect'i router.replace() ile yönlendirir.
     throw new Error("Oturum süresi doldu, lütfen tekrar giriş yapın");
   }
 
