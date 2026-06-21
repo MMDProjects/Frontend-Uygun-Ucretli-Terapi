@@ -18,8 +18,7 @@ export default async function BlogDetailPage({ params }: Props) {
     notFound();
   }
 
-  const authorName = (blog as { authorName?: string | null }).authorName
-    || `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim();
+  const authorName = blog.authorName?.trim() || `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim();
   const dateLabel = new Date(blog.createdAt).toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "long",

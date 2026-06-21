@@ -183,12 +183,22 @@ export function ExpertDetailDialog({
                   {expert.documents.length > 0 ? (
                     expert.documents.map((doc, index) => (
                       <div key={doc.id}>
-                        <div className="grid grid-cols-3 gap-2 px-3 py-2 text-xs">
-                          <span className="font-medium">{doc.name}</span>
-                          <span className="text-muted-foreground">{doc.type}</span>
-                          <span className="text-right text-muted-foreground">
-                            {doc.uploadedAt}
+                        <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                          <span className={doc.isPending ? "font-medium text-amber-700" : "font-medium"}>
+                            {doc.name}
                           </span>
+                          {doc.url ? (
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#016a59] underline underline-offset-2 hover:opacity-80"
+                            >
+                              Görüntüle
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">URL yok</span>
+                          )}
                         </div>
                         {index < expert.documents.length - 1 ? <Separator /> : null}
                       </div>

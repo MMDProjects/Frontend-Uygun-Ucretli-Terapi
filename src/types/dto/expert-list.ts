@@ -18,6 +18,8 @@ export interface ExpertDocument {
   name: string;
   type: string;
   uploadedAt: string;
+  url?: string;
+  isPending?: boolean;
 }
 
 export interface ExpertDetail extends ExpertListItem {

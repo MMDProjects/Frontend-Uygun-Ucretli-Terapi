@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { toast } from "sonner";
@@ -68,13 +68,36 @@ export function FaqManagementView() {
 
   const [formData, setFormData] = useState<FaqInput>(EMPTY_INPUT);
 
-  const nextOrder = useMemo(() => {
-    if (faqs.length === 0) return 1;
-    return Math.max(...faqs.map((f) => f.order)) + 1;
+  const nextOrderForCategory = useCallback(
+    (category: string) => {
+      const inCat = faqs.filter((f) => f.category === category);
+      if (inCat.length === 0) return 1;
+      return Math.max(...inCat.map((f) => f.order)) + 1;
+    },
+    [faqs]
+  );
+
+  const groupedFaqs = useMemo(() => {
+    const sorted = [...faqs].sort((a, b) => a.order - b.order);
+    const catOrder: string[] = [];
+    const map = new Map<string, FaqDto[]>();
+    for (const f of sorted) {
+      if (!map.has(f.category)) {
+        catOrder.push(f.category);
+        map.set(f.category, []);
+      }
+      map.get(f.category)!.push(f);
+    }
+    return catOrder.map((cat) => ({
+      cat,
+      label: CATEGORY_LABELS[cat] ?? cat,
+      items: map.get(cat)!,
+    }));
   }, [faqs]);
 
   const openCreate = () => {
-    setFormData({ ...EMPTY_INPUT, order: nextOrder });
+    const defaultCat = "genel";
+    setFormData({ ...EMPTY_INPUT, order: nextOrderForCategory(defaultCat) });
     setDialog({ kind: "create" });
   };
 
@@ -203,69 +226,79 @@ export function FaqManagementView() {
       ) : null}
 
       {!loading && !error && faqs.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {faqs.map((faq) => (
-            <Card
-              key={faq.id}
-              className="rounded-lg shadow-[0_4px_6px_rgba(0,0,0,0.05)]"
-            >
-              <CardHeader className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={
-                        faq.status === "published"
-                          ? "border-[#27AE60]/30 bg-[#27AE60]/10 text-[#27AE60]"
-                          : "border-muted-foreground/30 bg-muted text-muted-foreground"
-                      }
-                    >
-                      {faq.status === "published" ? "Yayında" : "Taslak"}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {CATEGORY_LABELS[faq.category] ?? faq.category}
-                    </Badge>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    Sıra #{faq.order}
-                  </span>
-                </div>
-                <CardTitle className="text-base leading-snug">
-                  {faq.question}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="line-clamp-3 text-sm text-muted-foreground">
-                  {faq.answer}
-                </p>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    Güncellendi: {faq.updatedAt}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEdit(faq)}
-                    >
-                      <Pencil className="size-4" />
-                      Düzenle
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="border-[#EB5757]/30 text-[#EB5757] hover:bg-[#EB5757]/10 hover:text-[#EB5757]"
-                      onClick={() => setPendingDelete(faq)}
-                    >
-                      <Trash2 className="size-4" />
-                      Sil
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="space-y-8">
+          {groupedFaqs.map(({ cat, label, items }) => (
+            <div key={cat}>
+              <div className="mb-3 flex items-center gap-3">
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#e6f0ee] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#014a3e]">
+                  {label}
+                </span>
+                <div className="h-px flex-1 bg-border/50" />
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {items.length} kayıt
+                </span>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {items.map((faq) => (
+                  <Card
+                    key={faq.id}
+                    className="rounded-lg shadow-[0_4px_6px_rgba(0,0,0,0.05)]"
+                  >
+                    <CardHeader className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge
+                          variant="outline"
+                          className={
+                            faq.status === "published"
+                              ? "border-[#27AE60]/30 bg-[#27AE60]/10 text-[#27AE60]"
+                              : "border-muted-foreground/30 bg-muted text-muted-foreground"
+                          }
+                        >
+                          {faq.status === "published" ? "Yayında" : "Taslak"}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Sıra #{faq.order}
+                        </span>
+                      </div>
+                      <CardTitle className="text-base leading-snug">
+                        {faq.question}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="line-clamp-3 text-sm text-muted-foreground">
+                        {faq.answer}
+                      </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">
+                          Güncellendi: {faq.updatedAt}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEdit(faq)}
+                          >
+                            <Pencil className="size-4" />
+                            Düzenle
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-[#EB5757]/30 text-[#EB5757] hover:bg-[#EB5757]/10 hover:text-[#EB5757]"
+                            onClick={() => setPendingDelete(faq)}
+                          >
+                            <Trash2 className="size-4" />
+                            Sil
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       ) : null}
@@ -320,12 +353,16 @@ export function FaqManagementView() {
                 <Label htmlFor="faq-category">Kategori *</Label>
                 <Select
                   value={formData.category || null}
-                  onValueChange={(value) =>
+                  onValueChange={(value) => {
+                    const cat = value ?? "genel";
                     setFormData((prev) => ({
                       ...prev,
-                      category: value ?? "genel",
-                    }))
-                  }
+                      category: cat,
+                      ...(dialog.kind === "create"
+                        ? { order: nextOrderForCategory(cat) }
+                        : {}),
+                    }));
+                  }}
                 >
                   <SelectTrigger id="faq-category" className="w-full min-w-0">
                     <SelectValue placeholder="Kategori seçin" />
@@ -341,7 +378,7 @@ export function FaqManagementView() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="faq-order">Sıra *</Label>
+                <Label htmlFor="faq-order">Kategori İçi Sıra *</Label>
                 <Input
                   id="faq-order"
                   type="number"
@@ -354,6 +391,9 @@ export function FaqManagementView() {
                     }))
                   }
                 />
+                <p className="text-xs text-muted-foreground">
+                  Yalnızca seçilen kategori içindeki sıralamayı belirler.
+                </p>
               </div>
             </div>
 

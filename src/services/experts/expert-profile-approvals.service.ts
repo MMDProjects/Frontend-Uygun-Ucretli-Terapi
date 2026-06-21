@@ -76,14 +76,8 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
     return payload.data
       .filter(
         (e) =>
-          e.isPublished === true &&
-          (e.status === "REVIZE_GONDERILDI" ||
-            (e.status === "ONAY_BEKLIYOR" &&
-              (e.pendingBio !== null ||
-                e.pendingTitle !== null ||
-                e.pendingEducation !== null ||
-                e.pendingCertificateUrl !== null ||
-                e.pendingCvUrl !== null)))
+          (e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI") &&
+          e.isPublished === true,
       )
       .map(mapToApproval);
   } catch {

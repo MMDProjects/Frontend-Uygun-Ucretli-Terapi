@@ -528,6 +528,36 @@ export default function ExpertApplicationPage() {
       formData.append("password", data.sifre ?? "");
       formData.append("title", data.unvan || "Uzman");
       formData.append("kvkkConsent", "true");
+      if (data.biyografi) formData.append("bio", data.biyografi);
+
+      // Eğitim bilgisi
+      const educationParts: string[] = [];
+      if (data.lisansUni || data.lisansBolum) {
+        educationParts.push(
+          `Lisans: ${data.lisansUni} - ${data.lisansBolum}${data.lisansYil ? ` (${data.lisansYil})` : ""}`.trim(),
+        );
+      }
+      if (data.ylUni || data.ylBolum) {
+        educationParts.push(
+          `Yüksek Lisans: ${data.ylUni} - ${data.ylBolum}${data.ylYil ? ` (${data.ylYil})` : ""}`.trim(),
+        );
+      }
+      if (educationParts.length > 0) formData.append("education", educationParts.join("\n"));
+
+      // Kişisel bilgiler
+      if (data.il) formData.append("city", data.il);
+      if (data.ilce) formData.append("district", data.ilce);
+      if (data.yas) formData.append("age", data.yas);
+      if (data.cinsiyet) formData.append("gender", data.cinsiyet);
+      if (data.site) formData.append("website", data.site);
+      if (data.instagram) formData.append("instagram", data.instagram);
+      if (data.deneyim) formData.append("experienceDuration", data.deneyim);
+
+      // Sertifika listesi (metin)
+      const sertCerts = data.sertifikalar?.filter((s) => s.ad || s.kurum);
+      if (sertCerts?.length) {
+        formData.append("registrationCertificates", JSON.stringify(sertCerts));
+      }
 
       // Etiketler
       data.tagIds?.forEach((id) => formData.append("tagIds", id));

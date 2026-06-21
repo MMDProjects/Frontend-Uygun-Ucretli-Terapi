@@ -1,18 +1,23 @@
 import type { ApiResponse } from "@/types/dto/api";
 import { getAccessToken } from "@/lib/auth-cookies";
 
-const getBaseUrl = (): string => {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url) {
-    throw new Error("NEXT_PUBLIC_API_URL is not defined");
+function resolveApiBase(): string | null {
+  if (typeof window === "undefined" && process.env.INTERNAL_API_URL) {
+    return process.env.INTERNAL_API_URL.replace(/\/$/, "");
   }
-  return url.replace(/\/$/, "");
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  return url ? url.replace(/\/$/, "") : null;
+}
+
+const getBaseUrl = (): string => {
+  const url = resolveApiBase();
+  if (!url) throw new Error("API URL is not defined");
+  return url;
 };
 
 /** Returns API base URL or null when unset (e.g. mock-only dev). */
 export function getOptionalApiBase(): string | null {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  return url ? url.replace(/\/$/, "") : null;
+  return resolveApiBase();
 }
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

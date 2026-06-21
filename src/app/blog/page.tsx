@@ -18,7 +18,7 @@ const bentoSpanPattern = [
 ] as const;
 
 function BlogCardApi({ post, className }: { post: ApiBlog; className?: string }) {
-  const authorName = `${post.expertProfile.user.firstName} ${post.expertProfile.user.lastName}`.trim();
+  const authorName = post.authorName?.trim() || `${post.expertProfile.user.firstName} ${post.expertProfile.user.lastName}`.trim();
   const dateLabel = new Date(post.createdAt).toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "long",
