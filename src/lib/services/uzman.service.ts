@@ -15,8 +15,8 @@ type ApiRequestStatus = "BEKLEMEDE" | "UZMANA_YONLENDIRILDI" | "TAMAMLANDI" | "R
 type ApiNotificationType = "INFO" | "WARNING" | "DANGER_PANIC";
 
 function mapProfileStatus(s: ApiProfileStatus): UzmanProfileStatus {
-  if (s === "REDDEDILDI" || s === "REVIZE_GONDERILDI") return "pasif";
-  if (s === "ONAY_BEKLIYOR") return "onay_bekliyor";
+  if (s === "REDDEDILDI") return "pasif";
+  if (s === "REVIZE_GONDERILDI" || s === "ONAY_BEKLIYOR") return "onay_bekliyor";
   if (s === "YAYINDA") return "yayinda";
   return "taslak";
 }
