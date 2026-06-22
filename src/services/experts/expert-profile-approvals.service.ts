@@ -17,6 +17,7 @@ interface BackendExpert {
   status: string;
   isPublished: boolean;
   createdAt: string;
+  updatedAt: string;
   user: { firstName: string; lastName: string; email: string; phone: string };
   tags: { id: string; name: string }[];
 }
@@ -46,7 +47,7 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
     expertDisplayName:
       `${expert.user.firstName} ${expert.user.lastName}`.trim(),
     email: expert.user.email,
-    submittedAt: expert.createdAt,
+    submittedAt: expert.updatedAt ?? expert.createdAt,
     status: "pending",
     currentFirstName: expert.user.firstName,
     currentLastName: expert.user.lastName,
