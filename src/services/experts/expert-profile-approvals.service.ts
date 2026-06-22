@@ -85,8 +85,7 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
     return payload.data
       .filter(
         (e) =>
-          (e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI") &&
-          e.isPublished === true,
+          e.status === "REVIZE_GONDERILDI" || e.status === "PROFIL_GUNCELLENDI",
       )
       .map(mapToApproval);
   } catch {
