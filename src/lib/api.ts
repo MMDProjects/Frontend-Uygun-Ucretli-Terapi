@@ -32,8 +32,12 @@ async function _doRefresh(): Promise<string | null> {
       body: JSON.stringify({ refreshToken }),
     });
     if (!res.ok) {
-      clearTokens();
-      useAuthStore.getState().clearSession();
+      // Sadece kesin auth hatası (401/403) oturumu sonlandırır.
+      // 5xx, 429 gibi geçici hatalar oturumu korur — kullanıcı sayfada kalır.
+      if (res.status === 401 || res.status === 403) {
+        clearTokens();
+        useAuthStore.getState().clearSession();
+      }
       return null;
     }
     const data = (await res.json()) as {

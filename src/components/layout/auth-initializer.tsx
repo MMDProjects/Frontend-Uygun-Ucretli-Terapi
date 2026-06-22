@@ -5,10 +5,17 @@ import { getAccessToken, getRefreshToken, getRole } from "@/lib/auth-cookies";
 import { getMyProfile, refreshSession } from "@/lib/services/auth.service";
 import { useAuthStore, type UserRole } from "@/lib/stores/auth-store";
 
+// StrictMode'da useEffect iki kez çalışır; token rotation olduğu için ikinci istek
+// zaten silinmiş refresh token'ı gönderir → clearSession tetiklenir. Guard bunu önler.
+let initialized = false;
+
 export function AuthInitializer() {
   const setLoading = useAuthStore((s) => s.setLoading);
 
   useEffect(() => {
+    if (initialized) return;
+    initialized = true;
+
     async function init() {
       if (getAccessToken()) {
         // apiFetch zaten 401'de otomatik refresh + store güncelleme yapıyor.

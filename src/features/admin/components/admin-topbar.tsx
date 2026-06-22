@@ -1,8 +1,9 @@
 "use client";
 
 import { Bell, LogOut, Menu } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/lib/services/auth.service";
 
 interface AdminTopBarProps {
   pendingCount?: number;
@@ -17,6 +18,13 @@ export function AdminTopBar({
   onMenuClick,
   pageTitle,
 }: AdminTopBarProps) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    router.replace("/admin/giris");
+  }
+
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 shadow-sm sm:px-6">
       <div className="flex items-center gap-3">
@@ -61,15 +69,14 @@ export function AdminTopBar({
         </span>
         <div className="hidden h-6 w-px bg-border sm:block" />
         <Button
-          asChild
+          type="button"
           variant="ghost"
           size="sm"
           className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={handleLogout}
         >
-          <Link href="/admin/giris?cikis=1">
-            <LogOut className="size-4" />
-            <span className="hidden sm:inline">Çıkış</span>
-          </Link>
+          <LogOut className="size-4" />
+          <span className="hidden sm:inline">Çıkış</span>
         </Button>
       </div>
     </header>

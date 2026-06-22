@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const ACCESS_COOKIE = "accessToken";
+const REFRESH_COOKIE = "refreshToken";
 const ROLE_COOKIE = "userRole";
 const ADMIN_ROLE = "admin";
 
@@ -45,7 +46,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin logout: clear cookies and redirect to login
+  // Admin logout: cookie'leri temizle ve giriş sayfasına yönlendir
   if (
     pathname.startsWith("/admin/giris") &&
     request.nextUrl.searchParams.get("cikis") === "1"
@@ -53,18 +54,19 @@ export function proxy(request: NextRequest) {
     const target = new URL("/admin/giris", request.url);
     const res = NextResponse.redirect(target);
     res.cookies.set(ACCESS_COOKIE, "", { path: "/", maxAge: 0 });
+    res.cookies.set(REFRESH_COOKIE, "", { path: "/", maxAge: 0 });
     res.cookies.set(ROLE_COOKIE, "", { path: "/", maxAge: 0 });
     return res;
   }
 
   const admin = isAuthenticatedAdmin(request);
 
-  // Authenticated admin trying to reach login → redirect to dashboard
+  // Giriş yapmış admin giriş sayfasına gelirse → dashboard'a yönlendir
   if (pathname.startsWith("/admin/giris") && admin) {
     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
-  // Protected admin routes → require admin auth
+  // Korumalı admin route'lar → token yoksa giriş sayfasına
   if (isProtectedAdminRoute(pathname) && !admin) {
     return NextResponse.redirect(new URL("/admin/giris", request.url));
   }
