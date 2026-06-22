@@ -7,6 +7,8 @@ interface BackendExpert {
   bio: string;
   title: string;
   education: string;
+  pendingFirstName: string | null;
+  pendingLastName: string | null;
   pendingBio: string | null;
   pendingTitle: string | null;
   pendingEducation: string | null;
@@ -30,6 +32,8 @@ function authHeaders(): HeadersInit {
 
 function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
   const changedFields: string[] = [];
+  if (expert.pendingFirstName) changedFields.push("Ad");
+  if (expert.pendingLastName) changedFields.push("Soyad");
   if (expert.pendingTitle) changedFields.push("Unvan");
   if (expert.pendingEducation) changedFields.push("Eğitim");
   if (expert.pendingBio) changedFields.push("Biyografi");
@@ -44,6 +48,10 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
     email: expert.user.email,
     submittedAt: expert.createdAt,
     status: "pending",
+    currentFirstName: expert.user.firstName,
+    currentLastName: expert.user.lastName,
+    pendingFirstName: expert.pendingFirstName ?? null,
+    pendingLastName: expert.pendingLastName ?? null,
     currentBiography: expert.bio,
     biography: expert.pendingBio ?? expert.bio,
     currentTitle: expert.title,

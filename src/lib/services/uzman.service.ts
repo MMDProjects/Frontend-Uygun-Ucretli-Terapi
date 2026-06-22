@@ -49,8 +49,12 @@ export type ApiTag = { id: string; name: string; isActive: boolean };
 export type ApiUzmanProfile = {
   id: string;
   userId: string;
+  firstName: string;
+  lastName: string;
   title: string;
   bio: string;
+  pendingFirstName: string | null;
+  pendingLastName: string | null;
   pendingBio: string | null;
   pendingTitle: string | null;
   pendingEducation: string | null;
@@ -114,6 +118,8 @@ type RawProfile = {
   userId: string;
   title: string;
   bio: string;
+  pendingFirstName: string | null;
+  pendingLastName: string | null;
   pendingBio: string | null;
   pendingTitle: string | null;
   pendingEducation: string | null;
@@ -131,15 +137,23 @@ type RawProfile = {
   adminNote: string | null;
   tags: ApiTag[];
   availabilities: ApiAvailability[];
+  user: { firstName: string; lastName: string };
 };
 
 export async function getMyUzmanProfile(): Promise<ApiUzmanProfile> {
   const token = getAccessToken();
   const raw = await apiFetch<RawProfile>("/experts/me/profile", { token });
-  return { ...raw, status: mapProfileStatus(raw.status) };
+  return {
+    ...raw,
+    firstName: raw.user.firstName,
+    lastName: raw.user.lastName,
+    status: mapProfileStatus(raw.status),
+  };
 }
 
 export async function updateMyUzmanProfile(data: {
+  firstName?: string;
+  lastName?: string;
   title?: string;
   bio?: string;
   education?: string;
@@ -150,6 +164,8 @@ export async function updateMyUzmanProfile(data: {
 }): Promise<{ message: string }> {
   const token = getAccessToken();
   const formData = new FormData();
+  if (data.firstName !== undefined) formData.append("firstName", data.firstName);
+  if (data.lastName !== undefined) formData.append("lastName", data.lastName);
   if (data.title !== undefined) formData.append("title", data.title);
   if (data.bio !== undefined) formData.append("bio", data.bio);
   if (data.education !== undefined) formData.append("education", data.education);

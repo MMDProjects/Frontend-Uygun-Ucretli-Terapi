@@ -14,6 +14,13 @@ import Link from "next/link";
 import type { ApiTag } from "@/lib/services/uzman.service";
 import { getTags } from "@/lib/services/public.service";
 
+function toTitleCase(str: string): string {
+  return str
+    .split(" ")
+    .map((w) => (w ? w.charAt(0).toLocaleUpperCase("tr") + w.slice(1) : w))
+    .join(" ");
+}
+
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
@@ -520,13 +527,13 @@ export default function ExpertApplicationPage() {
     try {
       const formData = new FormData();
 
-      // Temel alanlar
-      formData.append("firstName", data.ad);
-      formData.append("lastName", data.soyad);
+      // Temel alanlar (ad, soyad, ünvan başharfleri büyük)
+      formData.append("firstName", toTitleCase(data.ad.trim()));
+      formData.append("lastName", toTitleCase(data.soyad.trim()));
       formData.append("email", data.eposta);
       formData.append("phone", data.telefon);
       formData.append("password", data.sifre ?? "");
-      formData.append("title", data.unvan || "Uzman");
+      formData.append("title", toTitleCase((data.unvan || "Uzman").trim()));
       formData.append("kvkkConsent", "true");
       if (data.biyografi) formData.append("bio", data.biyografi);
 

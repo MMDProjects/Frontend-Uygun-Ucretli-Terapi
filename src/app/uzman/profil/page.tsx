@@ -18,6 +18,13 @@ import {
 } from "@/lib/services/uzman.service";
 import { cn } from "@/lib/utils";
 
+function toTitleCase(str: string): string {
+  return str
+    .split(" ")
+    .map((w) => (w ? w.charAt(0).toLocaleUpperCase("tr") + w.slice(1) : w))
+    .join(" ");
+}
+
 const MAX_KEYWORDS = 5;
 const MIN_KEYWORDS = 2;
 const MIN_WORDS = 80;
@@ -32,6 +39,8 @@ export default function UzmanProfilPage() {
   const [allTags, setAllTags] = useState<ApiTag[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [title, setTitle] = useState("");
   const [bio, setBio] = useState("");
   const [originalBio, setOriginalBio] = useState("");
@@ -50,6 +59,8 @@ export default function UzmanProfilPage() {
         setProfile(p);
         setAllTags(tags);
         // Input'larda pending varsa onu göster (uzman en son gönderdiğini görür)
+        setFirstName(p.pendingFirstName ?? p.firstName ?? "");
+        setLastName(p.pendingLastName ?? p.lastName ?? "");
         setTitle(p.pendingTitle ?? p.title ?? "");
         setBio(p.pendingBio ?? p.bio ?? "");
         setOriginalBio(p.pendingBio ?? p.bio ?? "");
@@ -67,6 +78,11 @@ export default function UzmanProfilPage() {
   const keywordsValid = selectedTagIds.length >= MIN_KEYWORDS && selectedTagIds.length <= MAX_KEYWORDS;
   const bioChanged = bio !== originalBio;
   const bioInvalid = bioChanged && !wordCountValid;
+  const nameChanged = profile
+    ? firstName !== (profile.pendingFirstName ?? profile.firstName) ||
+      lastName !== (profile.pendingLastName ?? profile.lastName)
+    : false;
+  const needsReview = bioChanged || nameChanged;
   const isSaveDisabled = saving || !keywordsValid || bioInvalid;
 
   function toggleTag(id: string) {
@@ -90,18 +106,30 @@ export default function UzmanProfilPage() {
     if (isSaveDisabled) return;
     setSaving(true);
     try {
+      const safeFirstName = toTitleCase(firstName.trim());
+      const safeLastName = toTitleCase(lastName.trim());
       await updateMyUzmanProfile({
-        title,
+        ...(nameChanged ? { firstName: safeFirstName, lastName: safeLastName } : {}),
+        title: toTitleCase(title.trim()),
         education,
         tagIds: selectedTagIds,
         avatar: avatarFile ?? undefined,
         ...(bioChanged ? { bio } : {}),
       });
       setAvatarFile(null);
+      if (nameChanged) {
+        setFirstName(safeFirstName);
+        setLastName(safeLastName);
+        setProfile((p) =>
+          p ? { ...p, pendingFirstName: safeFirstName, pendingLastName: safeLastName } : p
+        );
+      }
       if (bioChanged) {
         setOriginalBio(bio);
         setProfile((p) => p ? { ...p, pendingBio: bio } : p);
-        toast.success("Değişiklikler kaydedildi. Biyografi admin onayına gönderildi.");
+      }
+      if (needsReview) {
+        toast.success("Değişiklikler kaydedildi ve admin onayına gönderildi.");
       } else {
         toast.success("Bilgiler başarıyla kaydedildi.");
       }
@@ -129,7 +157,7 @@ export default function UzmanProfilPage() {
     <div className="space-y-6">
       <PageHeader
         title="Profilim"
-        description="Unvan, eğitim ve fotoğraf anında kaydedilir. Biyografi değişikliği admin onayına gider."
+        description="Unvan, eğitim ve fotoğraf anında kaydedilir. Ad, soyad ve biyografi değişiklikleri admin onayına gider."
       >
         <div className="flex items-center gap-3">
           <ProfileStatusBadge status={profile.status} />
@@ -139,7 +167,7 @@ export default function UzmanProfilPage() {
             disabled={isSaveDisabled}
             className={cn(
               "gap-1.5",
-              bioChanged
+              needsReview
                 ? "bg-amber-600 hover:bg-amber-700 text-white"
                 : "bg-primary hover:bg-[#014a3e] text-white"
             )}
@@ -149,7 +177,7 @@ export default function UzmanProfilPage() {
                 <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Kaydediliyor…
               </>
-            ) : bioChanged ? (
+            ) : needsReview ? (
               <>
                 <Send className="size-3.5" />
                 Kaydet & Onaya Gönder
@@ -165,7 +193,7 @@ export default function UzmanProfilPage() {
       </PageHeader>
 
       {/* Genel onay bekleniyor banner */}
-      {(profile.pendingTitle || profile.pendingBio || profile.pendingEducation) && !profile.adminNote && (
+      {(profile.pendingFirstName || profile.pendingLastName || profile.pendingTitle || profile.pendingBio || profile.pendingEducation) && !profile.adminNote && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <Info className="mt-0.5 size-4 shrink-0 text-amber-600" />
           <div>
@@ -245,6 +273,48 @@ export default function UzmanProfilPage() {
       <div className="rounded-2xl border border-border/60 bg-white p-5">
         <h3 className="mb-4 text-sm font-bold text-foreground">Temel Bilgiler</h3>
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">
+              Ad <span className="text-destructive">*</span>
+              {profile.pendingFirstName && (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                  Onay bekleniyor
+                </span>
+              )}
+            </Label>
+            <Input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="h-10 rounded-xl"
+              placeholder="Ali"
+            />
+            {profile.pendingFirstName && profile.firstName && (
+              <p className="text-[10px] text-muted-foreground">
+                Sitede görünen: <span className="font-medium">{profile.firstName}</span>
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">
+              Soyad <span className="text-destructive">*</span>
+              {profile.pendingLastName && (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                  Onay bekleniyor
+                </span>
+              )}
+            </Label>
+            <Input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="h-10 rounded-xl"
+              placeholder="Yılmaz"
+            />
+            {profile.pendingLastName && profile.lastName && (
+              <p className="text-[10px] text-muted-foreground">
+                Sitede görünen: <span className="font-medium">{profile.lastName}</span>
+              </p>
+            )}
+          </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">
               Unvan <span className="text-destructive">*</span>

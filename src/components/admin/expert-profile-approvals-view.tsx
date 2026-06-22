@@ -225,6 +225,21 @@ export function ExpertProfileApprovalsView() {
                     <dd className="text-xs font-medium">{row.changedFieldsSummary || "—"}</dd>
                   </div>
                 </dl>
+                {/* Ad/Soyad değişikliği */}
+                {(row.pendingFirstName || row.pendingLastName) && (
+                  <div className="space-y-1">
+                    <div className="rounded-md border bg-muted/20 p-2">
+                      <p className="text-xs text-muted-foreground">Mevcut ad soyad</p>
+                      <p className="text-sm font-medium">{row.currentFirstName} {row.currentLastName}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen ad soyad</p>
+                      <p className="text-sm text-foreground">
+                        {row.pendingFirstName ?? row.currentFirstName} {row.pendingLastName ?? row.currentLastName}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {/* Unvan değişikliği */}
                 {row.pendingTitle && row.pendingTitle !== row.currentTitle && (
                   <div className="space-y-1">
@@ -340,6 +355,20 @@ export function ExpertProfileApprovalsView() {
                   <p className="text-xs text-muted-foreground">Değişen alanlar</p>
                   <p className="font-medium">{selected.changedFieldsSummary || "—"}</p>
                 </div>
+                {(selected.pendingFirstName || selected.pendingLastName) && (
+                  <>
+                    <div className="rounded-md border bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">Mevcut ad soyad</p>
+                      <p className="mt-1 font-medium">{selected.currentFirstName} {selected.currentLastName}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs font-medium text-amber-700">Onay bekleyen ad soyad</p>
+                      <p className="mt-1 text-foreground">
+                        {selected.pendingFirstName ?? selected.currentFirstName} {selected.pendingLastName ?? selected.currentLastName}
+                      </p>
+                    </div>
+                  </>
+                )}
                 {selected.pendingTitle && selected.pendingTitle !== selected.currentTitle && (
                   <>
                     <div className="rounded-md border bg-muted/20 p-3">

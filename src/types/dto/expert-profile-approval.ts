@@ -12,6 +12,10 @@ export interface ExpertProfileApproval {
   email: string;
   submittedAt: string;
   status: ExpertProfileApprovalStatus;
+  currentFirstName: string;
+  currentLastName: string;
+  pendingFirstName: string | null;
+  pendingLastName: string | null;
   currentBiography: string;
   biography: string;
   currentTitle: string;
