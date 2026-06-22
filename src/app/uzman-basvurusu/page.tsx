@@ -17,7 +17,7 @@ import { getTags } from "@/lib/services/public.service";
 function toTitleCase(str: string): string {
   return str
     .split(" ")
-    .map((w) => (w ? w.charAt(0).toLocaleUpperCase("tr") + w.slice(1) : w))
+    .map((w) => (w ? w.charAt(0).toLocaleUpperCase("tr") + w.slice(1).toLocaleLowerCase("tr") : w))
     .join(" ");
 }
 
