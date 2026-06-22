@@ -10,6 +10,7 @@ interface BackendExpert {
   certificateUrl: string;
   cvUrl: string;
   status: string;
+  isPublished: boolean;
   createdAt: string;
   createdByAdmin: boolean;
   user: { firstName: string; lastName: string; email: string; phone: string };
@@ -90,7 +91,11 @@ export async function listExpertApplications(): Promise<ExpertApplication[]> {
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
-      .filter((e) => e.status === "ONAY_BEKLIYOR" && !e.createdByAdmin)
+      .filter(
+        (e) =>
+          !e.isPublished &&
+          (e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI"),
+      )
       .map(mapToApplication);
   } catch {
     return [];
