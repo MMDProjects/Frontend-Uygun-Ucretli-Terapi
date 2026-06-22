@@ -91,11 +91,7 @@ export async function listExpertApplications(): Promise<ExpertApplication[]> {
     const payload = (await res.json()) as { data: BackendExpert[] };
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
-      .filter(
-        (e) =>
-          !e.isPublished &&
-          (e.status === "ONAY_BEKLIYOR" || e.status === "REVIZE_GONDERILDI"),
-      )
+      .filter((e) => !e.isPublished && e.status === "ONAY_BEKLIYOR")
       .map(mapToApplication);
   } catch {
     return [];
