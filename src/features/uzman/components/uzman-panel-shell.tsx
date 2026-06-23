@@ -7,7 +7,7 @@ import { Info, AlertTriangle } from "lucide-react";
 import { UzmanSidebar } from "@/features/uzman/components/uzman-sidebar";
 import { UzmanAuthGuard } from "@/features/uzman/components/uzman-auth-guard";
 import { DangerPanicOverlay } from "@/features/uzman/components/danger-panic-overlay";
-import { subscribeToNotificationStream, getMyUzmanNotifications } from "@/lib/services/uzman.service";
+import { subscribeToNotificationStream, getMyUzmanNotifications, markUzmanNotificationRead } from "@/lib/services/uzman.service";
 import { getAccessToken } from "@/lib/auth-cookies";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
@@ -16,12 +16,21 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [panicMessage, setPanicMessage] = useState<string | null>(null);
+  const [panicIds, setPanicIds] = useState<string[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     getMyUzmanNotifications()
-      .then((notifs) => setUnreadCount(notifs.filter((n) => !n.isRead).length))
+      .then((notifs) => {
+        setUnreadCount(notifs.filter((n) => !n.isRead).length);
+        // Panel açıldığında okunmamış ACİL bildirimleri popup olarak göster
+        const panics = notifs.filter((n) => !n.isRead && n.type === "danger_panic");
+        if (panics.length > 0) {
+          setPanicMessage(panics[panics.length - 1].message);
+          setPanicIds(panics.map((p) => p.id));
+        }
+      })
       .catch(() => {});
   }, [isAuthenticated]);
 
@@ -76,7 +85,12 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
         {panicMessage && (
           <DangerPanicOverlay
             message={panicMessage}
-            onDismiss={() => setPanicMessage(null)}
+            onDismiss={() => {
+              setPanicMessage(null);
+              // Okundu işaretle — hata olsa bile overlay kapanır
+              panicIds.forEach((id) => markUzmanNotificationRead(id).catch(() => {}));
+              setPanicIds([]);
+            }}
           />
         )}
       </div>
