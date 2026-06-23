@@ -55,7 +55,9 @@ export async function listBlogPosts(): Promise<BlogPostDto[]> {
     if (!res.ok) return [];
     const payload = (await res.json()) as { data: BackendBlog[] };
     if (!Array.isArray(payload?.data)) return [];
-    return payload.data.map(mapToBlogPost);
+    return payload.data
+      .filter((b) => b.status === "YAYINDA")
+      .map(mapToBlogPost);
   } catch {
     return [];
   }
