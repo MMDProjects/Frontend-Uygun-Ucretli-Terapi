@@ -12,6 +12,8 @@ export interface ExpertProfileApproval {
   email: string;
   submittedAt: string;
   status: ExpertProfileApprovalStatus;
+  currentAvatarUrl: string | null;
+  pendingAvatarUrl: string | null;
   currentFirstName: string;
   currentLastName: string;
   pendingFirstName: string | null;
@@ -22,6 +24,10 @@ export interface ExpertProfileApproval {
   pendingTitle: string | null;
   currentEducation: string;
   pendingEducation: string | null;
+  currentCertificateUrl: string | null;
+  pendingCertificateUrl: string | null;
+  currentCvUrl: string | null;
+  pendingCvUrl: string | null;
   keywords: string[];
   changedFieldsSummary: string;
 }

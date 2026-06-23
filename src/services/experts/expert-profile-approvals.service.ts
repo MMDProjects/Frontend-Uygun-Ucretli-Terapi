@@ -7,11 +7,15 @@ interface BackendExpert {
   bio: string;
   title: string;
   education: string;
+  avatarUrl: string | null;
+  pendingAvatarUrl: string | null;
   pendingFirstName: string | null;
   pendingLastName: string | null;
   pendingBio: string | null;
   pendingTitle: string | null;
   pendingEducation: string | null;
+  certificateUrl: string | null;
+  cvUrl: string | null;
   pendingCertificateUrl: string | null;
   pendingCvUrl: string | null;
   status: string;
@@ -33,6 +37,7 @@ function authHeaders(): HeadersInit {
 
 function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
   const changedFields: string[] = [];
+  if (expert.pendingAvatarUrl) changedFields.push("Profil Fotoğrafı");
   if (expert.pendingFirstName) changedFields.push("Ad");
   if (expert.pendingLastName) changedFields.push("Soyad");
   if (expert.pendingTitle) changedFields.push("Unvan");
@@ -44,11 +49,12 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
   return {
     id: expert.id,
     expertId: expert.id,
-    expertDisplayName:
-      `${expert.user.firstName} ${expert.user.lastName}`.trim(),
+    expertDisplayName: `${expert.user.firstName} ${expert.user.lastName}`.trim(),
     email: expert.user.email,
     submittedAt: expert.updatedAt ?? expert.createdAt,
     status: "pending",
+    currentAvatarUrl: expert.avatarUrl ?? null,
+    pendingAvatarUrl: expert.pendingAvatarUrl ?? null,
     currentFirstName: expert.user.firstName,
     currentLastName: expert.user.lastName,
     pendingFirstName: expert.pendingFirstName ?? null,
@@ -59,6 +65,10 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
     pendingTitle: expert.pendingTitle ?? null,
     currentEducation: expert.education,
     pendingEducation: expert.pendingEducation ?? null,
+    currentCertificateUrl: expert.certificateUrl ?? null,
+    pendingCertificateUrl: expert.pendingCertificateUrl ?? null,
+    currentCvUrl: expert.cvUrl ?? null,
+    pendingCvUrl: expert.pendingCvUrl ?? null,
     keywords: expert.tags.map((t) => t.name),
     changedFieldsSummary: changedFields.join(", ") || "Profil güncelleme",
   };

@@ -82,7 +82,8 @@ export default function UzmanProfilPage() {
     ? firstName !== (profile.pendingFirstName ?? profile.firstName) ||
       lastName !== (profile.pendingLastName ?? profile.lastName)
     : false;
-  const needsReview = bioChanged || nameChanged;
+  const avatarChanged = avatarFile !== null;
+  const needsReview = bioChanged || nameChanged || avatarChanged;
   const isSaveDisabled = saving || !keywordsValid || bioInvalid;
 
   function toggleTag(id: string) {
@@ -117,6 +118,12 @@ export default function UzmanProfilPage() {
         ...(bioChanged ? { bio } : {}),
       });
       setAvatarFile(null);
+      if (avatarChanged) {
+        setAvatarPreview(null);
+        // Profili yeniden yükle — pendingAvatarUrl'i göstermek için
+        const fresh = await getMyUzmanProfile();
+        setProfile(fresh);
+      }
       if (nameChanged) {
         setFirstName(safeFirstName);
         setLastName(safeLastName);
@@ -193,7 +200,7 @@ export default function UzmanProfilPage() {
       </PageHeader>
 
       {/* Genel onay bekleniyor banner */}
-      {(profile.pendingFirstName || profile.pendingLastName || profile.pendingTitle || profile.pendingBio || profile.pendingEducation) && !profile.adminNote && (
+      {(profile.pendingAvatarUrl || profile.pendingFirstName || profile.pendingLastName || profile.pendingTitle || profile.pendingBio || profile.pendingEducation) && !profile.adminNote && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <Info className="mt-0.5 size-4 shrink-0 text-amber-600" />
           <div>
@@ -217,7 +224,14 @@ export default function UzmanProfilPage() {
 
       {/* Profil Fotoğrafı */}
       <div className="rounded-2xl border border-border/60 bg-white p-5">
-        <h3 className="mb-4 text-sm font-bold text-foreground">Profil Fotoğrafı</h3>
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-foreground">Profil Fotoğrafı</h3>
+          {profile.pendingAvatarUrl && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              Onay bekleniyor
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-5">
           <div className="relative">
             <div className="flex size-20 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-2xl font-bold text-primary">

@@ -61,6 +61,7 @@ export type ApiUzmanProfile = {
   pendingTagIds: string | null;
   education: string | null;
   avatarUrl: string | null;
+  pendingAvatarUrl: string | null;
   cvUrl: string | null;
   certificateUrl: string | null;
   pendingCvUrl: string | null;
@@ -126,6 +127,7 @@ type RawProfile = {
   pendingTagIds: string | null;
   education: string | null;
   avatarUrl: string | null;
+  pendingAvatarUrl: string | null;
   cvUrl: string | null;
   certificateUrl: string | null;
   pendingCvUrl: string | null;

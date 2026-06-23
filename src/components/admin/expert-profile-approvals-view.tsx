@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useExpertProfileApprovals } from "@/hooks/use-expert-profile-approvals";
 import {
@@ -225,6 +225,26 @@ export function ExpertProfileApprovalsView() {
                     <dd className="text-xs font-medium">{row.changedFieldsSummary || "—"}</dd>
                   </div>
                 </dl>
+                {/* Avatar değişikliği */}
+                {row.pendingAvatarUrl && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium">Profil Fotoğrafı Değişikliği</p>
+                    <div className="flex gap-2">
+                      {row.currentAvatarUrl && (
+                        <div className="flex-1 space-y-1">
+                          <p className="text-[10px] text-muted-foreground">Mevcut</p>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={row.currentAvatarUrl} alt="mevcut" className="h-16 w-16 rounded-lg object-cover border" />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-1">
+                        <p className="text-[10px] font-medium text-amber-700">Onay bekleyen</p>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={row.pendingAvatarUrl} alt="onay bekleyen" className="h-16 w-16 rounded-lg object-cover border border-amber-300" />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* Ad/Soyad değişikliği */}
                 {(row.pendingFirstName || row.pendingLastName) && (
                   <div className="space-y-1">
@@ -282,6 +302,48 @@ export function ExpertProfileApprovalsView() {
                   <div className="rounded-md border bg-muted/20 p-3">
                     <p className="text-xs font-medium text-muted-foreground">Biyografi</p>
                     <p className="mt-1 line-clamp-4 text-sm text-foreground">{row.biography}</p>
+                  </div>
+                )}
+                {/* PDF Belgeleri */}
+                {(row.pendingCertificateUrl || row.pendingCvUrl) && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Onay Bekleyen Belgeler</p>
+                    {row.pendingCertificateUrl && (
+                      <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                        <span className="text-xs font-medium text-amber-800">Sertifika (PDF)</span>
+                        <a href={row.pendingCertificateUrl} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:underline">
+                          Görüntüle <ExternalLink className="size-3" />
+                        </a>
+                      </div>
+                    )}
+                    {row.pendingCvUrl && (
+                      <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                        <span className="text-xs font-medium text-amber-800">CV (PDF)</span>
+                        <a href={row.pendingCvUrl} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs font-semibold text-amber-700 hover:underline">
+                          Görüntüle <ExternalLink className="size-3" />
+                        </a>
+                      </div>
+                    )}
+                    {row.currentCertificateUrl && (
+                      <div className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-2">
+                        <span className="text-xs text-muted-foreground">Mevcut Sertifika</span>
+                        <a href={row.currentCertificateUrl} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:underline">
+                          Görüntüle <ExternalLink className="size-3" />
+                        </a>
+                      </div>
+                    )}
+                    {row.currentCvUrl && (
+                      <div className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-2">
+                        <span className="text-xs text-muted-foreground">Mevcut CV</span>
+                        <a href={row.currentCvUrl} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:underline">
+                          Görüntüle <ExternalLink className="size-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex flex-wrap gap-1.5">
