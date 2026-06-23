@@ -32,6 +32,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.fikriorjin.com",
       },
+      {
+        protocol: "https",
+        hostname: "www.uygunucretliterapi.com",
+      },
+      {
+        protocol: "https",
+        hostname: "uygunucretliterapi.com",
+      },
     ],
   },
   turbopack: {
