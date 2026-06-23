@@ -25,7 +25,7 @@ function mapDashboardToTasks(d: DashboardResponse): PendingTaskDto[] {
       type: "profil_guncelleme",
       count: d.pendingProfileUpdates ?? 0,
       urgency: "high",
-      href: "/admin/uzman-onay/profil-guncellemeleri",
+      href: "/admin/uzman-onay/profil-onaylari",
       label: "Profil güncelleme onay bekliyor",
     },
     {
