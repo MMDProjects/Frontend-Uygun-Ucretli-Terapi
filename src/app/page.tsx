@@ -12,7 +12,7 @@ import { siteConfig } from "@/lib/constants/site";
 import { getExperts } from "@/lib/services/public.service";
 
 const homeDescription =
-  "Online psikolojik danışmanlıkta güvenilir uzmanlar, KVKK uyumu, testler ve şeffaf süreç — tek platformda.";
+  "Online danışmanlıkta güvenilir uzmanlar, KVKK uyumu, testler ve şeffaf süreç — tek platformda.";
 
 export const metadata: Metadata = {
   title: "Ana Sayfa",

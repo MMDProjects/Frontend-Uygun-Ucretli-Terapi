@@ -38,7 +38,7 @@ export function TestsHeroSection() {
               Testler
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Kısa ve anlaşılır psikolojik testlerle kendinizi daha iyi tanıyın.
+              Kısa ve anlaşılır bilimsel testlerle kendinizi daha iyi tanıyın.
               Test sonucunda puan özetinizi görebilir, uzman eşleşmesi için
               sonraki adımı planlayabilirsiniz.
             </p>

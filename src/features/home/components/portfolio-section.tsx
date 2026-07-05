@@ -32,7 +32,7 @@ export function PortfolioSection({ experts }: Props) {
         <div className="flex items-end justify-between">
           <SectionHeading
             title="Önerilen uzmanlarımız"
-            description="Alanında deneyimli, seçilmiş terapistler"
+            description="Alanında deneyimli, uzmanlar"
             titleId="home-recommended-experts-heading"
           />
           <div className="hidden gap-2 sm:flex">

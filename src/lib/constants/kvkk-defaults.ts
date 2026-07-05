@@ -11,12 +11,12 @@ export const DEFAULT_KVKK_SECTIONS: KvkkSection[] = [
   {
     id: "islenen-veriler",
     title: "2. İşlenen Kişisel Veriler",
-    html: "<p>Platform tarafından aşağıdaki kişisel veri kategorileri işlenmektedir:</p><ul><li><strong>Kimlik Verileri:</strong> Ad, soyad, kullanıcı adı.</li><li><strong>İletişim Verileri:</strong> E-posta adresi, telefon numarası.</li><li><strong>İşlem Güvenliği Verileri:</strong> Şifrelenmiş parola, giriş zamanı, IP adresi log kayıtları.</li><li><strong>Özel Nitelikli Kişisel Veriler:</strong> Psikolojik değerlendirme testi sonuçları ve danışmanlık talep içerikleri (yalnızca açık rızanıza dayanılarak işlenir).</li><li><strong>Pazarlama Verileri:</strong> Bülten aboneliği tercihi (isteğe bağlı, ayrı onaya tabidir).</li></ul>",
+    html: "<p>Platform tarafından aşağıdaki kişisel veri kategorileri işlenmektedir:</p><ul><li><strong>Kimlik Verileri:</strong> Ad, soyad, kullanıcı adı.</li><li><strong>İletişim Verileri:</strong> E-posta adresi, telefon numarası.</li><li><strong>İşlem Güvenliği Verileri:</strong> Şifrelenmiş parola, giriş zamanı, IP adresi log kayıtları.</li><li><strong>Özel Nitelikli Kişisel Veriler:</strong> Bilimsel değerlendirme testi sonuçları ve danışmanlık talep içerikleri (yalnızca açık rızanıza dayanılarak işlenir).</li><li><strong>Pazarlama Verileri:</strong> Bülten aboneliği tercihi (isteğe bağlı, ayrı onaya tabidir).</li></ul>",
   },
   {
     id: "isleme-amaclari",
     title: "3. Kişisel Verilerin İşlenme Amaçları",
-    html: "<p>Kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:</p><ul><li>Üyelik kaydının oluşturulması ve hesap güvenliğinin sağlanması</li><li>Uzman ile danışan arasındaki eşleşme sürecinin yürütülmesi</li><li>Ücretsiz ön görüşme talebinin iletilmesi ve takibi</li><li>Psikolojik değerlendirme testlerinin uygulanması ve sonuçların arşivlenmesi</li><li>Platform ile ilgili teknik destek, bilgilendirme ve iletişim faaliyetlerinin yürütülmesi</li><li>Yasal yükümlülüklerin yerine getirilmesi ve mevzuata uyum</li><li>İzin vermeniz hâlinde elektronik ticari ileti (bülten) gönderilmesi</li></ul>",
+    html: "<p>Kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:</p><ul><li>Üyelik kaydının oluşturulması ve hesap güvenliğinin sağlanması</li><li>Uzman ile danışan arasındaki eşleşme sürecinin yürütülmesi</li><li>Ücretsiz ön görüşme talebinin iletilmesi ve takibi</li><li>Bilimsel değerlendirme testlerinin uygulanması ve sonuçların arşivlenmesi</li><li>Platform ile ilgili teknik destek, bilgilendirme ve iletişim faaliyetlerinin yürütülmesi</li><li>Yasal yükümlülüklerin yerine getirilmesi ve mevzuata uyum</li><li>İzin vermeniz hâlinde elektronik ticari ileti (bülten) gönderilmesi</li></ul>",
   },
   {
     id: "hukuki-sebepler",
@@ -31,7 +31,7 @@ export const DEFAULT_KVKK_SECTIONS: KvkkSection[] = [
   {
     id: "veri-toplama-yontemi",
     title: "6. Veri Toplama Yöntemi",
-    html: "<p>Kişisel verileriniz; kayıt ve giriş formları, iletişim ve talep formları, test çözme ekranları ile çerezler (cookies) aracılığıyla elektronik ortamda toplanmaktadır. Psikolojik değerlendirme testi sonuçları gibi özel nitelikli veriler yalnızca açık rızanıza dayanılarak ve AES-256 şifreleme yöntemiyle güvenli biçimde saklanmaktadır.</p>",
+    html: "<p>Kişisel verileriniz; kayıt ve giriş formları, iletişim ve talep formları, test çözme ekranları ile çerezler (cookies) aracılığıyla elektronik ortamda toplanmaktadır. Bilimsel değerlendirme testi sonuçları gibi özel nitelikli veriler yalnızca açık rızanıza dayanılarak ve AES-256 şifreleme yöntemiyle güvenli biçimde saklanmaktadır.</p>",
   },
   {
     id: "haklariniz",

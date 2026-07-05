@@ -38,7 +38,7 @@ export function BlogHeroSection() {
               Blog
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Uzmanlarımızın kaleme aldığı kanıta dayalı içeriklerle kaygı, ilişkiler, duygu yönetimi ve günlük psikolojik iyi oluş konularında güvenilir bilgiye ulaşın.
+              Uzmanlarımızın kaleme aldığı kanıta dayalı içeriklerle kaygı, ilişkiler, duygu yönetimi ve günlük iyi oluş konularında güvenilir bilgiye ulaşın.
             </p>
           </div>
 

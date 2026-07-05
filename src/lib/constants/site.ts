@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: "Psikolojik Danismanlik Platformu",
+  name: "Online Danismanlik Platformu",
   description:
-    "Danisanlarin uzman bulabildigi, testleri cozumleyebildigi ve guven odakli iceriklere ulasabildigi psikolojik danismanlik platformu.",
+    "Danisanlarin uzman bulabildigi, testleri cozumleyebildigi ve guven odakli iceriklere ulasabildigi online danismanlik platformu.",
   /** Ana sayfa ve footer metinleriyle uyumlu kısa marka adı */
   brandShortName: "Uygun Ücretli Terapi",
   /** Header vb. görünen marka yazısı */

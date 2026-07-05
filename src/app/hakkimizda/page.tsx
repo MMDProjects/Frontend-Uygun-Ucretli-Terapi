@@ -67,7 +67,7 @@ export default function AboutPage() {
               Hakkımızda
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Psikolojik danışmanlığı herkes için erişilebilir kılmak amacıyla
+              Online danışmanlığı herkes için erişilebilir kılmak amacıyla
               kurulduk. Admin onaylı uzmanlarımız ve şeffaf süreçlerimizle
               güvene dayalı bir eşleştirme platformu sunuyoruz.
             </p>
@@ -106,7 +106,7 @@ export default function AboutPage() {
             </div>
             <h2 className="text-xl font-bold text-primary-hover">Misyonumuz</h2>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Psikolojik danışmanlığı herkes için erişilebilir kılmak; güvenilir
+              Online danışmanlığı herkes için erişilebilir kılmak; güvenilir
               uzmanlarla danışanları buluşturarak sağlıklı, mutlu bireyler ve
               toplumlar oluşturmak.
             </p>
@@ -118,7 +118,7 @@ export default function AboutPage() {
             </div>
             <h2 className="text-xl font-bold text-primary-hover">Vizyonumuz</h2>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Türkiye&apos;nin en güvenilir psikolojik danışmanlık platformu olmak;
+              Türkiye&apos;nin en güvenilir online danışmanlık platformu olmak;
               her bireyin ihtiyaç duyduğunda profesyonel destek alabileceği
               şeffaf ve erişilebilir bir ekosistem kurmak.
             </p>

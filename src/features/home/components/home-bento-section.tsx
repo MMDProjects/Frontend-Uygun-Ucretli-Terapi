@@ -17,7 +17,7 @@ export async function HomeBentoSection() {
       <div className="page-shell space-y-8">
         <SectionHeading
           title="Testlerle kendinizi tanıyın"
-          description="Kısa sürede tamamlanan bilimsel testlerle ruh halinizi ölçün, sonuçları yorumlayın ve size uygun destek yolunu belirleyin."
+          description="Kısa sürede tamamlanan bilimsel testlerle kendinizi ölçün, sonuçları yorumlayın ve size uygun destek yolunu belirleyin."
           titleId="home-bento-title"
         />
 
@@ -76,7 +76,7 @@ export async function HomeBentoSection() {
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-[0.95rem]">
                 Test sonrasında uygun uzman alanlarını görür, isterseniz tek
-                tıkla psikolojik destek talebine geçiş yapabilirsiniz.
+                tıkla online destek talebine geçiş yapabilirsiniz.
               </p>
               <Link
                 href="/uzmanlar"

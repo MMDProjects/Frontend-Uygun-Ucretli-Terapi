@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { HomePersonalizedStrip } from "./home-personalized-strip";
 
 const centerFloatTags = ["Gizlilik önceliği"] as const;
-const centerBottomTags = ["Ruh sağlığı", "Bilinçli destek"] as const;
+const centerBottomTags = ["Online", "Bilinçli destek"] as const;
 
 // Orta kutu yatay slider — fotoğraf 1: terapist ve danışan oturumu
 const heroBentoMainImageSrc =
@@ -84,7 +84,7 @@ export function HeroSection() {
           {/* Sol: başlık + CTA */}
           <div className="flex flex-col justify-center gap-6 rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm sm:p-8 lg:col-span-4 lg:h-full lg:min-h-0 lg:rounded-[2.25rem] lg:p-8">
             <p className="inline-flex w-fit items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-primary-hover">
-              Online psikolojik danışmanlık
+              Online danışmanlık
             </p>
 
             <h1

@@ -12,7 +12,7 @@ export default function CorporatePage() {
               Kurumsal
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Kurumlara özel psikolojik destek çözümleri için bizimle iletişime
+              Kurumlara özel online destek çözümleri için bizimle iletişime
               geçin. İhtiyacınıza uygun model ve teklif çalışmasını birlikte
               planlayalım.
             </p>
@@ -28,7 +28,7 @@ export default function CorporatePage() {
             </h2>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
               Çalışan refahı, üretkenlik ve kurumsal iklim üzerinde doğrudan etkisi
-              olan psikolojik destek programlarını kurumunuzun yapısına göre
+              olan online destek programlarını kurumunuzun yapısına göre
               tasarlıyoruz.
             </p>
 

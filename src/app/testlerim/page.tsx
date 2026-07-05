@@ -67,7 +67,7 @@ export default function TestlerimPage() {
                 Testlerim
               </h1>
               <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-                Tamamladığınız psikolojik testler ve sonuçları
+                Tamamladığınız online testler ve sonuçları
               </p>
             </div>
           </div>

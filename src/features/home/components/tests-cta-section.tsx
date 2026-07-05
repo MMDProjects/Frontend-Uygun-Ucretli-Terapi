@@ -14,7 +14,7 @@ export function TestsCtaSection() {
           <div className="flex-1 space-y-6 text-white">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
-                Psikolojik Testler
+                Bilimsel Testler
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-3xl">
                 Kendinizi Tanıyın

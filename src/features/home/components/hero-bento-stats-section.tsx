@@ -44,7 +44,7 @@ export function HeroBentoStatsSection() {
                 id="hero-stats-title"
                 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-3xl xl:text-4xl"
               >
-                Profesyonel Psikolojik
+                Profesyonel Online
                 <br />
                 Destek, Her Zaman
                 <br />

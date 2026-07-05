@@ -41,7 +41,7 @@ export function AboutHomeSection() {
       <div className="page-shell space-y-8">
         <SectionHeading
           title="Biz kimiz?"
-          description="Güven, şeffaflık ve erişilebilirliği ön planda tutan bir ekiple psikolojik danışmanlığı herkes için ulaşılabilir kılıyoruz."
+          description="Güven, şeffaflık ve erişilebilirliği ön planda tutan bir ekiple online danışmanlığı herkes için ulaşılabilir kılıyoruz."
           titleId="home-about-heading"
         />
 
@@ -78,7 +78,7 @@ export function AboutHomeSection() {
               {siteConfig.brandShortName} ile tanışın
             </h3>
             <p className="text-base leading-7 text-muted-foreground">
-              {siteConfig.brandShortName} ekibi, online psikolojik danışmanlıkta güven,
+              {siteConfig.brandShortName} ekibi, online danışmanlıkta güven,
               şeffaflık ve erişilebilirliği ön planda tutar. Misyonumuz, doğru
               uzmanla güvenli bir bağ kurmanızı kolaylaştırmaktır.
             </p>
