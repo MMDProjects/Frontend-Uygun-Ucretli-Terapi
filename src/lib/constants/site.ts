@@ -3,16 +3,18 @@ export const siteConfig = {
   description:
     "Danisanlarin uzman bulabildigi, testleri cozumleyebildigi ve guven odakli iceriklere ulasabildigi online danismanlik platformu.",
   /** Ana sayfa ve footer metinleriyle uyumlu kısa marka adı */
-  brandShortName: "Uygun Ücretli Terapi",
+  brandShortName: "Çaremer",
   /** Header vb. görünen marka yazısı */
-  brandDisplayName: "Uygun Ücretli Terapi",
-  brandLogoUrl: "/images/logo.png",
-  siteUrl: "https://uygunucretliterapi.com",
+  brandDisplayName: "Çaremer",
+  brandLogoUrl:
+    "https://cdn.fikriorjin.com/themes/b8b168db-c150-4fb9-8be8-c10059a3ab80/uygunu%CC%88cretliterapilogo-vector-01_1.png",
+  siteUrl: "https://caremer.online",
   contact: {
     addressLines: [],
     phoneDisplay: "+90 530 917 25 90",
     phoneHref: "tel:+905309172590",
-    email: "uygunucretliterapi@gmail.com",
+    // email: "uygunucretliterapi@gmail.com",
+    email: "",
   },
   socialLinks: [
     {

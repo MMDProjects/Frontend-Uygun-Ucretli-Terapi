@@ -29,14 +29,14 @@ export function SiteFooter() {
                   {siteConfig.contact.phoneDisplay}
                 </a>
               </p>
-              <p className="mt-1 text-sm">
+              {/* <p className="mt-1 text-sm">
                 <a
                   href={`mailto:${siteConfig.contact.email}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   {siteConfig.contact.email}
                 </a>
-              </p>
+              </p> */}
             </address>
           </div>
 
@@ -59,7 +59,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 border-t border-primary/20 pt-6 text-center text-sm text-[#1a1a1a]/75">
-          <p>© 2022 {siteConfig.brandShortName}. Tüm hakları saklıdır.</p>
+          <p>© 2026 {siteConfig.brandShortName}. Tüm hakları saklıdır.</p>
         </div>
       </div>
     </footer>

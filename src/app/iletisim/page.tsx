@@ -32,7 +32,7 @@ export default function ContactPage() {
             </p>
 
             <ul className="mt-6 space-y-5">
-              <li className="flex items-start gap-3">
+              {/* <li className="flex items-start gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
                   <Mail className="size-4" />
                 </span>
@@ -40,7 +40,7 @@ export default function ContactPage() {
                   <p className="text-sm font-semibold text-primary-hover">E-posta</p>
                   <p className="text-sm text-muted-foreground">uygunucretliterapi@gmail.com — genel bilgi ve talepler için</p>
                 </div>
-              </li>
+              </li> */}
               <li className="flex items-start gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
                   <MessageCircle className="size-4" />
