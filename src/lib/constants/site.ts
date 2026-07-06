@@ -6,8 +6,7 @@ export const siteConfig = {
   brandShortName: "Uygun Ücretli Terapi",
   /** Header vb. görünen marka yazısı */
   brandDisplayName: "Uygun Ücretli Terapi",
-  brandLogoUrl:
-    "https://cdn.fikriorjin.com/themes/b8b168db-c150-4fb9-8be8-c10059a3ab80/uygunu%CC%88cretliterapilogo-vector-01_1.png",
+  brandLogoUrl: "/images/logo.png",
   siteUrl: "https://uygunucretliterapi.com",
   contact: {
     addressLines: [],
