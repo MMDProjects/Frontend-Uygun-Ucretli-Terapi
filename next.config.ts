@@ -40,6 +40,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "uygunucretliterapi.com",
       },
+      {
+        protocol: "https",
+        hostname: "www.caremer.online",
+      },
+      {
+        protocol: "https",
+        hostname: "caremer.online",
+      },
     ],
   },
   turbopack: {
