@@ -67,9 +67,10 @@ export default function AboutPage() {
               Hakkımızda
             </h1>
             <p className="text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-              Online danışmanlığı herkes için erişilebilir kılmak amacıyla
-              kurulduk. Admin onaylı uzmanlarımız ve şeffaf süreçlerimizle
-              güvene dayalı bir eşleştirme platformu sunuyoruz.
+              Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı
+              herkes için erişilebilir kılmak amacıyla kurulduk. Admin onaylı
+              uzmanlarımız ve şeffaf süreçlerimizle güvene dayalı bir
+              eşleştirme platformu sunuyoruz.
             </p>
           </div>
         </div>
