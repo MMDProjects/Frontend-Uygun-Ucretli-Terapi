@@ -6,8 +6,7 @@ export const siteConfig = {
   brandShortName: "Çaremer",
   /** Header vb. görünen marka yazısı */
   brandDisplayName: "Çaremer",
-  brandLogoUrl:
-    "https://cdn.fikriorjin.com/themes/b8b168db-c150-4fb9-8be8-c10059a3ab80/uygunu%CC%88cretliterapilogo-vector-01_1.png",
+  brandLogoUrl: "/images/logo.png",
   siteUrl: "https://caremer.online",
   contact: {
     addressLines: [],
