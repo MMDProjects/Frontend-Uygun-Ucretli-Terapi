@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Info, AlertTriangle } from "lucide-react";
 import { UzmanSidebar } from "@/features/uzman/components/uzman-sidebar";
+import { UzmanTopBar } from "@/features/uzman/components/uzman-topbar";
 import { UzmanAuthGuard } from "@/features/uzman/components/uzman-auth-guard";
 import { DangerPanicOverlay } from "@/features/uzman/components/danger-panic-overlay";
 import { subscribeToNotificationStream, getMyUzmanNotifications, markUzmanNotificationRead } from "@/lib/services/uzman.service";
@@ -80,7 +81,10 @@ export function UzmanPanelShell({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <UzmanTopBar onMenuClick={() => setSidebarOpen(true)} unreadCount={unreadCount} />
+          <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        </div>
 
         {panicMessage && (
           <DangerPanicOverlay
