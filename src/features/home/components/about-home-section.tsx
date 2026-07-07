@@ -1,40 +1,40 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+// Video özellikleri şimdilik devre dışı — fotoğraf kullanılıyor
+// import { useState, useEffect, useRef } from "react";
+// import { Play, X } from "lucide-react";
+
 import Image from "next/image";
 import Link from "next/link";
-import { Play, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/common/section-heading";
 import { siteConfig } from "@/lib/constants/site";
 
 export function AboutHomeSection() {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
-    if (!apiUrl) return;
-    fetch(`${apiUrl}/settings`)
-      .then((r) => r.json())
-      .then((data) => { if (data.videoUrl) setVideoUrl(data.videoUrl); })
-      .catch(() => {});
-  }, []);
+  // Video state — şimdilik devre dışı
+  // const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  // const [modalOpen, setModalOpen] = useState(false);
+  // const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (modalOpen) {
-      dialog.showModal();
-    } else {
-      dialog.close();
-    }
-  }, [modalOpen]);
+  // useEffect(() => {
+  //   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
+  //   if (!apiUrl) return;
+  //   fetch(`${apiUrl}/settings`)
+  //     .then((r) => r.json())
+  //     .then((data) => { if (data.videoUrl) setVideoUrl(data.videoUrl); })
+  //     .catch(() => {});
+  // }, []);
 
-  function openModal() { if (videoUrl) setModalOpen(true); }
-  function closeModal() { setModalOpen(false); }
+  // useEffect(() => {
+  //   const dialog = dialogRef.current;
+  //   if (!dialog) return;
+  //   if (modalOpen) { dialog.showModal(); } else { dialog.close(); }
+  // }, [modalOpen]);
+
+  // function openModal() { if (videoUrl) setModalOpen(true); }
+  // function closeModal() { setModalOpen(false); }
 
   return (
     <section className="bg-[#cce1de] py-20" aria-labelledby="home-about-heading">
@@ -47,8 +47,23 @@ export function AboutHomeSection() {
 
         <div className="grid items-stretch gap-5 lg:grid-cols-[1fr_1fr]">
 
-          {/* Sol: Kapak görseli + play butonu */}
+          {/* Sol: Huzurlu fotoğraf */}
           <div
+            className="relative min-h-[300px] overflow-hidden rounded-[2rem] border border-border/60 shadow-sm"
+            role="img"
+            aria-label="Huzurlu meditasyon görseli"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80"
+              alt="Huzurlu meditasyon"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          </div>
+
+          {/* Sol: Video + play butonu — şimdilik devre dışı */}
+          {/* <div
             className="relative min-h-[300px] overflow-hidden rounded-[2rem] border border-border/60 bg-black/30 shadow-sm"
             role="img"
             aria-label="Tanıtım videosu kapak görseli"
@@ -70,9 +85,9 @@ export function AboutHomeSection() {
                 <Play className="ml-1 h-8 w-8 fill-current" aria-hidden />
               </button>
             </div>
-          </div>
+          </div> */}
 
-          {/* Sağ: PsikoDestek ile tanışın */}
+          {/* Sağ: Tanışın */}
           <div className="flex flex-col justify-center gap-6 rounded-[2rem] border border-border/60 bg-white p-8 shadow-sm">
             <h3 className="text-balance text-2xl font-bold tracking-tight text-primary-hover sm:text-3xl">
               {siteConfig.brandShortName} ile tanışın
@@ -114,8 +129,8 @@ export function AboutHomeSection() {
         </div>
       </div>
 
-      {/* Video modal — dikey video için optimize */}
-      <dialog
+      {/* Video modal — şimdilik devre dışı */}
+      {/* <dialog
         ref={dialogRef}
         onClick={(e) => { if (e.target === dialogRef.current) closeModal(); }}
         className="m-auto max-h-[90dvh] w-full max-w-2xl rounded-[2rem] bg-black p-0 shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm open:flex open:flex-col"
@@ -148,7 +163,7 @@ export function AboutHomeSection() {
             />
           )
         )}
-      </dialog>
+      </dialog> */}
     </section>
   );
 }
