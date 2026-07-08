@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: "Online Danismanlik Platformu",
+  name: "Çaremer | Online Danışmanlık Platformu",
   description:
-    "Danisanlarin uzman bulabildigi, testleri cozumleyebildigi ve guven odakli iceriklere ulasabildigi online danismanlik platformu.",
+    "Danışanların uzman bulabildığı, testleri çözebildiği ve güven odaklı içeriklere ulaşabildiği online psikolojik danışmanlık platformu.",
   /** Ana sayfa ve footer metinleriyle uyumlu kısa marka adı */
   brandShortName: "Çaremer",
   /** Header vb. görünen marka yazısı */
@@ -18,7 +18,7 @@ export const siteConfig = {
   socialLinks: [
     {
       label: "Instagram",
-      href: "https://www.instagram.com/uygunucretliterapi/",
+      href: "https://www.instagram.com/caremeronline/",
     },
     {
       label: "WhatsApp",

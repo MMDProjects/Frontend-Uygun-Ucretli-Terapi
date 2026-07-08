@@ -1,8 +1,21 @@
+import type { Metadata } from "next";
 import { BlogHeroSection } from "@/features/blog/components/blog-hero-section";
 import { getBlogs } from "@/lib/services/public.service";
 import type { ApiBlog } from "@/lib/services/public.service";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description:
+    "Psikoloji, kişisel gelişim ve ruh sağlığı üzerine uzman yazıları. Güncel makaleler ve rehberler.",
+  openGraph: {
+    title: "Blog | Çaremer",
+    description:
+      "Psikoloji, kişisel gelişim ve ruh sağlığı üzerine uzman yazıları.",
+    url: "https://caremer.online/blog",
+  },
+};
 import { ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 

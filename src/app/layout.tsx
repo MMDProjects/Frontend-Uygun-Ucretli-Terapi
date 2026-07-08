@@ -27,11 +27,38 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.siteUrl),
   title: {
     default: siteConfig.name,
-    template: `%s | ${siteConfig.name}`,
+    template: `%s | Çaremer`,
   },
   description: siteConfig.description,
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    url: siteConfig.siteUrl,
+    siteName: "Çaremer",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Çaremer — Online Danışmanlık Platformu",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

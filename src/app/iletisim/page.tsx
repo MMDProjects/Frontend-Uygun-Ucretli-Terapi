@@ -1,4 +1,17 @@
+import type { Metadata } from "next";
 import { Mail, MessageCircle, Clock, ShieldCheck, HelpCircle, Star } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "İletişim",
+  description:
+    "Soru, randevu, öneri veya şikayet bildirimlerinizi iletebilirsiniz. Mesai saatleri içinde ortalama 4 saat içinde yanıt veriyoruz.",
+  openGraph: {
+    title: "İletişim | Çaremer",
+    description:
+      "Soru, randevu, öneri veya şikayet bildirimlerinizi iletebilirsiniz.",
+    url: "https://caremer.online/iletisim",
+  },
+};
 
 import { ContactForm } from "@/features/contact/components/contact-form";
 
