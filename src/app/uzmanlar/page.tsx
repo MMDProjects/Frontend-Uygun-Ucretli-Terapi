@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import { ExpertsHeroSection } from "@/features/experts/components/experts-hero-section";
 import { ExpertCardApi } from "@/features/experts/components/expert-card-api";
 import { ExpertCardSkeleton } from "@/features/experts/components/expert-card-skeleton";
 import { getExperts, getPublicPricing } from "@/lib/services/public.service";
+
+export const metadata: Metadata = {
+  title: "Uzmanlarımız",
+  description:
+    "Admin onaylı psikolog, terapist ve psikolojik danışmanlarımızı inceleyin. Ücretsiz ön görüşme ile size en uygun uzmanı bulun.",
+  openGraph: {
+    title: "Uzmanlarımız | Çaremer",
+    description:
+      "Admin onaylı psikolog, terapist ve psikolojik danışmanlarımızı inceleyin. Ücretsiz ön görüşme ile size en uygun uzmanı bulun.",
+    url: "https://caremer.online/uzmanlar",
+  },
+};
 
 export const revalidate = 0;
 

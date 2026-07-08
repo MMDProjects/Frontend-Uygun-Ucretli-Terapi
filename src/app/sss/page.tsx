@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import { getSss } from "@/lib/services/public.service";
 import { SssFullList } from "@/components/common/sss-full-list";
+
+export const metadata: Metadata = {
+  title: "Sık Sorulan Sorular",
+  description:
+    "Çaremer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu ve daha fazlası.",
+  openGraph: {
+    title: "Sık Sorulan Sorular | Çaremer",
+    description:
+      "Çaremer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu.",
+    url: "https://caremer.online/sss",
+  },
+};
 
 export const revalidate = 0;
 

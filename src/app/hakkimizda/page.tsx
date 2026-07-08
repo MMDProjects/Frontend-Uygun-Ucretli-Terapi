@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Shield,
@@ -9,6 +10,18 @@ import {
   Target,
   Eye,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Hakkımızda",
+  description:
+    "Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı herkes için erişilebilir kılmak amacıyla kurulduk. Admin onaylı uzmanlar, şeffaf süreçler.",
+  openGraph: {
+    title: "Hakkımızda | Çaremer",
+    description:
+      "Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı herkes için erişilebilir kılmak amacıyla kurulduk.",
+    url: "https://caremer.online/hakkimizda",
+  },
+};
 
 const STATS = [
   { value: "30+", label: "Uzman", description: "Admin onaylı, belgelenmiş profesyoneller" },

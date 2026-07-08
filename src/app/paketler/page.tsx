@@ -1,8 +1,21 @@
+import type { Metadata } from "next";
 import type React from "react";
 import { Check } from "lucide-react";
 import { getPackages, getSss } from "@/lib/services/public.service";
 import type { ApiPackage } from "@/lib/services/public.service";
 import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Paketler",
+  description:
+    "Çaremer danışmanlık paketleri ve fiyatları. Seans sayısına göre şeffaf fiyatlandırma. Ücretsiz ön görüşme ile başlayın.",
+  openGraph: {
+    title: "Paketler | Çaremer",
+    description:
+      "Çaremer danışmanlık paketleri ve fiyatları. Şeffaf fiyatlandırma.",
+    url: "https://caremer.online/paketler",
+  },
+};
 import Link from "next/link";
 import { SssSection } from "@/components/common/sss-section";
 
