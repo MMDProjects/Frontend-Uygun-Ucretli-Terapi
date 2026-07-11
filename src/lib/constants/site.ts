@@ -1,11 +1,11 @@
 export const siteConfig = {
-  name: "Çaremer | Online Danışmanlık Platformu",
+  name: "Yeçamer | Online Danışmanlık Platformu",
   description:
-    "Danışanların uzman bulabildığı, testleri çözebildiği ve güven odaklı içeriklere ulaşabildiği online psikolojik danışmanlık platformu.",
+    "Danışanların uzman bulabildiği, testleri çözebildiği ve güven odaklı içeriklere ulaşabildiği online psikolojik danışmanlık platformu.",
   /** Ana sayfa ve footer metinleriyle uyumlu kısa marka adı */
-  brandShortName: "Çaremer",
+  brandShortName: "Yeçamer",
   /** Header vb. görünen marka yazısı */
-  brandDisplayName: "Çaremer",
+  brandDisplayName: "Yeçamer",
   brandLogoUrl: "/images/logo.png",
   siteUrl: "https://caremer.online",
   contact: {
@@ -18,7 +18,7 @@ export const siteConfig = {
   socialLinks: [
     {
       label: "Instagram",
-      href: "https://www.instagram.com/caremeronline/",
+      href: "https://www.instagram.com/yecameronline/",
     },
     {
       label: "WhatsApp",
