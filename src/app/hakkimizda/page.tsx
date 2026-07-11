@@ -16,10 +16,10 @@ export const metadata: Metadata = {
   description:
     "Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı herkes için erişilebilir kılmak amacıyla kurulduk. Admin onaylı uzmanlar, şeffaf süreçler.",
   openGraph: {
-    title: "Hakkımızda | Çaremer",
+    title: "Hakkımızda | Yeçamer",
     description:
       "Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı herkes için erişilebilir kılmak amacıyla kurulduk.",
-    url: "https://caremer.online/hakkimizda",
+    url: "https://yecamer.online/hakkimizda",
   },
 };
 

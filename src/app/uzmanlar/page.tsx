@@ -9,10 +9,10 @@ export const metadata: Metadata = {
   description:
     "Admin onaylı psikolog, terapist ve psikolojik danışmanlarımızı inceleyin. Ücretsiz ön görüşme ile size en uygun uzmanı bulun.",
   openGraph: {
-    title: "Uzmanlarımız | Çaremer",
+    title: "Uzmanlarımız | Yeçamer",
     description:
       "Admin onaylı psikolog, terapist ve psikolojik danışmanlarımızı inceleyin. Ücretsiz ön görüşme ile size en uygun uzmanı bulun.",
-    url: "https://caremer.online/uzmanlar",
+    url: "https://yecamer.online/uzmanlar",
   },
 };
 

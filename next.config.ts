@@ -42,11 +42,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "www.caremer.online",
+        hostname: "www.yecamer.online",
       },
       {
         protocol: "https",
-        hostname: "caremer.online",
+        hostname: "yecamer.online",
       },
     ],
   },

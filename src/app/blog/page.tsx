@@ -10,10 +10,10 @@ export const metadata: Metadata = {
   description:
     "Psikoloji, kişisel gelişim ve ruh sağlığı üzerine uzman yazıları. Güncel makaleler ve rehberler.",
   openGraph: {
-    title: "Blog | Çaremer",
+    title: "Blog | Yeçamer",
     description:
       "Psikoloji, kişisel gelişim ve ruh sağlığı üzerine uzman yazıları.",
-    url: "https://caremer.online/blog",
+    url: "https://yecamer.online/blog",
   },
 };
 import { ShieldCheck } from "lucide-react";

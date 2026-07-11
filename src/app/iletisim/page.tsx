@@ -6,10 +6,10 @@ export const metadata: Metadata = {
   description:
     "Soru, randevu, öneri veya şikayet bildirimlerinizi iletebilirsiniz. Mesai saatleri içinde ortalama 4 saat içinde yanıt veriyoruz.",
   openGraph: {
-    title: "İletişim | Çaremer",
+    title: "İletişim | Yeçamer",
     description:
       "Soru, randevu, öneri veya şikayet bildirimlerinizi iletebilirsiniz.",
-    url: "https://caremer.online/iletisim",
+    url: "https://yecamer.online/iletisim",
   },
 };
 

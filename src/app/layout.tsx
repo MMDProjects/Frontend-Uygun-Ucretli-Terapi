@@ -31,14 +31,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
     default: siteConfig.name,
-    template: `%s | Çaremer`,
+    template: `%s | Yeçamer`,
   },
   description: siteConfig.description,
   openGraph: {
     type: "website",
     locale: "tr_TR",
     url: siteConfig.siteUrl,
-    siteName: "Çaremer",
+    siteName: "Yeçamer",
     title: siteConfig.name,
     description: siteConfig.description,
     images: [
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Çaremer — Online Danışmanlık Platformu",
+        alt: "Yeçamer — Online Danışmanlık Platformu",
       },
     ],
   },

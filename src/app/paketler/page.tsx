@@ -8,12 +8,12 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Paketler",
   description:
-    "Çaremer danışmanlık paketleri ve fiyatları. Seans sayısına göre şeffaf fiyatlandırma. Ücretsiz ön görüşme ile başlayın.",
+    "Yeçamer danışmanlık paketleri ve fiyatları. Seans sayısına göre şeffaf fiyatlandırma. Ücretsiz ön görüşme ile başlayın.",
   openGraph: {
-    title: "Paketler | Çaremer",
+    title: "Paketler | Yeçamer",
     description:
-      "Çaremer danışmanlık paketleri ve fiyatları. Şeffaf fiyatlandırma.",
-    url: "https://caremer.online/paketler",
+      "Yeçamer danışmanlık paketleri ve fiyatları. Şeffaf fiyatlandırma.",
+    url: "https://yecamer.online/paketler",
   },
 };
 import Link from "next/link";

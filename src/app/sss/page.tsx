@@ -5,12 +5,12 @@ import { SssFullList } from "@/components/common/sss-full-list";
 export const metadata: Metadata = {
   title: "Sık Sorulan Sorular",
   description:
-    "Çaremer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu ve daha fazlası.",
+    "Yeçamer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu ve daha fazlası.",
   openGraph: {
-    title: "Sık Sorulan Sorular | Çaremer",
+    title: "Sık Sorulan Sorular | Yeçamer",
     description:
-      "Çaremer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu.",
-    url: "https://caremer.online/sss",
+      "Yeçamer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu.",
+    url: "https://yecamer.online/sss",
   },
 };
 
