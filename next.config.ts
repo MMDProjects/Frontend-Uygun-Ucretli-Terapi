@@ -48,6 +48,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "yecamer.online",
       },
+      {
+        protocol: "https",
+        hostname: "www.yecamer.com.tr",
+      },
+      {
+        protocol: "https",
+        hostname: "yecamer.com.tr",
+      },
     ],
   },
   turbopack: {

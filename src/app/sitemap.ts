@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://yecamer.online";
+const BASE_URL = "https://yecamer.com.tr";
 
 const staticRoutes: MetadataRoute.Sitemap = [
   { url: BASE_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1.0 },

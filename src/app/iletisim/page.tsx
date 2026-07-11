@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: "İletişim | Yeçamer",
     description:
       "Soru, randevu, öneri veya şikayet bildirimlerinizi iletebilirsiniz.",
-    url: "https://yecamer.online/iletisim",
+    url: "https://yecamer.com.tr/iletisim",
   },
 };
 
