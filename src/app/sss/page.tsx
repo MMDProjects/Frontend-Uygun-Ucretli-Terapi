@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Sık Sorulan Sorular | Yeçamer",
     description:
       "Yeçamer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu.",
-    url: "https://yecamer.online/sss",
+    url: "https://yecamer.com.tr/sss",
   },
 };
 

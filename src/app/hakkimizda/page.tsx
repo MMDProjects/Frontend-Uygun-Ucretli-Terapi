@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Hakkımızda | Yeçamer",
     description:
       "Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı herkes için erişilebilir kılmak amacıyla kurulduk.",
-    url: "https://yecamer.online/hakkimizda",
+    url: "https://yecamer.com.tr/hakkimizda",
   },
 };
 

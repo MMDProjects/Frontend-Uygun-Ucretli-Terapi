@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "Uzmanlarımız | Yeçamer",
     description:
       "Admin onaylı psikolog, terapist ve psikolojik danışmanlarımızı inceleyin. Ücretsiz ön görüşme ile size en uygun uzmanı bulun.",
-    url: "https://yecamer.online/uzmanlar",
+    url: "https://yecamer.com.tr/uzmanlar",
   },
 };
 

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Paketler | Yeçamer",
     description:
       "Yeçamer danışmanlık paketleri ve fiyatları. Şeffaf fiyatlandırma.",
-    url: "https://yecamer.online/paketler",
+    url: "https://yecamer.com.tr/paketler",
   },
 };
 import Link from "next/link";

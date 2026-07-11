@@ -28,6 +28,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://yecamer.online/sitemap.xml",
+    sitemap: "https://yecamer.com.tr/sitemap.xml",
   };
 }

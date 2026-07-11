@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Blog | Yeçamer",
     description:
       "Psikoloji, kişisel gelişim ve ruh sağlığı üzerine uzman yazıları.",
-    url: "https://yecamer.online/blog",
+    url: "https://yecamer.com.tr/blog",
   },
 };
 import { ShieldCheck } from "lucide-react";
