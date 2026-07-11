@@ -5,7 +5,7 @@ import { getPublicKvkk, type KvkkSection } from "@/lib/services/public.service";
 export const metadata: Metadata = {
   title: "KVKK Aydınlatma Metni",
   description:
-    "Uygun Ücretli Terapi platformu kişisel verilerin korunması ve işlenmesine ilişkin aydınlatma metni.",
+    "Yeçamer platformu kişisel verilerin korunması ve işlenmesine ilişkin aydınlatma metni.",
 };
 
 export const revalidate = 3600;
