@@ -6,7 +6,7 @@ export const DEFAULT_KVKK_SECTIONS: KvkkSection[] = [
   {
     id: "veri-sorumlusu",
     title: "1. Veri Sorumlusu",
-    html: '<p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında kişisel verileriniz; veri sorumlusu sıfatıyla <strong>Uygun Ücretli Terapi</strong> (bundan böyle "Platform" olarak anılacaktır) tarafından aşağıda açıklanan amaçlar doğrultusunda işlenmektedir.</p>',
+    html: '<p>6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") kapsamında kişisel verileriniz; veri sorumlusu sıfatıyla <strong>Yeçamer</strong> (bundan böyle "Platform" olarak anılacaktır) tarafından aşağıda açıklanan amaçlar doğrultusunda işlenmektedir.</p>',
   },
   {
     id: "islenen-veriler",
