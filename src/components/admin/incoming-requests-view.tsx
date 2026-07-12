@@ -17,12 +17,14 @@ interface IncomingRequestsViewProps {
   isCorporate?: boolean;
   searchQuery: string;
   selectedStatuses: IncomingRequestStatus[];
+  filterEmail?: string | null;
 }
 
 export function IncomingRequestsView({
   isCorporate,
   searchQuery,
   selectedStatuses,
+  filterEmail,
 }: IncomingRequestsViewProps) {
   const { requests: allRequests, setRequests: setAllRequests, loading, error, refetch } =
     useIncomingRequests();
@@ -39,7 +41,10 @@ export function IncomingRequestsView({
 
   const filteredRequests = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
+    const targetEmail = filterEmail?.toLowerCase().trim();
     return requests.filter((req) => {
+      const matchEmail = !targetEmail || req.email.toLowerCase() === targetEmail;
+
       const matchSearch =
         q.length === 0 ||
         req.fullName.toLowerCase().includes(q) ||
@@ -51,9 +56,9 @@ export function IncomingRequestsView({
         selectedStatuses.length === 0 ||
         selectedStatuses.includes(req.status);
 
-      return matchSearch && matchStatus;
+      return matchEmail && matchSearch && matchStatus;
     });
-  }, [requests, searchQuery, selectedStatuses]);
+  }, [requests, searchQuery, selectedStatuses, filterEmail]);
 
   const setRequests = (updater: (prev: IncomingRequest[]) => IncomingRequest[]) => {
     setAllRequests((prev) => {

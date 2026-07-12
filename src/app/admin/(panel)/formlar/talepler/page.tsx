@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, RefreshCw } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Filter, RefreshCw, X } from "lucide-react";
 import { IncomingRequestsView } from "@/components/admin/incoming-requests-view";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +28,16 @@ const TABS: { label: string; value: Tab }[] = [
 ];
 
 export default function GelenTaleplerPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const danisanEmail = searchParams.get("danisan");
+
   const [activeTab, setActiveTab] = useState<Tab>("bireysel");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<IncomingRequestStatus[]>([]);
   const filterCount = selectedStatuses.length;
+
+  const clearDanisanFilter = () => router.push("/admin/formlar/talepler");
 
   const handleStatusToggle = (status: IncomingRequestStatus, checked: boolean) => {
     setSelectedStatuses((prev) =>
@@ -89,6 +96,22 @@ export default function GelenTaleplerPage() {
         </DropdownMenu>
       </PageHeader>
 
+      {danisanEmail && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">Filtre:</span>
+          <span className="font-medium text-foreground">{danisanEmail}</span>
+          <span className="text-muted-foreground">e-postalı danışanın talepleri</span>
+          <button
+            type="button"
+            onClick={clearDanisanFilter}
+            className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
+          >
+            <X className="size-3.5" />
+            Filtreyi temizle
+          </button>
+        </div>
+      )}
+
       {/* Sekmeler */}
       <div className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1 w-fit">
         {TABS.map((tab) => (
@@ -113,6 +136,7 @@ export default function GelenTaleplerPage() {
           isCorporate={false}
           searchQuery={searchQuery}
           selectedStatuses={selectedStatuses}
+          filterEmail={danisanEmail}
         />
       )}
 
@@ -121,6 +145,7 @@ export default function GelenTaleplerPage() {
           isCorporate={true}
           searchQuery={searchQuery}
           selectedStatuses={selectedStatuses}
+          filterEmail={danisanEmail}
         />
       )}
     </div>

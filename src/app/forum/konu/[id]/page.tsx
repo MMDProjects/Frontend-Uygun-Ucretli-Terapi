@@ -9,9 +9,11 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   getForumQuestion,
   getAssignedQuestionById,
+  getMyQuestionById,
   createAnswer,
   type ForumQuestion,
   type AssignedQuestionDetail,
+  type MyQuestionDetail,
 } from "@/lib/services/forum.service";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +28,12 @@ function formatDateShort(iso: string) {
 function getInitials(name: string) {
   return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
+
+const STATUS_LABELS: Record<MyQuestionDetail["status"], { label: string; className: string }> = {
+  ONAY_BEKLIYOR: { label: "Onay Bekliyor", className: "border-amber-200 bg-amber-50 text-amber-700" },
+  ATANDI: { label: "Uzmana Atandı", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  CEVAPLANDI: { label: "Yanıtlandı — Onay Bekliyor", className: "border-green-200 bg-green-50 text-green-700" },
+};
 
 function PageSkeleton() {
   return (
@@ -58,6 +66,7 @@ export default function KonuDetailPage({ params }: PageProps) {
 
   const [question, setQuestion] = useState<ForumQuestion | null>(null);
   const [assignedQuestion, setAssignedQuestion] = useState<AssignedQuestionDetail | null>(null);
+  const [myQuestion, setMyQuestion] = useState<MyQuestionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFoundPage, setNotFoundPage] = useState(false);
 
@@ -73,11 +82,18 @@ export default function KonuDetailPage({ params }: PageProps) {
         setQuestion(q);
       } catch {
         // Public endpoint sadece onaylı cevabı olan CEVAPLANDI soruları döndürür.
-        // Uzman ise atanmış soruyu doğrudan kendi endpoint'inden çek.
+        // Uzman ise atanmış soruyu, danışan ise kendi sorusunu doğrudan kendi endpoint'inden çeker.
         if (role === "uzman") {
           try {
             const q = await getAssignedQuestionById(id);
             setAssignedQuestion(q);
+            return;
+          } catch {}
+        }
+        if (role === "danisan") {
+          try {
+            const q = await getMyQuestionById(id);
+            setMyQuestion(q);
             return;
           } catch {}
         }
@@ -229,6 +245,96 @@ export default function KonuDetailPage({ params }: PageProps) {
           {submitted && (
             <div className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 text-center shadow-sm lg:rounded-[2.25rem]">
               <p className="text-sm font-medium text-primary-hover">Yanıtınız gönderildi. Admin onayından sonra yayınlanacak.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Danışan, henüz public olmayan (ONAY_BEKLIYOR/ATANDI) kendi sorusuna bakıyor
+  if (!question && myQuestion) {
+    const statusInfo = STATUS_LABELS[myQuestion.status];
+    return (
+      <div className="bg-[#e6f0ee] !pt-0">
+        <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
+          <div className="page-shell">
+            <Link href="/forum" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-primary">
+              <ArrowLeft className="size-4" />
+              Tüm Konular
+            </Link>
+            <div className="max-w-2xl space-y-3">
+              <span className={cn(
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+                statusInfo.className
+              )}>
+                <Clock className="size-3" />
+                {statusInfo.label}
+              </span>
+              <h1 className="text-balance text-3xl font-semibold tracking-tight text-primary-hover sm:text-4xl">
+                {myQuestion.title}
+              </h1>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="size-3.5" />{formatDateShort(myQuestion.createdAt)}</span>
+                <span className="flex items-center gap-1"><MessageCircle className="size-3.5" />{myQuestion.answers.length} yanıt</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div className="page-shell max-w-3xl py-6 space-y-3">
+          {/* Soru */}
+          <article className="rounded-[2rem] border border-border/60 bg-white p-6 shadow-sm lg:rounded-[2.25rem]">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f0ee] text-sm font-bold text-primary-hover">
+                <MessageCircle className="size-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">Danışan</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(myQuestion.createdAt)}</span>
+                </div>
+                <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-foreground">{myQuestion.content}</p>
+              </div>
+            </div>
+          </article>
+
+          {/* Cevaplar (onaylı olmasa da kendi sorusunda görebilir) */}
+          {myQuestion.answers.map((ans) => {
+            const expertName = `${ans.expertProfile.user.firstName} ${ans.expertProfile.user.lastName}`.trim();
+            return (
+              <article key={ans.id} className="rounded-[2rem] border border-primary/20 bg-[#e6f0ee] p-5 shadow-sm lg:rounded-[2.25rem]">
+                <div className="flex items-start gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white">
+                    {ans.expertProfile.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={ans.expertProfile.avatarUrl} alt={expertName} className="size-full object-cover" />
+                    ) : (
+                      getInitials(expertName)
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-semibold text-foreground">{expertName}</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-white">
+                        <ShieldCheck className="size-3" />Uzman
+                      </span>
+                      {!ans.isApproved && (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                          Admin Onayı Bekliyor
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground">{formatDate(ans.createdAt)}</span>
+                    </div>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-foreground">{ans.content}</p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+          {myQuestion.answers.length === 0 && (
+            <div className="rounded-[2rem] border border-border/60 bg-white p-5 text-center shadow-sm lg:rounded-[2.25rem]">
+              <p className="text-sm text-muted-foreground">Sorunuz henüz yanıtlanmadı.</p>
             </div>
           )}
         </div>
