@@ -61,7 +61,7 @@ export function DanisanDetailDialog({
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-col">
           <Link
-            href={`/formlar/talepler?danisan=${encodeURIComponent(user.id)}`}
+            href={`/admin/formlar/talepler?danisan=${encodeURIComponent(user.email)}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "default" }),
               "w-full justify-center"
@@ -69,9 +69,6 @@ export function DanisanDetailDialog({
           >
             Talepleri görüntüle
           </Link>
-          <p className="text-center text-xs text-muted-foreground">
-            Talep listesi filtresi backend hazır olduğunda uygulanır.
-          </p>
         </DialogFooter>
       </DialogContent>
     </Dialog>

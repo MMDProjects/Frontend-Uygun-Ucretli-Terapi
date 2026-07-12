@@ -57,6 +57,31 @@ export async function getMyQuestions(): Promise<MyQuestion[]> {
   return apiFetch("/forum/my-questions", { token });
 }
 
+export type MyQuestionDetail = {
+  id: string;
+  title: string;
+  content: string;
+  status: "ONAY_BEKLIYOR" | "ATANDI" | "CEVAPLANDI";
+  createdAt: string;
+  updatedAt: string;
+  answers: {
+    id: string;
+    content: string;
+    isApproved: boolean;
+    createdAt: string;
+    expertProfile: {
+      title: string;
+      avatarUrl: string | null;
+      user: { firstName: string; lastName: string };
+    };
+  }[];
+};
+
+export async function getMyQuestionById(id: string): Promise<MyQuestionDetail> {
+  const token = getAccessToken();
+  return apiFetch(`/forum/my-questions/${id}`, { token });
+}
+
 export async function deleteQuestion(questionId: string): Promise<void> {
   const token = getAccessToken();
   await apiFetch(`/forum/questions/${questionId}`, { method: "DELETE", token });

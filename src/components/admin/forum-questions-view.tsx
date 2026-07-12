@@ -43,6 +43,26 @@ function formatDate(iso: string) {
   }).format(new Date(iso));
 }
 
+function ExpandableText({ text, className }: { text: string; className?: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div>
+      <p className={`${className ?? ""} ${expanded ? "" : "line-clamp-3"}`}>
+        {text}
+      </p>
+      {text.length > 150 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1 text-xs font-medium text-[#016a59] hover:underline"
+        >
+          {expanded ? "Daralt" : "Devamını oku"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 interface AssignDialogProps {
   question: AdminForumQuestion | null;
   experts: ExpertListItem[];
@@ -301,9 +321,7 @@ export function ForumQuestionsView() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {q.content}
-                </p>
+                <ExpandableText text={q.content} className="text-sm text-muted-foreground" />
 
                 {/* Danışan bilgisi */}
                 {q.user && (
@@ -335,9 +353,7 @@ export function ForumQuestionsView() {
                           {ans.expertProfile.title}
                         </span>
                       </p>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {ans.content}
-                      </p>
+                      <ExpandableText text={ans.content} className="text-sm text-muted-foreground" />
                       {ans.isApproved ? (
                         <Badge
                           variant="outline"
