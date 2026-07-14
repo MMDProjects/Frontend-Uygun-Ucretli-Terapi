@@ -35,12 +35,22 @@ function DropZone({
     e.preventDefault();
     setDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === "application/pdf") onFile(file);
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Sadece PDF dosyası yükleyebilirsiniz.");
+      return;
+    }
+    onFile(file);
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) onFile(file);
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Sadece PDF dosyası yükleyebilirsiniz.");
+      return;
+    }
+    onFile(file);
   }
 
   return (

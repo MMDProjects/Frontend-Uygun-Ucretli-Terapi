@@ -82,20 +82,21 @@ export async function listExpertApplications(): Promise<ExpertApplication[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  try {
-    const res = await fetch(`${base}/admin/experts?limit=100`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as { data: BackendExpert[] };
-    if (!Array.isArray(payload?.data)) return [];
-    return payload.data
-      .filter((e) => !e.isPublished && e.status === "ONAY_BEKLIYOR")
-      .map(mapToApplication);
-  } catch {
-    return [];
+  const res = await fetch(`${base}/admin/experts?limit=100`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Uzman başvuruları yüklenemedi (${res.status})`);
   }
+  const payload = (await res.json()) as { data: BackendExpert[] };
+  if (!Array.isArray(payload?.data)) {
+    throw new Error("Uzman başvuruları yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  return payload.data
+    .filter((e) => !e.isPublished && e.status === "ONAY_BEKLIYOR")
+    .map(mapToApplication);
 }
 
 /**

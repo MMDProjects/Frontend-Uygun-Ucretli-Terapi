@@ -337,7 +337,9 @@ export function subscribeToNotificationStream(
       // Backend { data: { type, message, id } } sarmalıyor olabilir
       const payload = parsed?.data ?? parsed;
       onMessage(payload);
-    } catch {}
+    } catch (err) {
+      console.error("[notification-stream] Bozuk bildirim verisi alındı, atlandı:", err, e.data);
+    }
   }
 
   // NestJS SSE hem 'message' hem custom event type gönderebilir

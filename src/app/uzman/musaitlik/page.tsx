@@ -166,7 +166,7 @@ export default function UzmanMusaitlikPage() {
         }
       }
 
-      await Promise.all([
+      const results = await Promise.allSettled([
         ...toRemove.map((id) => removeAvailability(id)),
         ...toAdd.map((c) => {
           const slot = SLOT_DEFS.find((s) => s.key === c.slotKey)!;
@@ -178,12 +178,21 @@ export default function UzmanMusaitlikPage() {
         }),
       ]);
 
+      // Her durumda gerçek backend durumunu çekip UI'ı senkronize et —
+      // kısmi başarı olsa bile ekran tutarsız kalmasın.
       const fresh = await getMyAvailabilities();
       setAllAvails(fresh);
 
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-      toast.success("Müsaitlik kaydedildi.");
+      const failedCount = results.filter((r) => r.status === "rejected").length;
+      if (failedCount > 0) {
+        toast.error(
+          `${failedCount} değişiklik kaydedilemedi, geri kalanı kaydedildi. Lütfen tekrar kontrol edin.`
+        );
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+        toast.success("Müsaitlik kaydedildi.");
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Kayıt başarısız.");
     } finally {

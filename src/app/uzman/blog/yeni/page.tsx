@@ -58,7 +58,13 @@ export default function YeniBlogPage() {
     try {
       const created = await createBlog({ title: title.trim(), slug: slug.trim(), content: content.trim() });
       if (coverFile) {
-        await uploadBlogCover(created.id, coverFile).catch(() => {});
+        try {
+          await uploadBlogCover(created.id, coverFile);
+        } catch {
+          toast.error("Taslak kaydedildi ancak kapak fotoğrafı yüklenemedi. Blog listesinden tekrar deneyin.");
+          router.push("/uzman/blog");
+          return;
+        }
       }
       toast.success("Taslak kaydedildi.");
       router.push("/uzman/blog");

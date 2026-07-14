@@ -28,13 +28,12 @@ function authHeaders(): HeadersInit {
 export async function getAdminPackages(): Promise<AdminPackage[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
-  try {
-    const res = await fetch(`${base}/packages`, { headers: authHeaders() });
-    if (!res.ok) return [];
-    return (await res.json()) as AdminPackage[];
-  } catch {
-    return [];
+  const res = await fetch(`${base}/packages`, { headers: authHeaders() });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null) as { message?: string } | null;
+    throw new Error(body?.message ?? `Paketler yüklenemedi (${res.status})`);
   }
+  return (await res.json()) as AdminPackage[];
 }
 
 export async function updateAdminPackage(

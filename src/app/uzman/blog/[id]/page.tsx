@@ -115,7 +115,13 @@ export default function BlogDuzenlePage({ params }: PageProps) {
     try {
       await updateBlogContent(id, { title: title.trim(), slug: slug.trim(), content: content.trim() });
       if (coverFile) {
-        await uploadBlogCover(id, coverFile).catch(() => {});
+        try {
+          await uploadBlogCover(id, coverFile);
+        } catch {
+          toast.error("İçerik güncellendi ancak kapak fotoğrafı yüklenemedi. Blog listesinden tekrar deneyin.");
+          router.push("/uzman/blog");
+          return;
+        }
       }
       toast.success(
         isRejected ? "Yazı düzeltildi ve tekrar gönderildi." :

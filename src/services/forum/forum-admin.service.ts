@@ -39,19 +39,18 @@ export async function listAdminForumQuestions(
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  try {
-    const qs = status ? `?status=${status}` : "";
-    const res = await fetch(`${base}/admin/forum/questions${qs}`, {
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as
-      | { data: AdminForumQuestion[] }
-      | AdminForumQuestion[];
-    return Array.isArray(payload) ? payload : (payload.data ?? []);
-  } catch {
-    return [];
+  const qs = status ? `?status=${status}` : "";
+  const res = await fetch(`${base}/admin/forum/questions${qs}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Forum soruları yüklenemedi (${res.status})`);
   }
+  const payload = (await res.json()) as
+    | { data: AdminForumQuestion[] }
+    | AdminForumQuestion[];
+  return Array.isArray(payload) ? payload : (payload.data ?? []);
 }
 
 export async function assignForumQuestion(

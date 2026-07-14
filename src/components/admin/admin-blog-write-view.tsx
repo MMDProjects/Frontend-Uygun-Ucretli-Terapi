@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { ImagePlus, X } from "lucide-react";
 import Image from "next/image";
 import { apiFetch } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth-cookies";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -63,10 +62,8 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
     setErrors({});
     setSubmitting(true);
     try {
-      const token = getAccessToken();
       const created = await apiFetch<{ id: string }>("/admin/blogs", {
         method: "POST",
-        token,
         body: {
           title: title.trim(),
           slug: slug.trim(),
@@ -79,7 +76,6 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
         formData.append("cover", coverFile);
         await apiFetch(`/admin/blogs/${created.id}/cover`, {
           method: "POST",
-          token,
           body: formData,
           isFormData: true,
         });

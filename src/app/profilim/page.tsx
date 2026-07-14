@@ -27,22 +27,30 @@ export default function ProfilimPage() {
   const { isAuthenticated, displayName, setSession } = useAuthStore();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } =
     useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  function loadProfile() {
+    setLoadError(null);
+    getMyProfile()
+      .then((data) => {
+        setProfile(data);
+        reset({ firstName: data.firstName, lastName: data.lastName, phone: data.phone ?? "" });
+      })
+      .catch((e: unknown) => {
+        setLoadError(e instanceof Error ? e.message : "Profil bilgileri yüklenemedi.");
+      });
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/giris?redirect=/profilim");
       return;
     }
-    getMyProfile()
-      .then((data) => {
-        setProfile(data);
-        reset({ firstName: data.firstName, lastName: data.lastName, phone: data.phone ?? "" });
-      })
-      .catch(() => setLoadError(true));
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, router, reset]);
 
   if (!isAuthenticated) return null;
@@ -89,8 +97,15 @@ export default function ProfilimPage() {
         <div className="page-shell grid gap-6 lg:grid-cols-[1fr_280px]">
           <div className="space-y-5">
             {loadError ? (
-              <div className="surface-card !rounded-[2rem] p-6 text-center text-sm text-muted-foreground">
-                Profil bilgileri yüklenemedi. Lütfen sayfayı yenileyin.
+              <div className="surface-card !rounded-[2rem] p-6 flex flex-col items-center gap-3 text-center text-sm text-muted-foreground">
+                <p>{loadError}</p>
+                <button
+                  type="button"
+                  onClick={loadProfile}
+                  className="rounded-xl border border-border bg-white px-4 py-1.5 text-sm font-semibold text-foreground transition hover:bg-muted"
+                >
+                  Tekrar Dene
+                </button>
               </div>
             ) : !profile ? (
               <div className="surface-card !rounded-[2rem] p-6 flex items-center justify-center">

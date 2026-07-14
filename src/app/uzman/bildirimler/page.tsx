@@ -122,7 +122,7 @@ export default function UzmanBildirimlerPage() {
   useEffect(() => {
     getMyUzmanNotifications()
       .then(setNotifications)
-      .catch(() => toast.error("Bildirimler yüklenemedi."))
+      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Bildirimler yüklenemedi."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -134,8 +134,8 @@ export default function UzmanBildirimlerPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
-    } catch {
-      toast.error("İşlem başarısız.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bildirim okundu olarak işaretlenemedi.");
     }
   }
 
@@ -144,8 +144,8 @@ export default function UzmanBildirimlerPage() {
     try {
       await Promise.all(unread.map((n) => markUzmanNotificationRead(n.id)));
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    } catch {
-      toast.error("İşlem başarısız.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bildirimler okundu olarak işaretlenemedi.");
     }
   }
 

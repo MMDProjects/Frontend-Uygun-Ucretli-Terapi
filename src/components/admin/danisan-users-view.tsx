@@ -47,16 +47,9 @@ export function DanisanUsersView() {
   };
 
   const handleStatusToggleRow = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id !== userId) return u;
-        const next: DanisanUser["status"] =
-          u.status === "active" ? "inactive" : "active";
-        toast.success(
-          `${u.name} ${next === "active" ? "aktifleştirildi" : "pasifleştirildi"} (yerel, API TODO)`
-        );
-        return { ...u, status: next };
-      })
+    const user = users.find((u) => u.id === userId);
+    toast.error(
+      `${user?.name ?? "Kullanıcı"} durumu değiştirilemedi: bu özellik henüz backend'e bağlı değil.`
     );
   };
 
@@ -70,16 +63,17 @@ export function DanisanUsersView() {
     setWarningOpen(true);
   };
 
-  const handleSendWarning = (message: string, _type: string) => {
+  const handleSendWarning = (_message: string, _type: string) => {
     if (!warningUser) return;
-    toast.success(`${warningUser.name} için uyarı kaydedildi (API TODO)`);
-    console.warn("[warning stub]", warningUser.id, message, _type);
+    toast.error(
+      `${warningUser.name} için uyarı gönderilemedi: bu özellik henüz backend'e bağlı değil.`
+    );
     setWarningOpen(false);
     setWarningUser(null);
   };
 
   const handleNotifyStub = (user: DanisanUser) => {
-    toast.success(`${user.name}: bildirim kuyruğu (yakında)`);
+    toast.error(`${user.name}: bildirim gönderme özelliği henüz aktif değil.`);
   };
 
   return (
