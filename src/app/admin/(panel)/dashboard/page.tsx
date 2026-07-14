@@ -1,5 +1,4 @@
 import { PendingTaskCards } from "@/components/admin/pending-task-cards";
-import { DashboardContentActions } from "@/components/admin/dashboard-content-actions";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/features/admin/components/page-header";
 
@@ -48,7 +47,9 @@ export default function AdminDashboardPage() {
         <Button type="button" size="sm" disabled>
           Yeni uzman (manuel)
         </Button>
-        <DashboardContentActions />
+        <Button type="button" size="sm" variant="outline" disabled>
+          İçerik yayınla
+        </Button>
         <Button type="button" size="sm" variant="secondary" disabled>
           Uzman listesi export
         </Button>

@@ -92,35 +92,35 @@ export async function listExperts(): Promise<ExpertListItem[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  try {
-    const res = await fetch(`${base}/admin/experts?limit=100`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as { data: BackendExpert[]; total: number };
-    if (!Array.isArray(payload?.data)) return [];
-    return sortExpertsByPriority(payload.data.map(mapToListItem));
-  } catch {
-    return [];
+  const res = await fetch(`${base}/admin/experts?limit=100`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Uzmanlar yüklenemedi (${res.status})`);
   }
+  const payload = (await res.json()) as { data: BackendExpert[]; total: number };
+  if (!Array.isArray(payload?.data)) {
+    throw new Error("Uzmanlar yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  return sortExpertsByPriority(payload.data.map(mapToListItem));
 }
 
 export async function getExpertDetail(expertId: string): Promise<ExpertDetail | null> {
   const base = getOptionalApiBase();
   if (!base) return null;
 
-  try {
-    const res = await fetch(`${base}/admin/experts/${expertId}`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return null;
-    const expert = (await res.json()) as BackendExpert;
-    return mapToDetail(expert);
-  } catch {
-    return null;
+  const res = await fetch(`${base}/admin/experts/${expertId}`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Uzman detayı yüklenemedi (${res.status})`);
   }
+  const expert = (await res.json()) as BackendExpert;
+  return mapToDetail(expert);
 }
 
 export async function updateExpertPricing(

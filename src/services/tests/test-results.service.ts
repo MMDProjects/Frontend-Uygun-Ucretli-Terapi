@@ -182,39 +182,34 @@ export async function listTestResults(
     return applyResultFilters(cloneResults(resultsStore), filters);
   }
 
-  try {
-    const params = new URLSearchParams();
-    if (filters.testId) params.set("testId", filters.testId);
-    if (filters.search) params.set("search", filters.search);
-    const qs = params.toString();
-    const path = `${base}/admin/test-results${qs ? `?${qs}` : ""}`;
-    const token = accessToken ?? (typeof window !== "undefined" ? (await import("@/lib/auth-cookies")).getAccessToken() : undefined);
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
-    const res = await fetch(path, {
-      method: "GET",
-      headers,
-    });
-    if (!res.ok) {
-      console.warn("[listTestResults] HTTP", res.status, "- using store");
-      return applyResultFilters(cloneResults(resultsStore), filters);
-    }
-    const payload: unknown = await res.json();
-    if (!responseLooksSuccessful(payload)) {
-      return applyResultFilters(cloneResults(resultsStore), filters);
-    }
-    const mapped = mapResultsFromResponse(payload);
-    if (mapped.length > 0) {
-      resultsStore = cloneResults(mapped);
-    }
-    return applyResultFilters(cloneResults(resultsStore), filters);
-  } catch (e) {
-    console.warn("[listTestResults] failed - using store", e);
-    return applyResultFilters(cloneResults(resultsStore), filters);
+  const params = new URLSearchParams();
+  if (filters.testId) params.set("testId", filters.testId);
+  if (filters.search) params.set("search", filters.search);
+  const qs = params.toString();
+  const path = `${base}/admin/test-results${qs ? `?${qs}` : ""}`;
+  const token = accessToken ?? (typeof window !== "undefined" ? (await import("@/lib/auth-cookies")).getAccessToken() : undefined);
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  const res = await fetch(path, {
+    method: "GET",
+    headers,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `Test sonuçları yüklenemedi (${res.status})`);
   }
+  const payload: unknown = await res.json();
+  if (!responseLooksSuccessful(payload)) {
+    throw new Error("Test sonuçları yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  const mapped = mapResultsFromResponse(payload);
+  if (mapped.length > 0) {
+    resultsStore = cloneResults(mapped);
+  }
+  return applyResultFilters(cloneResults(resultsStore), filters);
 }
 
 export async function getTestResult(
@@ -225,36 +220,29 @@ export async function getTestResult(
   if (!base) {
     return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
   }
-  try {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
-    const res = await fetch(`${base}/admin/test-results/${encodeURIComponent(id)}`, {
-      method: "GET",
-      headers,
-      credentials: "include",
-    });
-    if (!res.ok) {
-      return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
-    }
-    const payload: unknown = await res.json();
-    if (!responseLooksSuccessful(payload) || !isRecord(payload)) {
-      return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
-    }
-    const data = isRecord(payload.data) ? payload.data : null;
-    if (!data) {
-      return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
-    }
-    const row = data.submission ?? data.result ?? data;
-    if (!isRecord(row)) {
-      return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
-    }
-    return mapBackendResult(row as unknown as BackendTestResult);
-  } catch {
-    return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
   }
+  const res = await fetch(`${base}/admin/test-results/${encodeURIComponent(id)}`, {
+    method: "GET",
+    headers,
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `Test sonucu yüklenemedi (${res.status})`);
+  }
+  const payload: unknown = await res.json();
+  if (!responseLooksSuccessful(payload) || !isRecord(payload)) {
+    throw new Error("Test sonucu yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  const data = isRecord(payload.data) ? payload.data : null;
+  if (!data) return null;
+  const row = data.submission ?? data.result ?? data;
+  if (!isRecord(row)) return null;
+  return mapBackendResult(row as unknown as BackendTestResult);
 }

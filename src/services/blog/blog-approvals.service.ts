@@ -49,20 +49,21 @@ export async function listPendingBlogApprovals(): Promise<BlogApprovalDto[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  try {
-    const res = await fetch(`${base}/admin/blogs?limit=100`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as { data: BackendBlog[] };
-    if (!Array.isArray(payload?.data)) return [];
-    return payload.data
-      .filter((b) => b.status === "ONAY_BEKLIYOR" || b.status === "REVIZE_GONDERILDI")
-      .map(mapToBlogApproval);
-  } catch {
-    return [];
+  const res = await fetch(`${base}/admin/blogs?limit=100`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Blog onayları yüklenemedi (${res.status})`);
   }
+  const payload = (await res.json()) as { data: BackendBlog[] };
+  if (!Array.isArray(payload?.data)) {
+    throw new Error("Blog onayları yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  return payload.data
+    .filter((b) => b.status === "ONAY_BEKLIYOR" || b.status === "REVIZE_GONDERILDI")
+    .map(mapToBlogApproval);
 }
 
 /** Approve: sets blog status to AKTIF. */

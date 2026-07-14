@@ -192,8 +192,8 @@ export function ExpertRequestsAdminView() {
       const res = await listAdminExpertRequests(p, limit);
       setRequests(res.data);
       setTotal(res.total);
-    } catch {
-      toast.error("Talepler yüklenemedi.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Talepler yüklenemedi.");
     } finally {
       setLoading(false);
     }

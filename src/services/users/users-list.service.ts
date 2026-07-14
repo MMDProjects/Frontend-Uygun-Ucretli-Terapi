@@ -128,7 +128,8 @@ function responseLooksSuccessful(payload: unknown): boolean {
 }
 
 /**
- * GET /users with Bearer token. Mock list when API URL missing or request/parsing fails.
+ * GET /users with Bearer token. Mock list only when API URL is not configured (local/demo mode).
+ * Real HTTP or network failures throw so callers can surface an error to the user.
  */
 export async function listUsers(
   accessToken?: string | null
@@ -138,37 +139,30 @@ export async function listUsers(
     return MOCK_DANISAN_USERS;
   }
 
-  try {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
-
-    const res = await fetch(`${base}/admin/users`, {
-      method: "GET",
-      headers,
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      console.warn("[listUsers] HTTP", res.status, "- using mock list");
-      return MOCK_DANISAN_USERS;
-    }
-
-    const payload: unknown = await res.json();
-
-    if (!responseLooksSuccessful(payload)) {
-      console.warn("[listUsers] unexpected response shape - using mock list");
-      return MOCK_DANISAN_USERS;
-    }
-
-    const users = mapUsersFromResponse(payload);
-    return users;
-  } catch (e) {
-    console.warn("[listUsers] request failed - using mock list", e);
-    return MOCK_DANISAN_USERS;
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
   }
+
+  const res = await fetch(`${base}/admin/users`, {
+    method: "GET",
+    headers,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `Kullanıcılar yüklenemedi (${res.status})`);
+  }
+
+  const payload: unknown = await res.json();
+
+  if (!responseLooksSuccessful(payload)) {
+    throw new Error("Kullanıcılar yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+
+  return mapUsersFromResponse(payload);
 }

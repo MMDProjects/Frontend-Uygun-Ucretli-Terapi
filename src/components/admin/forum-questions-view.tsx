@@ -198,7 +198,11 @@ export function ForumQuestionsView() {
   );
 
   useEffect(() => {
-    listExperts().then(setExperts);
+    listExperts()
+      .then(setExperts)
+      .catch((err: unknown) => {
+        toast.error(err instanceof Error ? err.message : "Uzman listesi yüklenemedi");
+      });
   }, []);
 
   async function handleApproveAnswer(

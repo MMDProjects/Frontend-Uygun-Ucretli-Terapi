@@ -89,8 +89,11 @@ export default function UzmanDashboardPage() {
   const [requests, setRequests] = useState<ApiUzmanRequest[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
+    setLoading(true);
+    setError(null);
     Promise.all([
       getMyUzmanProfile(),
       getMyUzmanRequests(),
@@ -101,8 +104,14 @@ export default function UzmanDashboardPage() {
         setRequests(reqs);
         setUnreadCount(notifs.filter((n) => !n.isRead).length);
       })
-      .catch(() => {})
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : "Panel verileri yüklenemedi");
+      })
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    load();
   }, []);
 
   const todayLabel = new Date().toLocaleDateString("tr-TR", {
@@ -125,7 +134,23 @@ export default function UzmanDashboardPage() {
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <AlertTriangle className="size-10 text-destructive" />
+        <p className="font-semibold text-destructive">
+          {error ?? "Panel verileri yüklenemedi"}
+        </p>
+        <button
+          type="button"
+          onClick={() => load()}
+          className="rounded-xl border border-border bg-white px-5 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
+        >
+          Tekrar Dene
+        </button>
+      </div>
+    );
+  }
 
   const pendingCount = requests.filter((r) => r.status === "Beklemede").length;
   const hasAdminNote = profile.status === "pasif" && profile.adminNote;

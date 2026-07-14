@@ -74,7 +74,8 @@ export function useExperts(): UseExpertsResult {
 
   const toggleExpertStatus = useCallback(async (expertId: string) => {
     const current = experts.find((e) => e.id === expertId);
-    const isActive = current?.status !== "active";
+    const previousStatus = current?.status ?? "inactive";
+    const isActive = previousStatus !== "active";
     // Optimistik güncelleme
     setExperts((prev) =>
       sortExpertsByPriority(
@@ -82,19 +83,43 @@ export function useExperts(): UseExpertsResult {
       )
     );
     setDetail((d) => (d?.id === expertId ? { ...d, status: isActive ? "active" : "inactive" } : d));
-    // API çağrısı
-    await toggleExpertActive(expertId, isActive);
+    try {
+      await toggleExpertActive(expertId, isActive);
+    } catch (e) {
+      // Rollback
+      setExperts((prev) =>
+        sortExpertsByPriority(
+          prev.map((ex) => (ex.id === expertId ? { ...ex, status: previousStatus } : ex))
+        )
+      );
+      setDetail((d) => (d?.id === expertId ? { ...d, status: previousStatus } : d));
+      throw e;
+    }
   }, [experts]);
 
   const togglePublish = useCallback(async (expertId: string, isPublished: boolean) => {
-    await toggleExpertPublish(expertId, isPublished);
+    const current = experts.find((e) => e.id === expertId);
+    const previousPublished = current?.isPublished ?? false;
+    // Optimistik güncelleme
     setExperts((prev) =>
       sortExpertsByPriority(
         prev.map((e) => (e.id === expertId ? { ...e, isPublished } : e))
       )
     );
     setDetail((d) => (d?.id === expertId ? { ...d, isPublished } : d));
-  }, []);
+    try {
+      await toggleExpertPublish(expertId, isPublished);
+    } catch (e) {
+      // Rollback
+      setExperts((prev) =>
+        sortExpertsByPriority(
+          prev.map((ex) => (ex.id === expertId ? { ...ex, isPublished: previousPublished } : ex))
+        )
+      );
+      setDetail((d) => (d?.id === expertId ? { ...d, isPublished: previousPublished } : d));
+      throw e;
+    }
+  }, [experts]);
 
   useEffect(() => {
     void load();

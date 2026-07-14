@@ -85,22 +85,21 @@ export async function listIncomingRequests(
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  try {
-    const headers = authHeaders();
-    if (accessToken) {
-      (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
-    }
-
-    const res = await fetch(`${base}/admin/contact-forms?limit=100`, {
-      method: "GET",
-      headers,
-    });
-    if (!res.ok) return [];
-    const payload: unknown = await res.json();
-    return mapIncomingRequestsFromResponse(payload);
-  } catch {
-    return [];
+  const headers = authHeaders();
+  if (accessToken) {
+    (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
   }
+
+  const res = await fetch(`${base}/admin/contact-forms?limit=100`, {
+    method: "GET",
+    headers,
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Talepler yüklenemedi (${res.status})`);
+  }
+  const payload: unknown = await res.json();
+  return mapIncomingRequestsFromResponse(payload);
 }
 
 export async function updateIncomingRequestStatus(

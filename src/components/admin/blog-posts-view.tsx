@@ -8,7 +8,6 @@ import { useBlogPosts } from "@/hooks/use-blog-posts";
 import { PageHeader } from "@/features/admin/components/page-header";
 import type { BlogPostDto } from "@/types/dto/blog-post";
 import { apiFetch } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth-cookies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,10 +65,8 @@ export function BlogPostsView({ hideHeader }: { hideHeader?: boolean } = {}) {
     if (editContent.trim().length < 100) { toast.error("İçerik en az 100 karakter olmalıdır."); return; }
     setSaving(true);
     try {
-      const token = getAccessToken();
       await apiFetch(`/admin/blogs/${selectedPost.id}/content`, {
         method: "PATCH",
-        token,
         body: { title: editTitle.trim(), content: editContent.trim() },
       });
       setSelectedPost((s) => s ? { ...s, title: editTitle.trim(), content: editContent.trim() } : s);
@@ -86,12 +83,11 @@ export function BlogPostsView({ hideHeader }: { hideHeader?: boolean } = {}) {
     if (!selectedPost || !coverFile) return;
     setCoverUploading(true);
     try {
-      const token = getAccessToken();
       const formData = new FormData();
       formData.append("cover", coverFile);
       const result = await apiFetch<{ coverImageUrl: string }>(
         `/admin/blogs/${selectedPost.id}/cover`,
-        { method: "POST", token, body: formData, isFormData: true }
+        { method: "POST", body: formData, isFormData: true }
       );
       setSelectedPost((s) => s ? { ...s, coverImageUrl: result.coverImageUrl } : s);
       setCoverFile(null);

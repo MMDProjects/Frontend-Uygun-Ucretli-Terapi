@@ -16,7 +16,6 @@ import {
 import type { BlogApprovalDto } from "@/types/dto/blog-approval";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { apiFetch } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth-cookies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -169,13 +168,12 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
     if (!selected || !coverFile) return;
     setCoverUploading(true);
     try {
-      const token = getAccessToken();
       const formData = new FormData();
       formData.append("cover", coverFile);
       const result = await apiFetch<{ coverImageUrl: string }>(`/admin/blogs/${selected.id}/cover`, {
         method: "POST",
-        token,
         body: formData,
+        isFormData: true,
       });
       updateLocalApproval(selected.id, {});
       setSelected((s) => s ? { ...s, coverImageUrl: result.coverImageUrl } : s);
@@ -214,8 +212,7 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
   const handleDelete = async (item: BlogApprovalDto) => {
     if (!confirm(`"${item.title}" blog yazısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
     try {
-      const token = getAccessToken();
-      await apiFetch(`/admin/blogs/${item.id}`, { method: "DELETE", token });
+      await apiFetch(`/admin/blogs/${item.id}`, { method: "DELETE" });
       toast.success("Blog yazısı silindi.");
       if (selected?.id === item.id) setSelected(null);
       void refetch();

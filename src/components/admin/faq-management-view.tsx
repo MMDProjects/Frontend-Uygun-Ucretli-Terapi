@@ -137,18 +137,18 @@ export function FaqManagementView() {
       if (dialog.kind === "create") {
         const created = await add(payload);
         if (created) {
-          toast.success("SSS eklendi (yerel, API TODO)");
+          toast.success("SSS eklendi.");
           setDialog({ kind: "closed" });
         } else {
-          toast.error("SSS eklenemedi");
+          toast.error(error ?? "SSS eklenemedi");
         }
       } else if (dialog.kind === "edit") {
         const updated = await edit(dialog.faq.id, payload);
         if (updated) {
-          toast.success("SSS güncellendi (yerel, API TODO)");
+          toast.success("SSS güncellendi.");
           setDialog({ kind: "closed" });
         } else {
-          toast.error("SSS güncellenemedi");
+          toast.error(error ?? "SSS güncellenemedi");
         }
       }
     } finally {
@@ -162,10 +162,10 @@ export function FaqManagementView() {
     try {
       const ok = await remove(pendingDelete.id);
       if (ok) {
-        toast.success("SSS silindi (yerel, API TODO)");
+        toast.success("SSS silindi.");
         setPendingDelete(null);
       } else {
-        toast.error("SSS silinemedi");
+        toast.error(error ?? "SSS silinemedi");
       }
     } finally {
       setDeleting(false);

@@ -81,26 +81,27 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  try {
-    const res = await fetch(`${base}/admin/experts?limit=100`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as { data: BackendExpert[] };
-    if (!Array.isArray(payload?.data)) return [];
-    // Profil Onayları kuyruğu: daha önce yayına alınmış (isPublished: true) uzmanların
-    // profil/biyografi/belge güncellemeleri buraya düşer.
-    // Yeni başvurular (isPublished: false, ONAY_BEKLIYOR) "Yeni Başvurular" kuyruğuna aittir.
-    return payload.data
-      .filter(
-        (e) =>
-          e.status === "REVIZE_GONDERILDI" || e.status === "PROFIL_GUNCELLENDI",
-      )
-      .map(mapToApproval);
-  } catch {
-    return [];
+  const res = await fetch(`${base}/admin/experts?limit=100`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Profil onayları yüklenemedi (${res.status})`);
   }
+  const payload = (await res.json()) as { data: BackendExpert[] };
+  if (!Array.isArray(payload?.data)) {
+    throw new Error("Profil onayları yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  // Profil Onayları kuyruğu: daha önce yayına alınmış (isPublished: true) uzmanların
+  // profil/biyografi/belge güncellemeleri buraya düşer.
+  // Yeni başvurular (isPublished: false, ONAY_BEKLIYOR) "Yeni Başvurular" kuyruğuna aittir.
+  return payload.data
+    .filter(
+      (e) =>
+        e.status === "REVIZE_GONDERILDI" || e.status === "PROFIL_GUNCELLENDI",
+    )
+    .map(mapToApproval);
 }
 
 /** Approve: sets expert status to AKTIF. */

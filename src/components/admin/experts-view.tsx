@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { useExperts } from "@/hooks/use-experts";
 import { sortExpertsByPriority } from "@/services/users/experts-list.service";
 import { apiFetch } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { ExpertListItem } from "@/types/dto/expert-list";
 
 export function ExpertsView() {
@@ -60,7 +59,12 @@ export function ExpertsView() {
 
   const handleOpenDetail = async (expertId: string) => {
     setDetailOpen(true);
-    await openDetail(expertId);
+    try {
+      await openDetail(expertId);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Uzman detayı yüklenemedi");
+      setDetailOpen(false);
+    }
   };
 
   const handleOpenWarning = (expert: ExpertListItem) => {
@@ -71,10 +75,8 @@ export function ExpertsView() {
   const handleSendWarning = async (message: string, type: string) => {
     if (!warningExpert) return;
     try {
-      const token = getAccessToken();
       await apiFetch("/admin/notifications", {
         method: "POST",
-        token,
         body: { userId: warningExpert.userId, type, message },
       });
       toast.success(`${warningExpert.fullName} için bildirim gönderildi.`);

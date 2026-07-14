@@ -42,16 +42,15 @@ export async function listAdminExpertRequests(
   const base = getOptionalApiBase();
   if (!base) return { data: [], total: 0, page, limit };
 
-  try {
-    const res = await fetch(
-      `${base}/admin/requests?page=${page}&limit=${limit}`,
-      { method: "GET", headers: authHeaders() }
-    );
-    if (!res.ok) return { data: [], total: 0, page, limit };
-    return (await res.json()) as AdminExpertRequestsResponse;
-  } catch {
-    return { data: [], total: 0, page, limit };
+  const res = await fetch(
+    `${base}/admin/requests?page=${page}&limit=${limit}`,
+    { method: "GET", headers: authHeaders() }
+  );
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? `Uzman talepleri yüklenemedi (${res.status})`);
   }
+  return (await res.json()) as AdminExpertRequestsResponse;
 }
 
 export async function updateAdminExpertRequestStatus(
