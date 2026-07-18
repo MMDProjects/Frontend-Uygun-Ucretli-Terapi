@@ -56,11 +56,11 @@ export function PortfolioSection({ experts }: Props) {
         </div>
 
         <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-5">
+          <div className="flex -ml-5">
             {experts.map((expert) => (
               <div
                 key={expert.id}
-                className="min-w-0 shrink-0 grow-0 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                className="min-w-0 shrink-0 grow-0 basis-full pl-5 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
               >
                 <ExpertCardApi
                   expert={expert}
