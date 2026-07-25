@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 
 export interface AdminPackage {
   id: string;
@@ -16,24 +16,10 @@ export interface UpdatePackageDto {
   description?: string;
 }
 
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 export async function getAdminPackages(): Promise<AdminPackage[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
-  const res = await fetch(`${base}/packages`, { headers: authHeaders() });
-  if (!res.ok) {
-    const body = await res.json().catch(() => null) as { message?: string } | null;
-    throw new Error(body?.message ?? `Paketler yüklenemedi (${res.status})`);
-  }
-  return (await res.json()) as AdminPackage[];
+  return apiFetch<AdminPackage[]>("/packages");
 }
 
 export async function updateAdminPackage(
@@ -42,13 +28,8 @@ export async function updateAdminPackage(
 ): Promise<void> {
   const base = getOptionalApiBase();
   if (!base) return;
-  const res = await fetch(`${base}/admin/packages/${id}`, {
+  await apiFetch<unknown>(`/admin/packages/${id}`, {
     method: "PUT",
-    headers: authHeaders(),
-    body: JSON.stringify(dto),
+    body: dto,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => null) as { message?: string } | null;
-    throw new Error(err?.message ?? "Paket güncellenemedi");
-  }
 }

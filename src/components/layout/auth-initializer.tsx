@@ -30,7 +30,12 @@ export function AuthInitializer() {
           });
         } catch {
           // apiFetch 401 → tryRefreshToken → başarısızsa clearSession zaten yapıldı.
-          // Burada tekrar refresh çağırmıyoruz — çift rotation race condition yaratır.
+          // Geçici hata (ağ/5xx) durumunda ise cookie'ler hâlâ durur; refresh token
+          // varken oturumu login'e düşürmemek için bir kez daha dene. refreshSession
+          // artık api.ts'teki singleton'a delege ettiği için çift rotation riski yok.
+          if (getRefreshToken()) {
+            await refreshSession();
+          }
         }
       } else if (getRefreshToken()) {
         // Access token yok ama refresh var → yeni access token al

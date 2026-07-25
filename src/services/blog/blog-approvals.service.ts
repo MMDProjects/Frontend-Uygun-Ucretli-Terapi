@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { BlogApprovalDto } from "@/types/dto/blog-approval";
 
 interface BackendBlog {
@@ -12,15 +12,6 @@ interface BackendBlog {
   createdAt: string;
   expertProfile: {
     user: { firstName: string; lastName: string };
-  };
-}
-
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -49,15 +40,7 @@ export async function listPendingBlogApprovals(): Promise<BlogApprovalDto[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  const res = await fetch(`${base}/admin/blogs?limit=100`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Blog onayları yüklenemedi (${res.status})`);
-  }
-  const payload = (await res.json()) as { data: BackendBlog[] };
+  const payload = await apiFetch<{ data: BackendBlog[] }>("/admin/blogs?limit=100");
   if (!Array.isArray(payload?.data)) {
     throw new Error("Blog onayları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
@@ -71,15 +54,10 @@ export async function approveBlogApproval(postId: string): Promise<void> {
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/blogs/${postId}/status`, {
+  await apiFetch<unknown>(`/admin/blogs/${postId}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status: "YAYINDA" }),
+    body: { status: "YAYINDA" },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }
 
 /** Reject: sets blog status to REDDEDILDI with admin note. */
@@ -90,15 +68,10 @@ export async function rejectBlogApproval(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/blogs/${postId}/status`, {
+  await apiFetch<unknown>(`/admin/blogs/${postId}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status: "REDDEDILDI", adminNote: revisionNote }),
+    body: { status: "REDDEDILDI", adminNote: revisionNote },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }
 
 /** Edit blog content while keeping it pending. */
@@ -109,13 +82,8 @@ export async function submitAdminBlogRevision(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/blogs/${postId}/content`, {
+  await apiFetch<unknown>(`/admin/blogs/${postId}/content`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ title: body.title, content: body.content }),
+    body: { title: body.title, content: body.content },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }

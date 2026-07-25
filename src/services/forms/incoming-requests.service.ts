@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type {
   IncomingRequest,
   IncomingRequestStatus,
@@ -18,15 +18,6 @@ interface BackendContactForm {
   kvkkApproved: boolean;
   status: "YENI" | "ISLEMDE" | "COZULDU";
   createdAt: string;
-}
-
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
 }
 
 const SUBJECT_LABELS: Record<string, string> = {
@@ -85,20 +76,9 @@ export async function listIncomingRequests(
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  const headers = authHeaders();
-  if (accessToken) {
-    (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
-  }
-
-  const res = await fetch(`${base}/admin/contact-forms?limit=100`, {
-    method: "GET",
-    headers,
+  const payload = await apiFetch<unknown>("/admin/contact-forms?limit=100", {
+    token: accessToken,
   });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Talepler yüklenemedi (${res.status})`);
-  }
-  const payload: unknown = await res.json();
   return mapIncomingRequestsFromResponse(payload);
 }
 
@@ -110,16 +90,9 @@ export async function updateIncomingRequestStatus(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const headers = authHeaders();
-  if (accessToken) {
-    (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
-  }
-
-  const res = await fetch(`${base}/admin/contact-forms/${id}/status`, {
+  await apiFetch<unknown>(`/admin/contact-forms/${id}/status`, {
     method: "PATCH",
-    headers,
-    body: JSON.stringify({ status: STATUS_MAP_REVERSE[status] }),
+    body: { status: STATUS_MAP_REVERSE[status] },
+    token: accessToken,
   });
-
-  if (!res.ok) throw new Error("Durum güncellenemedi");
 }

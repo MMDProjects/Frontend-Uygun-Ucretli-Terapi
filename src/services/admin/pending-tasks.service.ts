@@ -1,4 +1,4 @@
-import { httpRequest } from "@/lib/http-client";
+import { apiFetch } from "@/lib/api";
 import type { PendingTaskDto } from "@/types/dto/pending-task";
 
 interface DashboardResponse {
@@ -73,9 +73,8 @@ export async function getPendingTasks(
   const base = process.env.NEXT_PUBLIC_API_URL;
   if (!base) return [];
 
-  const res = await httpRequest<DashboardResponse>("/admin/dashboard", {
-    method: "GET",
-    accessToken: accessToken ?? undefined,
+  const data = await apiFetch<DashboardResponse>("/admin/dashboard", {
+    token: accessToken,
   });
-  return mapDashboardToTasks(res.data);
+  return mapDashboardToTasks(data);
 }

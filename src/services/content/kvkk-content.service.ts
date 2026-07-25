@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { KvkkSection } from "@/lib/services/public.service";
 
 export type KvkkVersionMeta = {
@@ -21,23 +21,13 @@ export type KvkkAdminData = {
   history: KvkkVersionMeta[];
 };
 
-function authHeaders(): HeadersInit {
-  const token = getAccessToken();
-  const headers: HeadersInit = { "Content-Type": "application/json", Accept: "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-}
-
 export async function getKvkkAdminContent(): Promise<KvkkAdminData | null> {
   const base = getOptionalApiBase();
   if (!base) return null;
   try {
-    const res = await fetch(`${base}/admin/content/kvkk`, {
-      headers: authHeaders(),
-      credentials: "include",
-    });
-    if (!res.ok) return null;
-    const payload = (await res.json()) as { success: boolean; data: KvkkAdminData };
+    const payload = await apiFetch<{ success: boolean; data: KvkkAdminData }>(
+      "/admin/content/kvkk"
+    );
     return payload?.data ?? null;
   } catch {
     return null;
@@ -50,14 +40,10 @@ export async function publishKvkkVersion(
 ): Promise<{ success: boolean; message: string }> {
   const base = getOptionalApiBase();
   if (!base) return { success: false, message: "API bağlantısı yok" };
-  const res = await fetch(`${base}/admin/content/kvkk`, {
-    method: "POST",
-    headers: authHeaders(),
-    credentials: "include",
-    body: JSON.stringify({ version, sections }),
-  });
-  const payload = (await res.json()) as { success: boolean; message: string };
-  if (!res.ok) throw new Error(payload?.message ?? "Yayınlama başarısız");
+  const payload = await apiFetch<{ success: boolean; message: string }>(
+    "/admin/content/kvkk",
+    { method: "POST", body: { version, sections } }
+  );
 
   // /kvkk sayfasının ISR cache'ini sıfırla
   try {
