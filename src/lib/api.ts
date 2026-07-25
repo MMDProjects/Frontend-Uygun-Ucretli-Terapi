@@ -58,7 +58,7 @@ async function _doRefresh(): Promise<string | null> {
   }
 }
 
-async function tryRefreshToken(): Promise<string | null> {
+export async function tryRefreshToken(): Promise<string | null> {
   if (refreshPromise) return refreshPromise;
   refreshPromise = _doRefresh().finally(() => {
     refreshPromise = null;
@@ -69,7 +69,14 @@ async function tryRefreshToken(): Promise<string | null> {
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   const { method = "GET", body, token, isFormData = false, _isRetry = false } = opts;
 
-  const resolvedToken = token ?? (typeof window !== "undefined" ? getAccessToken() : null);
+  let resolvedToken = token ?? (typeof window !== "undefined" ? getAccessToken() : null);
+
+  // Access token cookie'si 15 dk'da silinir; refresh token hâlâ duruyorsa
+  // istek atmadan önce sessizce yenile — yoksa Authorization'sız istek 401 döner
+  // ve aşağıdaki retry koşulu (resolvedToken şartı) hiç tetiklenmez.
+  if (!resolvedToken && !_isRetry && typeof window !== "undefined" && getRefreshToken()) {
+    resolvedToken = await tryRefreshToken();
+  }
 
   const headers: Record<string, string> = {};
   if (!isFormData && body !== undefined) headers["Content-Type"] = "application/json";

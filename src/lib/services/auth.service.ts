@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { apiFetch, tryRefreshToken } from "@/lib/api";
 import { setTokens, clearTokens, getRefreshToken, getAccessToken } from "@/lib/auth-cookies";
 import { useAuthStore, type UserRole } from "@/lib/stores/auth-store";
 
@@ -115,27 +115,8 @@ export async function updateMyProfile(data: {
 }
 
 export async function refreshSession(): Promise<void> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return;
-  try {
-    const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-    const res = await fetch(`${apiUrl}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) {
-      // Sadece token geçersizliği (401/403) oturumu sonlandırır.
-      // 5xx veya ağ hataları geçici olabilir — oturumu koruyoruz.
-      if (res.status === 401 || res.status === 403) {
-        clearTokens();
-        useAuthStore.getState().clearSession();
-      }
-      return;
-    }
-    const data = (await res.json()) as AuthResponse;
-    applySession(data);
-  } catch {
-    // TypeError dahil tüm ağ/fetch hataları: oturumu koru, backend geçici kapalı olabilir.
-  }
+  // api.ts'teki singleton refresh'e delege edilir: eşzamanlı çağrılar tek isteğe
+  // düşer (token rotation yarışı önlenir), başarıda cookie + store güncellenir,
+  // yalnızca 401/403'te oturum temizlenir, geçici hatalarda oturum korunur.
+  await tryRefreshToken();
 }

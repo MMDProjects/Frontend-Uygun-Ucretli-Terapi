@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { BlogPostDto } from "@/types/dto/blog-post";
 
 interface BackendBlog {
@@ -12,14 +12,6 @@ interface BackendBlog {
   createdAt: string;
   expertProfile: {
     user: { firstName: string; lastName: string };
-  };
-}
-
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -49,11 +41,7 @@ export async function listBlogPosts(): Promise<BlogPostDto[]> {
   if (!base) return [];
 
   try {
-    const res = await fetch(`${base}/admin/blogs?limit=100`, {
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as { data: BackendBlog[] };
+    const payload = await apiFetch<{ data: BackendBlog[] }>("/admin/blogs?limit=100");
     if (!Array.isArray(payload?.data)) return [];
     return payload.data
       .filter((b) => b.status === "YAYINDA")

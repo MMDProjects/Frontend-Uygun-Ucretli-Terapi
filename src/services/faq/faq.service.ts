@@ -1,4 +1,4 @@
-import { httpRequest } from "@/lib/http-client";
+import { apiFetch } from "@/lib/api";
 import type { FaqDto, FaqInput } from "@/types/dto/faq";
 
 interface BackendSss {
@@ -65,11 +65,10 @@ export async function listFaqs(
   const base = process.env.NEXT_PUBLIC_API_URL;
   if (!base) return [];
 
-  const res = await httpRequest<BackendSss[]>("/admin/sss", {
-    method: "GET",
-    accessToken: accessToken ?? undefined,
+  const data = await apiFetch<BackendSss[]>("/admin/sss", {
+    token: accessToken,
   });
-  const items = Array.isArray(res.data) ? res.data : [];
+  const items = Array.isArray(data) ? data : [];
   return items
     .map(mapSssToFaq)
     .sort((a, b) => a.order - b.order);
@@ -87,12 +86,12 @@ export async function createFaq(
     throw new Error("API URL tanımlı değil");
   }
 
-  const res = await httpRequest<BackendSss>("/admin/sss", {
+  const data = await apiFetch<BackendSss>("/admin/sss", {
     method: "POST",
     body: faqInputToSssBody(input),
-    accessToken: accessToken ?? undefined,
+    token: accessToken,
   });
-  return mapSssToFaq(res.data);
+  return mapSssToFaq(data);
 }
 
 /**
@@ -108,12 +107,12 @@ export async function updateFaq(
     throw new Error("API URL tanımlı değil");
   }
 
-  const res = await httpRequest<BackendSss>(`/admin/sss/${id}`, {
+  const data = await apiFetch<BackendSss>(`/admin/sss/${id}`, {
     method: "PATCH",
     body: faqInputToSssBody(input),
-    accessToken: accessToken ?? undefined,
+    token: accessToken,
   });
-  return mapSssToFaq(res.data);
+  return mapSssToFaq(data);
 }
 
 /**
@@ -126,8 +125,8 @@ export async function deleteFaq(
   const base = process.env.NEXT_PUBLIC_API_URL;
   if (!base) return;
 
-  await httpRequest<null>(`/admin/sss/${id}`, {
+  await apiFetch<unknown>(`/admin/sss/${id}`, {
     method: "DELETE",
-    accessToken: accessToken ?? undefined,
+    token: accessToken,
   });
 }

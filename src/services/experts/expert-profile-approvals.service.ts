@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { ExpertProfileApproval } from "@/types/dto/expert-profile-approval";
 
 interface BackendExpert {
@@ -24,15 +24,6 @@ interface BackendExpert {
   updatedAt: string;
   user: { firstName: string; lastName: string; email: string; phone: string };
   tags: { id: string; name: string }[];
-}
-
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
 }
 
 function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
@@ -81,15 +72,7 @@ export async function listExpertProfileApprovals(): Promise<ExpertProfileApprova
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  const res = await fetch(`${base}/admin/experts?limit=100`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Profil onayları yüklenemedi (${res.status})`);
-  }
-  const payload = (await res.json()) as { data: BackendExpert[] };
+  const payload = await apiFetch<{ data: BackendExpert[] }>("/admin/experts?limit=100");
   if (!Array.isArray(payload?.data)) {
     throw new Error("Profil onayları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
@@ -109,15 +92,10 @@ export async function approveExpertProfileApproval(approvalId: string): Promise<
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${approvalId}/status`, {
+  await apiFetch<unknown>(`/admin/experts/${approvalId}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status: "YAYINDA" }),
+    body: { status: "YAYINDA" },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }
 
 /** Reject: sets expert status to REDDEDILDI with revision note. */
@@ -128,13 +106,8 @@ export async function rejectExpertProfileApproval(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${approvalId}/status`, {
+  await apiFetch<unknown>(`/admin/experts/${approvalId}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status: "REDDEDILDI", adminNote: revisionNote }),
+    body: { status: "REDDEDILDI", adminNote: revisionNote },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }

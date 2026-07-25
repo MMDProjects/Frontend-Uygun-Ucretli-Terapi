@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 
 export type AdminExpertRequestStatus =
   | "BEKLEMEDE"
@@ -26,15 +26,6 @@ export interface AdminExpertRequestsResponse {
   limit: number;
 }
 
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 export async function listAdminExpertRequests(
   page = 1,
   limit = 20
@@ -42,15 +33,9 @@ export async function listAdminExpertRequests(
   const base = getOptionalApiBase();
   if (!base) return { data: [], total: 0, page, limit };
 
-  const res = await fetch(
-    `${base}/admin/requests?page=${page}&limit=${limit}`,
-    { method: "GET", headers: authHeaders() }
+  return apiFetch<AdminExpertRequestsResponse>(
+    `/admin/requests?page=${page}&limit=${limit}`
   );
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Uzman talepleri yüklenemedi (${res.status})`);
-  }
-  return (await res.json()) as AdminExpertRequestsResponse;
 }
 
 export async function updateAdminExpertRequestStatus(
@@ -60,10 +45,8 @@ export async function updateAdminExpertRequestStatus(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/requests/${id}/status`, {
+  await apiFetch<unknown>(`/admin/requests/${id}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status }),
+    body: { status },
   });
-  if (!res.ok) throw new Error("Durum güncellenemedi");
 }

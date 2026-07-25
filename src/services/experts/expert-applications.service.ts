@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { ExpertApplication } from "@/types/dto/expert-application";
 
 interface BackendExpert {
@@ -23,15 +23,6 @@ interface BackendExpert {
   instagram?: string | null;
   experienceDuration?: string | null;
   registrationCertificates?: string | null;
-}
-
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
 }
 
 function mapToApplication(expert: BackendExpert): ExpertApplication {
@@ -82,15 +73,7 @@ export async function listExpertApplications(): Promise<ExpertApplication[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  const res = await fetch(`${base}/admin/experts?limit=100`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Uzman başvuruları yüklenemedi (${res.status})`);
-  }
-  const payload = (await res.json()) as { data: BackendExpert[] };
+  const payload = await apiFetch<{ data: BackendExpert[] }>("/admin/experts?limit=100");
   if (!Array.isArray(payload?.data)) {
     throw new Error("Uzman başvuruları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
@@ -106,15 +89,10 @@ export async function approveExpertApplication(applicationId: string): Promise<v
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${applicationId}/status`, {
+  await apiFetch<unknown>(`/admin/experts/${applicationId}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status: "YAYINDA" }),
+    body: { status: "YAYINDA" },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }
 
 /**
@@ -127,13 +105,8 @@ export async function rejectExpertApplication(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${applicationId}/status`, {
+  await apiFetch<unknown>(`/admin/experts/${applicationId}/status`, {
     method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({ status: "REDDEDILDI", adminNote: rejectionReason }),
+    body: { status: "REDDEDILDI", adminNote: rejectionReason },
   });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || res.statusText);
-  }
 }

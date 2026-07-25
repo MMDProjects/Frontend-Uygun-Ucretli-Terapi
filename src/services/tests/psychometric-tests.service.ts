@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { PsychometricTestDefinition } from "@/types/dto/psychometric-test";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,15 +36,6 @@ function toSlug(title: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 function mapBackendTest(row: BackendTest): PsychometricTestDefinition | null {
   if (!row.definition) return null;
   const def = row.definition;
@@ -67,13 +58,7 @@ export async function listTests(): Promise<PsychometricTestDefinition[]> {
   if (!base) return cloneTests(memStore);
 
   try {
-    const res = await fetch(`${base}/admin/tests`, {
-      method: "GET",
-      headers: authHeaders(),
-    });
-    if (!res.ok) return cloneTests(memStore);
-
-    const rows: BackendTest[] = await res.json();
+    const rows = await apiFetch<BackendTest[]>("/admin/tests");
     const mapped = rows
       .map(mapBackendTest)
       .filter((t): t is PsychometricTestDefinition => t !== null);
@@ -118,9 +103,9 @@ export async function saveTest(
 
   const isEdit = Boolean(payload.id);
   const method = isEdit ? "PUT" : "POST";
-  const url = isEdit
-    ? `${base}/admin/tests/${encodeURIComponent(payload.id!)}`
-    : `${base}/admin/tests`;
+  const path = isEdit
+    ? `/admin/tests/${encodeURIComponent(payload.id!)}`
+    : "/admin/tests";
 
   const body = {
     title: payload.title,
@@ -130,15 +115,7 @@ export async function saveTest(
     definition,
   };
 
-  const res = await fetch(url, {
-    method,
-    headers: authHeaders(),
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) throw new Error(`Test kaydedilemedi (${res.status})`);
-
-  const saved: BackendTest = await res.json();
+  const saved = await apiFetch<BackendTest>(path, { method, body });
   const mapped = mapBackendTest(saved) ?? { ...definition, id: saved.id };
   const idx = memStore.findIndex((t) => t.id === mapped.id);
   if (idx >= 0) memStore[idx] = mapped;
@@ -154,11 +131,9 @@ export async function deleteTest(id: string): Promise<void> {
     memStore = memStore.filter((t) => t.id !== id);
     return;
   }
-  const res = await fetch(`${base}/admin/tests/${encodeURIComponent(id)}`, {
+  await apiFetch<unknown>(`/admin/tests/${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: authHeaders(),
   });
-  if (!res.ok) throw new Error(`Test silinemedi (${res.status})`);
   memStore = memStore.filter((t) => t.id !== id);
 }
 

@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
 import type { DanisanRole, DanisanUser, UserListStatus } from "@/types/dto/user-list";
 
@@ -139,26 +140,7 @@ export async function listUsers(
     return MOCK_DANISAN_USERS;
   }
 
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  };
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const res = await fetch(`${base}/admin/users`, {
-    method: "GET",
-    headers,
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.message ?? `Kullanıcılar yüklenemedi (${res.status})`);
-  }
-
-  const payload: unknown = await res.json();
+  const payload = await apiFetch<unknown>("/admin/users", { token: accessToken });
 
   if (!responseLooksSuccessful(payload)) {
     throw new Error("Kullanıcılar yüklenemedi: beklenmeyen sunucu yanıtı");

@@ -1,5 +1,5 @@
+import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { getAccessToken } from "@/lib/auth-cookies";
 import type { ExpertDetail, ExpertListItem } from "@/types/dto/expert-list";
 
 export function clampExpertPriorityScore(raw: number): number {
@@ -80,27 +80,13 @@ function mapToDetail(expert: BackendExpert): ExpertDetail {
   };
 }
 
-function authHeaders(): HeadersInit {
-  const token = typeof window !== "undefined" ? getAccessToken() : undefined;
-  return {
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 export async function listExperts(): Promise<ExpertListItem[]> {
   const base = getOptionalApiBase();
   if (!base) return [];
 
-  const res = await fetch(`${base}/admin/experts?limit=100`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Uzmanlar yüklenemedi (${res.status})`);
-  }
-  const payload = (await res.json()) as { data: BackendExpert[]; total: number };
+  const payload = await apiFetch<{ data: BackendExpert[]; total: number }>(
+    "/admin/experts?limit=100"
+  );
   if (!Array.isArray(payload?.data)) {
     throw new Error("Uzmanlar yüklenemedi: beklenmeyen sunucu yanıtı");
   }
@@ -111,15 +97,7 @@ export async function getExpertDetail(expertId: string): Promise<ExpertDetail | 
   const base = getOptionalApiBase();
   if (!base) return null;
 
-  const res = await fetch(`${base}/admin/experts/${expertId}`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? `Uzman detayı yüklenemedi (${res.status})`);
-  }
-  const expert = (await res.json()) as BackendExpert;
+  const expert = await apiFetch<BackendExpert>(`/admin/experts/${expertId}`);
   return mapToDetail(expert);
 }
 
@@ -131,16 +109,10 @@ export async function updateExpertPricing(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${expertId}/pricing`, {
+  await apiFetch<unknown>(`/admin/experts/${expertId}/pricing`, {
     method: "PATCH",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ standardPrice, discountedPrice }),
+    body: { standardPrice, discountedPrice },
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Fiyat güncellenemedi");
-  }
 }
 
 export async function toggleExpertActive(
@@ -150,19 +122,10 @@ export async function toggleExpertActive(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${expertId}/active`, {
+  await apiFetch<unknown>(`/admin/experts/${expertId}/active`, {
     method: "PATCH",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ isActive }),
+    body: { isActive },
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Durum güncellenemedi");
-  }
 }
 
 export async function toggleExpertPublish(
@@ -172,19 +135,10 @@ export async function toggleExpertPublish(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${expertId}/publish`, {
+  await apiFetch<unknown>(`/admin/experts/${expertId}/publish`, {
     method: "PATCH",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ isPublished }),
+    body: { isPublished },
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Yayın durumu güncellenemedi");
-  }
 }
 
 /**
@@ -198,16 +152,10 @@ export async function updateExpertPriorityScore(
   const base = getOptionalApiBase();
   if (!base) return;
 
-  const res = await fetch(`${base}/admin/experts/${expertId}/priority`, {
+  await apiFetch<unknown>(`/admin/experts/${expertId}/priority`, {
     method: "PATCH",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ priorityScore }),
+    body: { priorityScore },
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(text || "Öncelik skoru güncellenemedi");
-  }
 }
 
 export interface CreateExpertByAdminPayload {
@@ -223,16 +171,8 @@ export async function createExpertByAdmin(
   const base = getOptionalApiBase();
   if (!base) throw new Error("API bağlantısı bulunamadı");
 
-  const res = await fetch(`${base}/admin/experts`, {
+  return apiFetch<{ id: string; userId: string; email: string }>("/admin/experts", {
     method: "POST",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: payload,
   });
-
-  if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(err?.message || "Uzman oluşturulamadı");
-  }
-
-  return res.json() as Promise<{ id: string; userId: string; email: string }>;
 }
