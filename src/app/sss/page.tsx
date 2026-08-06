@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSss } from "@/lib/services/public.service";
 import { SssFullList } from "@/components/common/sss-full-list";
+import { JsonLd, stripHtml } from "@/lib/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "Sık Sorulan Sorular",
@@ -29,8 +30,22 @@ export default async function FaqPage() {
 
   const sorted = [...items].sort((a, b) => a.order - b.order);
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: sorted.map((item) => ({
+      "@type": "Question",
+      name: stripHtml(item.question),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: stripHtml(item.answer),
+      },
+    })),
+  };
+
   return (
     <>
+      {sorted.length > 0 && <JsonLd data={faqJsonLd} />}
       <section className="section-shell relative overflow-hidden border-b border-border/70 bg-[#cce1de]">
         <div className="page-shell">
           <div className="max-w-3xl space-y-4">

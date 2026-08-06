@@ -6,6 +6,8 @@ import { Star, Award, FileText, MessageSquare, Phone, BookOpen, Calendar } from 
 
 import { getExpert, getExpertBlogs } from "@/lib/services/public.service";
 import { FavoriteButton } from "@/features/experts/components/favorite-button";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { siteConfig } from "@/lib/constants/site";
 
 export const revalidate = 0;
 
@@ -66,8 +68,31 @@ export default async function ExpertDetailPage({ params }: ExpertDetailPageProps
   const fullStars = Math.floor(expert.rating);
   const hasHalf = expert.rating % 1 >= 0.5;
 
+  const pageUrl = `${siteConfig.siteUrl}/uzmanlar/${slug}`;
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name,
+    jobTitle: expert.title,
+    description: expert.bio,
+    url: pageUrl,
+    worksFor: { "@id": `${siteConfig.siteUrl}/#organization` },
+    ...(expert.avatarUrl ? { image: expert.avatarUrl } : {}),
+  };
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: siteConfig.siteUrl },
+      { "@type": "ListItem", position: 2, name: "Uzmanlarımız", item: `${siteConfig.siteUrl}/uzmanlar` },
+      { "@type": "ListItem", position: 3, name, item: pageUrl },
+    ],
+  };
+
   return (
     <>
+      <JsonLd data={personJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       {/* Hero başlık */}
       <section className="border-b border-border/70 bg-[#cce1de] pt-[calc(var(--site-header-height)+2rem)] pb-10">
         <div className="page-shell">

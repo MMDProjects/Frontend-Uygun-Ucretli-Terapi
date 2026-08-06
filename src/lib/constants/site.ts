@@ -7,7 +7,7 @@ export const siteConfig = {
   /** Header vb. görünen marka yazısı */
   brandDisplayName: "Yeçamer",
   brandLogoUrl: "/images/logo.png",
-  siteUrl: "https://yecamer.online",
+  siteUrl: "https://yecamer.com.tr",
   contact: {
     addressLines: [],
     phoneDisplay: "+90 530 917 25 90",
