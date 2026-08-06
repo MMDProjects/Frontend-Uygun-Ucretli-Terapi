@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Uzmanlarımız",
   description:
     "Admin onaylı psikolog, terapist ve psikolojik danışmanlarımızı inceleyin. Ücretsiz ön görüşme ile size en uygun uzmanı bulun.",
+  alternates: {
+    canonical: "/uzmanlar",
+  },
   openGraph: {
     title: "Uzmanlarımız | Yeçamer",
     description:

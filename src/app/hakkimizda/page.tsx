@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "Hakkımızda",
   description:
     "Çocuk aile rehberlik ve erişkin merkezi olarak online danışmanlığı herkes için erişilebilir kılmak amacıyla kurulduk. Admin onaylı uzmanlar, şeffaf süreçler.",
+  alternates: {
+    canonical: "/hakkimizda",
+  },
   openGraph: {
     title: "Hakkımızda | Yeçamer",
     description:

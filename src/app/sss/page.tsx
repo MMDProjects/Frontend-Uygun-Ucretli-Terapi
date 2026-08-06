@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Sık Sorulan Sorular",
   description:
     "Yeçamer hakkında merak ettikleriniz: nasıl çalışır, ücretler, uzman başvurusu ve daha fazlası.",
+  alternates: {
+    canonical: "/sss",
+  },
   openGraph: {
     title: "Sık Sorulan Sorular | Yeçamer",
     description:

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +12,41 @@ export const revalidate = 0;
 type ExpertDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+function truncate(text: string, maxLength: number): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= maxLength) return clean;
+  return `${clean.slice(0, maxLength).replace(/\s+\S*$/, "")}…`;
+}
+
+export async function generateMetadata({ params }: ExpertDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  let expert: Awaited<ReturnType<typeof getExpert>>;
+  try {
+    expert = await getExpert(slug);
+  } catch {
+    return {};
+  }
+
+  const name = `${expert.user.firstName} ${expert.user.lastName}`.trim();
+  const title = expert.title ? `${name} — ${expert.title}` : name;
+  const description = truncate(expert.bio ?? "", 155);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/uzmanlar/${slug}`,
+    },
+    openGraph: {
+      title: `${title} | Yeçamer`,
+      description,
+      url: `https://yecamer.com.tr/uzmanlar/${slug}`,
+      ...(expert.avatarUrl ? { images: [{ url: expert.avatarUrl, alt: name }] } : {}),
+    },
+  };
+}
 
 export default async function ExpertDetailPage({ params }: ExpertDetailPageProps) {
   const { slug } = await params;
