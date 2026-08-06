@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { getBlog } from "@/lib/services/public.service";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { siteConfig } from "@/lib/constants/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -69,8 +71,36 @@ export default async function BlogDetailPage({ params }: Props) {
     year: "numeric",
   });
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: blog.title,
+    description: excerptFromHtml(blog.content ?? "", 155),
+    datePublished: blog.createdAt,
+    url: `${siteConfig.siteUrl}/blog/${slug}`,
+    author: {
+      "@type": "Person",
+      name: authorName,
+      jobTitle: blog.expertProfile.title,
+    },
+    publisher: { "@id": `${siteConfig.siteUrl}/#organization` },
+    ...(blog.coverImageUrl ? { image: [blog.coverImageUrl] } : {}),
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: siteConfig.siteUrl },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${siteConfig.siteUrl}/blog` },
+      { "@type": "ListItem", position: 3, name: blog.title, item: `${siteConfig.siteUrl}/blog/${slug}` },
+    ],
+  };
+
   return (
     <div className="bg-white !pt-0">
+      <JsonLd data={articleJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       {/* Kapak resmi — en üstte */}
       {blog.coverImageUrl && (
         <div className="relative aspect-[21/9] w-full bg-muted">
