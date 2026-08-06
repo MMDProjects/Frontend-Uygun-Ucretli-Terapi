@@ -32,6 +32,7 @@ export const organizationJsonLd = {
   alternateName: "uygun ücretli Terapi",
   url: siteConfig.siteUrl,
   logo: `${siteConfig.siteUrl}${siteConfig.brandLogoUrl}`,
+  image: `${siteConfig.siteUrl}/og-image.png`,
   description: siteConfig.description,
   telephone: siteConfig.contact.phoneDisplay,
   sameAs: siteConfig.socialLinks.map((link) => link.href),

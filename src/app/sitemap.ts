@@ -26,8 +26,9 @@ async function getExpertSlugs(): Promise<string[]> {
     });
     if (!res.ok) return [];
     const data = await res.json();
-    const experts: { slug?: string }[] = Array.isArray(data) ? data : (data.data ?? []);
-    return experts.map((e) => e.slug).filter(Boolean) as string[];
+    const experts: { slug?: string; id?: string }[] = Array.isArray(data) ? data : (data.data ?? []);
+    // Uzman profillerinde slug alanı yok; URL'ler id ile kurulu (bkz. ExpertCardApi)
+    return experts.map((e) => e.slug ?? e.id).filter(Boolean) as string[];
   } catch {
     return [];
   }
