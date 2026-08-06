@@ -17,6 +17,9 @@ const homeDescription =
 export const metadata: Metadata = {
   title: "Ana Sayfa",
   description: homeDescription,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: `Ana Sayfa | ${siteConfig.name}`,
     description: homeDescription,

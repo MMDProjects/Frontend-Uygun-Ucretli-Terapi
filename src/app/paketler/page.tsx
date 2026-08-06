@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Paketler",
   description:
     "Yeçamer danışmanlık paketleri ve fiyatları. Seans sayısına göre şeffaf fiyatlandırma. Ücretsiz ön görüşme ile başlayın.",
+  alternates: {
+    canonical: "/paketler",
+  },
   openGraph: {
     title: "Paketler | Yeçamer",
     description:

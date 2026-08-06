@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Blog",
   description:
     "Psikoloji, kişisel gelişim ve ruh sağlığı üzerine uzman yazıları. Güncel makaleler ve rehberler.",
+  alternates: {
+    canonical: "/blog",
+  },
   openGraph: {
     title: "Blog | Yeçamer",
     description:

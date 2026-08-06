@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "İletişim",
   description:
     "Soru, randevu, öneri veya şikayet bildirimlerinizi iletebilirsiniz. Mesai saatleri içinde ortalama 4 saat içinde yanıt veriyoruz.",
+  alternates: {
+    canonical: "/iletisim",
+  },
   openGraph: {
     title: "İletişim | Yeçamer",
     description:

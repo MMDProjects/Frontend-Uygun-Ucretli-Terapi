@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "KVKK Aydınlatma Metni",
   description:
     "Yeçamer platformu kişisel verilerin korunması ve işlenmesine ilişkin aydınlatma metni.",
+  alternates: {
+    canonical: "/kvkk",
+  },
 };
 
 export const revalidate = 3600;
