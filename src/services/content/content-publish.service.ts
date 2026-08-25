@@ -7,7 +7,8 @@ export type ContentPublishResult = {
 };
 
 /**
- * Placeholder until Supabase/API contract exists.
+ * Gecici mock: backend tarafinda icerik yayin endpointi tanimlanana kadar
+ * bu servis sahte yanit doner. Gercek API sozlesmesi geldiginde degistirilecek.
  */
 export async function submitContentPublish(
   payload: ContentPublishPayload
