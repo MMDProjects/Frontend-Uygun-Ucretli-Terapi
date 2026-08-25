@@ -144,7 +144,7 @@ export function AdminBlogWriteView({ onPublished }: { onPublished?: () => void }
           <div className="space-y-1.5">
             <Label htmlFor="ab-slug">
               Slug <span className="text-destructive">*</span>
-              <span className="ml-2 text-xs font-normal text-muted-foreground">URL'de görünür</span>
+              <span className="ml-2 text-xs font-normal text-muted-foreground">URL&apos;de görünür</span>
             </Label>
             <Input
               id="ab-slug"

@@ -5,13 +5,22 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# Ust uste gelen deploy'lari sirala; devam edeni ASLA iptal etme.
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     steps:
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           port: ${{ secrets.VPS_PORT }}
@@ -35,4 +44,8 @@ jobs:
 
             docker compose up --build -d
 
-            echo "Frontend deploy tamamlandi"
+            # Konteyner gercekten ayaga kalkti mi? Kalkmadiysa job kirmizi olur,
+            # calisan konteynerlere dokunulmaz.
+            curl -fsS --retry 20 --retry-delay 5 --retry-connrefused http://127.0.0.1:3000/ > /dev/null
+
+            echo "Frontend deploy tamamlandi ve ana sayfa yanit veriyor"
