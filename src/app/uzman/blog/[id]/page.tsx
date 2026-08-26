@@ -196,7 +196,7 @@ export default function BlogDuzenlePage({ params }: PageProps) {
         <div className="space-y-1.5">
           <label htmlFor="blog-slug" className="block text-sm font-semibold text-foreground">
             Slug <span className="text-destructive">*</span>
-            <span className="ml-2 text-xs font-normal text-muted-foreground">URL'de görünür</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground">URL&apos;de görünür</span>
           </label>
           <input
             id="blog-slug"

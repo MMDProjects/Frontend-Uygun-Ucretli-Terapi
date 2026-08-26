@@ -1,0 +1,91 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+      - 'hotfix/**'
+      - 'chore/**'
+      - 'infra/**'
+  pull_request:
+    branches: [test, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Build sirasinda NEXT_PUBLIC_* degerleri imaja gomulur.
+  # CI'da yalnizca build'in kirilmadigini dogruluyoruz; prod degeri
+  # deploy sirasinda docker-compose build-arg ile veriliyor.
+  NEXT_PUBLIC_API_URL: http://localhost:4000
+
+jobs:
+  # main dalina yalnizca test veya hotfix/* uzerinden terfi edilebilir.
+  promotion-guard:
+    name: Terfi Zinciri Kontrolu
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Kaynak dali dogrula
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            test|hotfix/*)
+              echo "OK: $HEAD_REF -> main" ;;
+            *)
+              echo "::error::main dalina yalnizca 'test' veya 'hotfix/*' dallarindan PR acilabilir. Gelen dal: $HEAD_REF"
+              exit 1 ;;
+          esac
+
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Bagimliliklar
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+  docker-build:
+    name: Docker Imaj Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [frontend-ci]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      # Imaj push edilmez; amac VPS'te calisacak build'in kirik olmadigini
+      # deploy'dan ONCE dogrulamak.
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          push: false
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

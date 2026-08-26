@@ -13,8 +13,6 @@ type Props = {
 };
 
 export function PortfolioSection({ experts }: Props) {
-  if (experts.length === 0) return null;
-
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "start", slidesToScroll: 1 },
     [Autoplay({ delay: 3500, stopOnInteraction: true, stopOnMouseEnter: true })],
@@ -22,6 +20,10 @@ export function PortfolioSection({ experts }: Props) {
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  // Erken cikis hook'lardan SONRA olmali: aksi halde experts bostan doluya
+  // gectiginde render'lar arasi hook sayisi degisir ve React hata firlatir.
+  if (experts.length === 0) return null;
 
   return (
     <section
