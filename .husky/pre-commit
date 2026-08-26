@@ -1,0 +1,3 @@
+# Commit oncesi yalnizca degisen dosyalarda lint.
+# Testler bilerek burada kosmuyor; onlar CI kapisinda.
+npx lint-staged
