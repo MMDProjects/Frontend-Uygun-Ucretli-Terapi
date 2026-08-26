@@ -492,7 +492,7 @@ export default function AyarlarGenelPage() {
                 placeholder="Ücretsiz Ön Görüşme&#10;Hakkınız Hazır"
                 className="w-full resize-none rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring/25"
               />
-              <p className="text-[11px] text-muted-foreground">Yeni satır için Enter'a basın — popup'ta iki satır olarak görünür.</p>
+              <p className="text-[11px] text-muted-foreground">Yeni satır için Enter&apos;a basın — popup&apos;ta iki satır olarak görünür.</p>
             </div>
 
             {/* Açıklama */}
