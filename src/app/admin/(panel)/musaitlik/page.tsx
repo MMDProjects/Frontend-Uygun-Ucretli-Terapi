@@ -110,9 +110,11 @@ async function fetchExperts(): Promise<ExpertItem[]> {
   );
   return Array.isArray(res) ? res : (res.data ?? []);
 }
-async function fetchAvailabilities(id: string, weekStart: Date): Promise<ApiAvailability[]> {
+// Tüm uzmanlar tek istekte: uzman başına istek rate limit'e takılıp
+// bazı uzmanları boş gösteriyordu.
+async function fetchWeekAvailabilities(weekStart: Date): Promise<ApiAvailability[]> {
   const ws = toDateStr(weekStart);
-  return apiFetch(`/admin/experts/${id}/availabilities?weekStart=${ws}`, { token: getToken() });
+  return apiFetch(`/admin/availabilities?weekStart=${ws}`, { token: getToken() });
 }
 async function patchBulkBlock(ids: string[], block: boolean) {
   return apiFetch("/admin/availabilities/bulk-block", {
@@ -148,15 +150,25 @@ export default function AdminMusaitlikPage() {
 
   // Hafta değişince tüm uzmanların müsaitliklerini yeniden çek
   useEffect(() => {
-    if (loadingExperts || experts.length === 0) return;
-    const weekStart = weekDates[0];
-    Promise.all(
-      experts.map(async (e) => {
-        try   { return [e.id, await fetchAvailabilities(e.id, weekStart)] as [string, ApiAvailability[]]; }
-        catch { return [e.id, []] as [string, ApiAvailability[]]; }
-      }),
-    ).then((entries) => setAvailMap(new Map(entries)));
-  }, [weekDates, loadingExperts, experts]);
+    let cancelled = false;
+    fetchWeekAvailabilities(weekDates[0])
+      .then((list) => {
+        if (cancelled) return;
+        const m = new Map<string, ApiAvailability[]>();
+        list.forEach((a) => {
+          const arr = m.get(a.expertProfileId);
+          if (arr) arr.push(a);
+          else m.set(a.expertProfileId, [a]);
+        });
+        setAvailMap(m);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAvailMap(new Map());
+        toast.error("Müsaitlikler yüklenemedi, lütfen sayfayı yenileyin.");
+      });
+    return () => { cancelled = true; };
+  }, [weekDates]);
 
   const colorMap = useMemo(() => {
     const m = new Map<string, string>();
