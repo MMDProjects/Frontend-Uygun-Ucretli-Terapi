@@ -106,7 +106,7 @@ function weekRangeLabel(dates: Date[]): string {
 /* ─── API ────────────────────────────────────────────────── */
 async function fetchExperts(): Promise<ExpertItem[]> {
   const res = await apiFetch<{ data: ExpertItem[] } | ExpertItem[]>(
-    "/admin/experts?limit=100", { token: getToken() },
+    "/admin/experts?limit=100&onlyApproved=true", { token: getToken() },
   );
   return Array.isArray(res) ? res : (res.data ?? []);
 }
