@@ -85,7 +85,7 @@ export async function listExperts(): Promise<ExpertListItem[]> {
   if (!base) return [];
 
   const payload = await apiFetch<{ data: BackendExpert[]; total: number }>(
-    "/admin/experts?limit=100"
+    "/admin/experts?limit=100&onlyApproved=true"
   );
   if (!Array.isArray(payload?.data)) {
     throw new Error("Uzmanlar yüklenemedi: beklenmeyen sunucu yanıtı");
