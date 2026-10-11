@@ -56,6 +56,36 @@ type BlockKey = string;
 /* ─── helpers ────────────────────────────────────────────── */
 function getToken() { return getAccessToken() ?? ""; }
 
+/* Uzman/gün/saat seçimini kalıcı yapar — F5'te veya panel tekrar
+   açıldığında adminin daraltığı görünüm sıfırlanmasın diye. */
+const STORAGE_KEY = "musaitlik-filters-v1";
+
+type PersistedFilters = {
+  checkedIds: string[];
+  filterDays: number[];
+  filterBlocks: string[];
+};
+
+function loadPersistedFilters(): PersistedFilters | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedFilters;
+  } catch {
+    return null;
+  }
+}
+
+function savePersistedFilters(f: PersistedFilters) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(f));
+  } catch {
+    // localStorage kullanılamıyorsa (gizli sekme/quota) sessizce yoksay
+  }
+}
+
 function expertLabel(e: ExpertItem) {
   const last = e.user.lastName?.trim();
   return `${e.user.firstName}${last ? ` ${last[0].toUpperCase()}.` : ""}`;
@@ -128,9 +158,11 @@ export default function AdminMusaitlikPage() {
   const [checkedIds,     setCheckedIds]     = useState<Set<string>>(new Set());
   const [availMap,       setAvailMap]       = useState<Map<string, ApiAvailability[]>>(new Map());
   const [loadingExperts, setLoadingExperts] = useState(true);
-  const [filterDays,     setFilterDays]     = useState<Set<number>>(new Set([0,1,2,3,4,5,6]));
+  const [filterDays,     setFilterDays]     = useState<Set<number>>(
+    () => new Set(loadPersistedFilters()?.filterDays ?? [0,1,2,3,4,5,6]),
+  );
   const [filterBlocks,   setFilterBlocks]   = useState<Set<BlockKey>>(
-    () => new Set(TIME_BLOCKS.map((b) => b.key)),
+    () => new Set(loadPersistedFilters()?.filterBlocks ?? TIME_BLOCKS.map((b) => b.key)),
   );
   const [weekOffset, setWeekOffset] = useState(0);
 
@@ -142,11 +174,31 @@ export default function AdminMusaitlikPage() {
     fetchExperts()
       .then((list) => {
         setExperts(list);
-        setCheckedIds(new Set(list.map((e) => e.id)));
+        const persisted = loadPersistedFilters();
+        if (persisted) {
+          // Kayıtlı seçim varsa yalnızca hâlâ listede olan id'ler korunur;
+          // sonradan eklenen uzmanlar otomatik seçili başlamaz (listede
+          // görünmeye devam eder, admin isterse elle işaretler).
+          const validIds = new Set(list.map((e) => e.id));
+          setCheckedIds(new Set(persisted.checkedIds.filter((id) => validIds.has(id))));
+        } else {
+          setCheckedIds(new Set(list.map((e) => e.id)));
+        }
       })
       .catch(() => toast.error("Uzmanlar yüklenemedi"))
       .finally(() => setLoadingExperts(false));
   }, []);
+
+  // Seçim/filtre değişikliklerini kalıcı hale getir (uzmanlar yüklenmeden
+  // yazarsak boş state kayıtlı veriyi ezer, bu yüzden loadingExperts bekler).
+  useEffect(() => {
+    if (loadingExperts) return;
+    savePersistedFilters({
+      checkedIds: Array.from(checkedIds),
+      filterDays: Array.from(filterDays),
+      filterBlocks: Array.from(filterBlocks),
+    });
+  }, [checkedIds, filterDays, filterBlocks, loadingExperts]);
 
   // Hafta değişince tüm uzmanların müsaitliklerini yeniden çek
   useEffect(() => {
