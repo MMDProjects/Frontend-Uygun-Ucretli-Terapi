@@ -15,6 +15,18 @@ export const bentoSpanPattern = [
   "xl:col-span-4",
 ] as const;
 
+// Etiketleri değişiklik kalmayana kadar siler (iç içe "<scr<script>ipt>" gibi
+// kalıntılar için), kalan tekil < > karakterlerini de temizler.
+function stripHtml(html: string): string {
+  let text = html;
+  let previous: string;
+  do {
+    previous = text;
+    text = text.replace(/<[^>]*>/g, "");
+  } while (text !== previous);
+  return text.replace(/[<>]/g, "");
+}
+
 export function BlogCardApi({ post, className }: { post: ApiBlog; className?: string }) {
   const authorName =
     post.authorName?.trim() ||
@@ -27,7 +39,7 @@ export function BlogCardApi({ post, className }: { post: ApiBlog; className?: st
     year: "numeric",
   });
   const excerpt = post.content
-    ? post.content.replace(/<[^>]*>/g, "").slice(0, 140) + "…"
+    ? stripHtml(post.content).slice(0, 140) + "…"
     : "";
 
   return (
