@@ -14,21 +14,14 @@ import {
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
+import {
+  fetchExperts,
+  fetchWeekAvailabilities,
+  type ApiAvailability,
+  type ExpertItem,
+} from "@/lib/services/admin.service";
 
 /* ─── types ─────────────────────────────────────────────── */
-type ExpertItem = {
-  id: string;
-  priorityScore: number;
-  user: { firstName: string; lastName: string };
-};
-type ApiAvailability = {
-  id: string;
-  expertProfileId: string;
-  date: string;  // ISO datetime string "2026-06-09T00:00:00.000Z"
-  startTime: string;
-  endTime: string;
-  isBlockedByAdmin: boolean;
-};
 type AvailWithExpert = ApiAvailability & { expertId: string };
 
 /* ─── constants ──────────────────────────────────────────── */
@@ -134,18 +127,6 @@ function weekRangeLabel(dates: Date[]): string {
 }
 
 /* ─── API ────────────────────────────────────────────────── */
-async function fetchExperts(): Promise<ExpertItem[]> {
-  const res = await apiFetch<{ data: ExpertItem[] } | ExpertItem[]>(
-    "/admin/experts?limit=100&onlyApproved=true", { token: getToken() },
-  );
-  return Array.isArray(res) ? res : (res.data ?? []);
-}
-// Tüm uzmanlar tek istekte: uzman başına istek rate limit'e takılıp
-// bazı uzmanları boş gösteriyordu.
-async function fetchWeekAvailabilities(weekStart: Date): Promise<ApiAvailability[]> {
-  const ws = toDateStr(weekStart);
-  return apiFetch(`/admin/availabilities?weekStart=${ws}`, { token: getToken() });
-}
 async function patchBulkBlock(ids: string[], block: boolean) {
   return apiFetch("/admin/availabilities/bulk-block", {
     method: "PATCH", body: { ids, block }, token: getToken(),

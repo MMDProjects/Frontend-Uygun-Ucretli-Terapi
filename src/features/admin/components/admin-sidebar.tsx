@@ -9,8 +9,9 @@ import { siteConfig } from "@/lib/constants/site";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { logout } from "@/lib/services/auth.service";
+import { useInboxCounts } from "@/hooks/use-inbox-counts";
 
-type NavItem = { label: string; href: string; badge?: number };
+type NavItem = { label: string; href: string; badge?: number; urgent?: boolean };
 type NavGroup = { title: string; items: NavItem[] };
 
 const groups: NavGroup[] = [
@@ -42,6 +43,14 @@ const groups: NavGroup[] = [
     ],
   },
   {
+    title: "Asistan",
+    items: [
+      { label: "Mesajlar", href: "/admin/mesajlar" },
+      { label: "Arama Talepleri", href: "/admin/arama-talepleri" },
+      { label: "Bilgi Bankası", href: "/admin/bilgi-bankasi" },
+    ],
+  },
+  {
     title: "Sistem",
     items: [
       { label: "Genel Ayarlar", href: "/admin/ayarlar/genel" },
@@ -55,6 +64,16 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { displayName } = useAuthStore();
   const { unreadCount } = useAdminNotificationStore();
+  const { counts } = useInboxCounts();
+
+  const dynamicBadges: Record<string, { badge: number; urgent?: boolean }> = {
+    "/admin/mesajlar": {
+      badge: (counts?.pendingAgent ?? 0) + (counts?.crisis ?? 0),
+      urgent: (counts?.crisis ?? 0) > 0,
+    },
+    "/admin/arama-talepleri": { badge: counts?.newLeads ?? 0 },
+    "/admin/bilgi-bankasi": { badge: counts?.openUnanswered ?? 0 },
+  };
 
   const name = displayName ?? "Admin";
   const initials = name
@@ -93,7 +112,8 @@ export function AdminSidebar() {
               {group.title}
             </p>
             <ul className="space-y-0.5 pl-2">
-              {group.items.map((item) => {
+              {group.items.map((rawItem) => {
+                const item: NavItem = { ...rawItem, ...dynamicBadges[rawItem.href] };
                 const active =
                   pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
@@ -109,7 +129,14 @@ export function AdminSidebar() {
                     >
                       <span>{item.label}</span>
                       {item.badge !== undefined && item.badge > 0 ? (
-                        <span className="rounded-full bg-destructive px-1.5 py-0 text-[10px] font-medium text-white">
+                        <span
+                          className={cn(
+                            "rounded-full px-1.5 py-0 text-[10px] font-medium text-white",
+                            item.urgent
+                              ? "bg-red-600 ring-2 ring-red-300/60"
+                              : "bg-destructive"
+                          )}
+                        >
                           {item.badge}
                         </span>
                       ) : null}
