@@ -27,7 +27,7 @@ import {
 import { apiFetch } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
-import { getAllAdminNotifications, markAllAdminNotificationsRead } from "@/lib/services/admin.service";
+import { fetchAllExperts, getAllAdminNotifications, markAllAdminNotificationsRead } from "@/lib/services/admin.service";
 
 type ExpertItem = { id: string; user: { id: string; firstName: string; lastName: string } | null };
 
@@ -60,8 +60,9 @@ export default function AdminBildirimlerPage() {
 
   // Load experts
   useEffect(() => {
-    apiFetch<{ data: ExpertItem[] }>("/admin/experts?limit=200")
-      .then((res) => setExperts((res.data ?? []).filter((e) => e.user?.id)))
+    // Onaysız/başvuran uzmanlar da listede kalır (onlyApproved yok)
+    fetchAllExperts({ onlyApproved: false })
+      .then((list) => setExperts((list as unknown as ExpertItem[]).filter((e) => e.user?.id)))
       .catch(() => setExperts([]))
       .finally(() => setLoadingExperts(false));
   }, []);

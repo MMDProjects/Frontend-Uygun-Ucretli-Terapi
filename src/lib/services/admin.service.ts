@@ -55,12 +55,32 @@ export type ApiAvailability = {
   isBlockedByAdmin: boolean;
 };
 
+const ADMIN_EXPERTS_PAGE_LIMIT = 100;
+const ADMIN_EXPERTS_MAX_PAGES = 50;
+
+// /admin/experts sayfalarını birleştirir (sayfa başına en fazla 100 kayıt).
+export async function fetchAllExperts(
+  opts: { onlyApproved?: boolean } = {},
+): Promise<ExpertItem[]> {
+  const token = getAccessToken() ?? "";
+  const all: ExpertItem[] = [];
+  for (let page = 1; page <= ADMIN_EXPERTS_MAX_PAGES; page++) {
+    const qs = `page=${page}&limit=${ADMIN_EXPERTS_PAGE_LIMIT}${opts.onlyApproved ? "&onlyApproved=true" : ""}`;
+    const res = await apiFetch<
+      { data: ExpertItem[]; total?: number } | ExpertItem[]
+    >(`/admin/experts?${qs}`, { token });
+    const items = Array.isArray(res) ? res : (res.data ?? []);
+    all.push(...items);
+    if (Array.isArray(res)) break;
+    const total = res.total;
+    if (items.length < ADMIN_EXPERTS_PAGE_LIMIT) break;
+    if (typeof total === "number" && all.length >= total) break;
+  }
+  return all;
+}
+
 export async function fetchExperts(): Promise<ExpertItem[]> {
-  const res = await apiFetch<{ data: ExpertItem[] } | ExpertItem[]>(
-    "/admin/experts?limit=100&onlyApproved=true",
-    { token: getAccessToken() ?? "" },
-  );
-  return Array.isArray(res) ? res : (res.data ?? []);
+  return fetchAllExperts({ onlyApproved: true });
 }
 
 // Tüm uzmanlar tek istekte: uzman başına istek rate limit'e takılıp

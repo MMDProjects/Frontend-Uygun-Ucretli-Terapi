@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery, type Paginated } from "@/lib/pagination";
 import type { ExpertDetail, ExpertListItem } from "@/types/dto/expert-list";
 
 export function clampExpertPriorityScore(raw: number): number {
@@ -91,6 +92,34 @@ export async function listExperts(): Promise<ExpertListItem[]> {
     throw new Error("Uzmanlar yüklenemedi: beklenmeyen sunucu yanıtı");
   }
   return sortExpertsByPriority(payload.data.map(mapToListItem));
+}
+
+/** Sayfalı admin uzman listesi; arama backend'de yapılır (ad, e-posta, ID). */
+export async function listExpertsPage(
+  opts: { page?: number; limit?: number; search?: string } = {}
+): Promise<Paginated<ExpertListItem>> {
+  const page = opts.page ?? 1;
+  const limit = opts.limit ?? 20;
+  const base = getOptionalApiBase();
+  if (!base) return { data: [], total: 0, page, limit };
+
+  const payload = await apiFetch<Paginated<BackendExpert>>(
+    `/admin/experts${buildQuery({
+      page,
+      limit,
+      onlyApproved: true,
+      search: opts.search?.trim(),
+    })}`
+  );
+  if (!Array.isArray(payload?.data)) {
+    throw new Error("Uzmanlar yüklenemedi: beklenmeyen sunucu yanıtı");
+  }
+  return {
+    data: sortExpertsByPriority(payload.data.map(mapToListItem)),
+    total: payload.total ?? payload.data.length,
+    page: payload.page ?? page,
+    limit: payload.limit ?? limit,
+  };
 }
 
 export async function getExpertDetail(expertId: string): Promise<ExpertDetail | null> {

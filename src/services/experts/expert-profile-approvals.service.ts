@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery, type Paginated } from "@/lib/pagination";
 import type { ExpertProfileApproval } from "@/types/dto/expert-profile-approval";
 
 interface BackendExpert {
@@ -66,25 +67,30 @@ function mapToApproval(expert: BackendExpert): ExpertProfileApproval {
 }
 
 /**
- * Lists expert profiles awaiting admin approval (status: ONAY_BEKLIYOR).
+ * Lists expert profiles awaiting admin approval (REVIZE_GONDERILDI | PROFIL_GUNCELLENDI).
+ * Profil Onayları kuyruğu: daha önce yayına alınmış uzmanların profil/biyografi/belge
+ * güncellemeleri buraya düşer. Yeni başvurular "Yeni Başvurular" kuyruğuna aittir.
+ * Kuyruk filtresi backend'de uygulanır (queue=profileUpdates).
  */
-export async function listExpertProfileApprovals(): Promise<ExpertProfileApproval[]> {
+export async function listExpertProfileApprovals(
+  page = 1,
+  limit = 20
+): Promise<Paginated<ExpertProfileApproval>> {
   const base = getOptionalApiBase();
-  if (!base) return [];
+  if (!base) return { data: [], total: 0, page, limit };
 
-  const payload = await apiFetch<{ data: BackendExpert[] }>("/admin/experts?limit=100");
+  const payload = await apiFetch<Paginated<BackendExpert>>(
+    `/admin/experts${buildQuery({ queue: "profileUpdates", page, limit })}`
+  );
   if (!Array.isArray(payload?.data)) {
     throw new Error("Profil onayları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
-  // Profil Onayları kuyruğu: daha önce yayına alınmış (isPublished: true) uzmanların
-  // profil/biyografi/belge güncellemeleri buraya düşer.
-  // Yeni başvurular (isPublished: false, ONAY_BEKLIYOR) "Yeni Başvurular" kuyruğuna aittir.
-  return payload.data
-    .filter(
-      (e) =>
-        e.status === "REVIZE_GONDERILDI" || e.status === "PROFIL_GUNCELLENDI",
-    )
-    .map(mapToApproval);
+  return {
+    data: payload.data.map(mapToApproval),
+    total: payload.total ?? payload.data.length,
+    page: payload.page ?? page,
+    limit: payload.limit ?? limit,
+  };
 }
 
 /** Approve: sets expert status to AKTIF. */

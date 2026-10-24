@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useExpertProfileApprovals } from "@/hooks/use-expert-profile-approvals";
+import { Pager } from "@/components/shared/pager";
 import {
   expertProfileRejectSchema,
   type ExpertProfileRejectForm,
@@ -133,7 +134,18 @@ function RejectProfileDialog({
 }
 
 export function ExpertProfileApprovalsView() {
-  const { items, loading, error, refetch, approve, reject } = useExpertProfileApprovals();
+  const {
+    items,
+    page,
+    total,
+    limit,
+    setPage,
+    loading,
+    error,
+    refetch,
+    approve,
+    reject,
+  } = useExpertProfileApprovals();
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<ExpertProfileApproval | null>(null);
   const [rejectTarget, setRejectTarget] = useState<ExpertProfileApproval | null>(null);
@@ -390,6 +402,10 @@ export function ExpertProfileApprovalsView() {
             </Card>
           ))}
         </div>
+      ) : null}
+
+      {!error ? (
+        <Pager page={page} total={total} limit={limit} disabled={loading} onChange={setPage} />
       ) : null}
 
       <RejectProfileDialog

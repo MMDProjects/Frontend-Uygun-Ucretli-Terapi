@@ -20,12 +20,7 @@ export type PaymentStatus = "PAID" | "PENDING" | "FREE";
 export type AppointmentStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 export type UnansweredStatus = "OPEN" | "RESOLVED";
 
-export interface Paginated<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-}
+export type { Paginated } from "@/lib/pagination";
 
 export interface ContactSummary {
   id: string;

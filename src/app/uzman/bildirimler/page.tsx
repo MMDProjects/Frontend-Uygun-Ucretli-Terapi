@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bell, CheckCheck, MessageCircle, AlertCircle, Info, Siren } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/features/admin/components/page-header";
 import {
   getMyUzmanNotifications,
@@ -11,6 +12,8 @@ import {
 } from "@/lib/services/uzman.service";
 import type { UzmanNotificationType } from "@/types/domain";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 50;
 
 const TYPE_CONFIG: Record<
   UzmanNotificationType,
@@ -118,13 +121,36 @@ function NotificationItem({
 export default function UzmanBildirimlerPage() {
   const [notifications, setNotifications] = useState<ApiUzmanNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextPage, setNextPage] = useState(2);
 
   useEffect(() => {
-    getMyUzmanNotifications()
-      .then(setNotifications)
+    getMyUzmanNotifications({ page: 1, limit: PAGE_SIZE })
+      .then((list) => {
+        setNotifications(list);
+        setHasMore(list.length >= PAGE_SIZE);
+      })
       .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Bildirimler yüklenemedi."))
       .finally(() => setLoading(false));
   }, []);
+
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const list = await getMyUzmanNotifications({ page: nextPage, limit: PAGE_SIZE });
+      setNotifications((prev) => {
+        const seen = new Set(prev.map((n) => n.id));
+        return [...prev, ...list.filter((n) => !seen.has(n.id))];
+      });
+      setNextPage((p) => p + 1);
+      setHasMore(list.length >= PAGE_SIZE);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Bildirimler yüklenemedi.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -194,6 +220,13 @@ export default function UzmanBildirimlerPage() {
               onMarkRead={markRead}
             />
           ))}
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button type="button" variant="outline" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? "Yükleniyor…" : "Daha fazla yükle"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

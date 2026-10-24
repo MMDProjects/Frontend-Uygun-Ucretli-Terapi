@@ -41,7 +41,7 @@ export type ApiBlog = {
   expertProfile: {
     title: string;
     user: { firstName: string; lastName: string };
-  };
+  } | null;
 };
 
 export type ApiBlogListResponse = {

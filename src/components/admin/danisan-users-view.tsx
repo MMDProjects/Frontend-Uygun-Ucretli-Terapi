@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { Pager } from "@/components/shared/pager";
 import { useDanisanUsers } from "@/hooks/use-danisan-users";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { USERS_PAGE_LIMIT } from "@/services/users/users-list.service";
 import type { DanisanUser } from "@/types/dto/user-list";
 import { DanisanDetailDialog } from "./danisan-detail-dialog";
 import { DanisanUsersTable } from "./danisan-users-table";
@@ -10,32 +13,27 @@ import { DanisanUsersToolbar } from "./danisan-users-toolbar";
 import { UserWarningDialog } from "./user-warning-dialog";
 
 export function DanisanUsersView() {
-  const { users, setUsers, loading, error, refetch } = useDanisanUsers();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<Array<"active" | "inactive">>([]);
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
+  // İkisi birden seçiliyse ya da hiçbiri seçili değilse durum filtresi gönderilmez
+  const statusParam = selectedStatuses.length === 1 ? selectedStatuses[0] : undefined;
+
+  // Arama/filtre değişince sayfa 1'e döner (sayfa, ait olduğu filtre anahtarıyla tutulur)
+  const filterKey = `${debouncedSearch}|${statusParam ?? ""}`;
+  const [pageState, setPageState] = useState({ key: filterKey, page: 1 });
+  const page = pageState.key === filterKey ? pageState.page : 1;
+
+  const { users, total, loading, error, refetch } = useDanisanUsers({
+    page,
+    search: debouncedSearch || undefined,
+    status: statusParam,
+  });
 
   const [warningOpen, setWarningOpen] = useState(false);
   const [warningUser, setWarningUser] = useState<DanisanUser | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailUser, setDetailUser] = useState<DanisanUser | null>(null);
-
-  const filteredUsers = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    return users.filter((user) => {
-      const matchSearch =
-        q.length === 0 ||
-        user.name.toLowerCase().includes(q) ||
-        user.email.toLowerCase().includes(q) ||
-        user.id.includes(q) ||
-        `#${user.id}`.toLowerCase().includes(q);
-
-      const matchStatus =
-        selectedStatuses.length === 0 ||
-        selectedStatuses.includes(user.status);
-
-      return matchSearch && matchStatus;
-    });
-  }, [users, searchQuery, selectedStatuses]);
 
   const handleStatusToggleFilter = (
     status: "active" | "inactive",
@@ -89,7 +87,7 @@ export function DanisanUsersView() {
       />
 
       <DanisanUsersTable
-        users={filteredUsers}
+        users={users}
         loading={loading}
         error={error}
         onRefresh={refetch}
@@ -97,6 +95,14 @@ export function DanisanUsersView() {
         onOpenWarning={handleOpenWarning}
         onStatusToggle={handleStatusToggleRow}
         onNotifyStub={handleNotifyStub}
+      />
+
+      <Pager
+        page={page}
+        total={total}
+        limit={USERS_PAGE_LIMIT}
+        disabled={loading}
+        onChange={(next) => setPageState({ key: filterKey, page: next })}
       />
 
       <UserWarningDialog

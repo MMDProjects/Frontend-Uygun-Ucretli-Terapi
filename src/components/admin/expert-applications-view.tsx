@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ExternalLink, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useExpertApplications } from "@/hooks/use-expert-applications";
+import { Pager } from "@/components/shared/pager";
 import {
   expertApplicationRejectSchema,
   type ExpertApplicationRejectForm,
@@ -137,7 +138,18 @@ function RejectApplicationDialog({
 }
 
 export function ExpertApplicationsView() {
-  const { applications, loading, error, refetch, approve, reject } = useExpertApplications();
+  const {
+    applications,
+    page,
+    total,
+    limit,
+    setPage,
+    loading,
+    error,
+    refetch,
+    approve,
+    reject,
+  } = useExpertApplications();
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<ExpertApplication | null>(null);
   const [rejectTarget, setRejectTarget] = useState<ExpertApplication | null>(null);
@@ -310,6 +322,10 @@ export function ExpertApplicationsView() {
             </Card>
           ))}
         </div>
+      ) : null}
+
+      {!error ? (
+        <Pager page={page} total={total} limit={limit} disabled={loading} onChange={setPage} />
       ) : null}
 
       <RejectApplicationDialog

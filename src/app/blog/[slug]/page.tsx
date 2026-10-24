@@ -33,7 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const authorName =
     blog.authorName?.trim() ||
-    `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim();
+    (blog.expertProfile
+      ? `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim()
+      : "Editör");
   const description = excerptFromHtml(blog.content ?? "", 155);
 
   return {
@@ -64,7 +66,11 @@ export default async function BlogDetailPage({ params }: Props) {
     notFound();
   }
 
-  const authorName = blog.authorName?.trim() || `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim();
+  const authorName =
+    blog.authorName?.trim() ||
+    (blog.expertProfile
+      ? `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim()
+      : "Editör");
   const dateLabel = new Date(blog.createdAt).toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "long",
@@ -81,7 +87,7 @@ export default async function BlogDetailPage({ params }: Props) {
     author: {
       "@type": "Person",
       name: authorName,
-      jobTitle: blog.expertProfile.title,
+      ...(blog.expertProfile ? { jobTitle: blog.expertProfile.title } : {}),
     },
     publisher: { "@id": `${siteConfig.siteUrl}/#organization` },
     ...(blog.coverImageUrl ? { image: [blog.coverImageUrl] } : {}),

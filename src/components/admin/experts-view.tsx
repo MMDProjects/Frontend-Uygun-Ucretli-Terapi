@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Search, UserPlus } from "lucide-react";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { toast } from "sonner";
@@ -10,14 +10,21 @@ import { UserWarningDialog } from "@/components/admin/user-warning-dialog";
 import { CreateExpertDialog } from "@/components/admin/create-expert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Pager } from "@/components/shared/pager";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useExperts } from "@/hooks/use-experts";
-import { sortExpertsByPriority } from "@/services/users/experts-list.service";
 import { apiFetch } from "@/lib/api";
 import type { ExpertListItem } from "@/types/dto/expert-list";
 
 export function ExpertsView() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
   const {
     experts,
+    page,
+    total,
+    limit,
+    setPage,
     loading,
     error,
     refetch,
@@ -28,25 +35,11 @@ export function ExpertsView() {
     detailLoading,
     openDetail,
     closeDetail,
-  } = useExperts();
-  const [searchQuery, setSearchQuery] = useState("");
+  } = useExperts(debouncedSearch);
   const [detailOpen, setDetailOpen] = useState(false);
   const [warningOpen, setWarningOpen] = useState(false);
   const [warningExpert, setWarningExpert] = useState<ExpertListItem | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
-  const filteredExperts = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    const list = q
-      ? experts.filter(
-          (item) =>
-            item.fullName.toLowerCase().includes(q) ||
-            item.email.toLowerCase().includes(q) ||
-            item.id.toLowerCase().includes(q)
-        )
-      : experts;
-    return sortExpertsByPriority(list);
-  }, [experts, searchQuery]);
 
   const handlePrioritySave = async (expertId: string, score: number) => {
     try {
@@ -89,7 +82,7 @@ export function ExpertsView() {
   };
 
   const handleStatusToggleRow = async (expertId: string) => {
-    const selected = filteredExperts.find((x) => x.id === expertId);
+    const selected = experts.find((x) => x.id === expertId);
     try {
       await toggleExpertStatus(expertId);
       const next = selected?.status === "active" ? "inactive" : "active";
@@ -112,7 +105,7 @@ export function ExpertsView() {
   };
 
   const handleTogglePublish = async (expertId: string, isPublished: boolean) => {
-    const selected = filteredExperts.find((x) => x.id === expertId);
+    const selected = experts.find((x) => x.id === expertId);
     try {
       await togglePublish(expertId, isPublished);
       toast.success(
@@ -145,7 +138,7 @@ export function ExpertsView() {
       </PageHeader>
 
       <ExpertsTable
-        experts={filteredExperts}
+        experts={experts}
         loading={loading}
         error={error}
         onRefresh={refetch}
@@ -156,6 +149,10 @@ export function ExpertsView() {
         onTogglePublish={handleTogglePublish}
         onDelete={handleDelete}
       />
+
+      {!error ? (
+        <Pager page={page} total={total} limit={limit} disabled={loading} onChange={setPage} />
+      ) : null}
 
       <div className="rounded-lg border border-[#3178C6]/25 bg-[#3178C6]/5 px-4 py-3 text-sm text-[#24292E] dark:border-[#3178C6]/40 dark:text-foreground">
         <p className="font-medium text-[#3178C6] dark:text-[#6BA3E8]">İpucu</p>

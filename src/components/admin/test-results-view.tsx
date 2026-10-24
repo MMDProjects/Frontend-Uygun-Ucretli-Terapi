@@ -6,6 +6,7 @@ import { PageHeader } from "@/features/admin/components/page-header";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Pager } from "@/components/shared/pager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,8 +24,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { usePsychometricTests } from "@/hooks/use-psychometric-tests";
 import { useTestResults } from "@/hooks/use-test-results";
+import { TEST_RESULTS_PAGE_LIMIT } from "@/services/tests/test-results.service";
 import type { TestResultSubmission } from "@/types/dto/psychometric-test";
 import { TestResultDetailDialog } from "./test-result-detail-dialog";
 
@@ -59,15 +62,23 @@ export function TestResultsView({
   const setTestFilter = onTestFilterChange ?? setInternalFilter;
   const setSearch = onSearchChange ?? setInternalSearch;
 
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+  const testId = testFilter === "__all__" ? undefined : testFilter;
+
   const filters = useMemo(
-    () => ({
-      testId: testFilter === "__all__" ? undefined : testFilter,
-      search: search.trim() || undefined,
-    }),
-    [testFilter, search]
+    () => ({ testId, search: debouncedSearch || undefined }),
+    [testId, debouncedSearch]
   );
 
-  const { submissions, loading, error, refetch } = useTestResults(filters);
+  // Arama/filtre değişince sayfa 1'e döner (sayfa, ait olduğu filtre anahtarıyla tutulur)
+  const filterKey = `${testId ?? ""}|${debouncedSearch}`;
+  const [pageState, setPageState] = useState({ key: filterKey, page: 1 });
+  const page = pageState.key === filterKey ? pageState.page : 1;
+
+  const { submissions, total, loading, error, refetch } = useTestResults(
+    filters,
+    page
+  );
 
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<TestResultSubmission | null>(null);
@@ -181,6 +192,15 @@ export function TestResultsView({
                 </Table>
               </div>
             </>
+          ) : null}
+          {!error ? (
+            <Pager
+              page={page}
+              total={total}
+              limit={TEST_RESULTS_PAGE_LIMIT}
+              disabled={loading}
+              onChange={(next) => setPageState({ key: filterKey, page: next })}
+            />
           ) : null}
         </CardContent>
       </Card>

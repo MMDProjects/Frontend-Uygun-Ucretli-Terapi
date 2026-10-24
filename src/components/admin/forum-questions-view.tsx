@@ -5,7 +5,8 @@ import { Loader2, UserCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useForumQuestions } from "@/hooks/use-forum-questions";
-import { listExperts } from "@/services/users/experts-list.service";
+import { fetchAllExperts } from "@/lib/services/admin.service";
+import { getOptionalApiBase } from "@/lib/http-client";
 import type { ExpertListItem } from "@/types/dto/expert-list";
 import { PageHeader } from "@/features/admin/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -63,9 +64,12 @@ function ExpandableText({ text, className }: { text: string; className?: string 
   );
 }
 
+// Atama kutusunun ihtiyaç duyduğu alanlar
+type ExpertOption = Pick<ExpertListItem, "id" | "fullName">;
+
 interface AssignDialogProps {
   question: AdminForumQuestion | null;
-  experts: ExpertListItem[];
+  experts: ExpertOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAssign: (questionId: string, expertProfileId: string) => Promise<void>;
@@ -192,14 +196,30 @@ export function ForumQuestionsView() {
     }
   }
 
-  const [experts, setExperts] = useState<ExpertListItem[]>([]);
+  const [experts, setExperts] = useState<ExpertOption[]>([]);
   const [assignTarget, setAssignTarget] = useState<AdminForumQuestion | null>(
     null
   );
 
   useEffect(() => {
-    listExperts()
-      .then(setExperts)
+    if (!getOptionalApiBase()) return;
+    fetchAllExperts({ onlyApproved: true })
+      .then((list) =>
+        setExperts(
+          list
+            .map((e) => ({
+              id: e.id,
+              fullName: `${e.user.firstName} ${e.user.lastName}`.trim(),
+              priorityScore: e.priorityScore ?? 0,
+            }))
+            .sort(
+              (a, b) =>
+                b.priorityScore - a.priorityScore ||
+                a.fullName.localeCompare(b.fullName, "tr"),
+            )
+            .map(({ id, fullName }) => ({ id, fullName })),
+        ),
+      )
       .catch((err: unknown) => {
         toast.error(err instanceof Error ? err.message : "Uzman listesi yüklenemedi");
       });

@@ -69,7 +69,9 @@ function RequestRow({
 }) {
   const [updating, setUpdating] = useState(false);
   const danisanName = `${req.user.firstName} ${req.user.lastName}`.trim();
-  const uzmanName = `${req.expertProfile.user.firstName} ${req.expertProfile.user.lastName}`.trim();
+  const uzmanName = req.expertProfile?.user
+    ? `${req.expertProfile.user.firstName} ${req.expertProfile.user.lastName}`.trim()
+    : "-";
   const date = new Date(req.createdAt).toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "short",
@@ -131,7 +133,9 @@ function MobileCard({
 }) {
   const [updating, setUpdating] = useState(false);
   const danisanName = `${req.user.firstName} ${req.user.lastName}`.trim();
-  const uzmanName = `${req.expertProfile.user.firstName} ${req.expertProfile.user.lastName}`.trim();
+  const uzmanName = req.expertProfile?.user
+    ? `${req.expertProfile.user.firstName} ${req.expertProfile.user.lastName}`.trim()
+    : "-";
   const date = new Date(req.createdAt).toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "short",
