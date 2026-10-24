@@ -222,7 +222,16 @@ export default function AdminBildirimlerPage() {
                         onValueChange={(v) => { if (v) field.onChange(v); }}
                       >
                         <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue placeholder="Uzman seçin…" />
+                          <SelectValue>
+                            {(v: string) => {
+                              const u = experts.find((e) => e.user?.id === v)?.user;
+                              return u ? (
+                                `${u.firstName} ${u.lastName}`
+                              ) : (
+                                <span className="text-muted-foreground">Uzman seçin…</span>
+                              );
+                            }}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {experts.filter((e) => e.user?.id).map((e) => (
@@ -246,7 +255,9 @@ export default function AdminBildirimlerPage() {
                   onValueChange={(v) => { if (v) setValue("type", v as FormValues["type"], { shouldValidate: true }); }}
                 >
                   <SelectTrigger className="h-10 rounded-xl">
-                    <SelectValue />
+                    <SelectValue>
+                      {(v: string) => typeLabels[v as keyof typeof typeLabels] ?? v}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(typeLabels).map(([val, label]) => (

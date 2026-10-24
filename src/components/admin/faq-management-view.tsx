@@ -365,7 +365,13 @@ export function FaqManagementView() {
                   }}
                 >
                   <SelectTrigger id="faq-category" className="w-full min-w-0">
-                    <SelectValue placeholder="Kategori seçin" />
+                    <SelectValue>
+                      {(v: string) =>
+                        FAQ_CATEGORIES.find((c) => c.id === v)?.label ?? (
+                          <span className="text-muted-foreground">Kategori seçin</span>
+                        )
+                      }
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {FAQ_CATEGORIES.map((c) => (

@@ -93,7 +93,11 @@ export function TestResultsView({
       {!hideHeader && (
         <PageHeader title="Test sonuçları" description="Testleri tamamlayan kullanıcıların gönderimleri.">
           <Select value={testFilter} onValueChange={(v) => setTestFilter(v ?? "__all__")}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Tüm testler" /></SelectTrigger>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue>
+                {(v: string) => tests.find((t) => t.id === v)?.title ?? "Tüm testler"}
+              </SelectValue>
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">Tüm testler</SelectItem>
               {tests.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
