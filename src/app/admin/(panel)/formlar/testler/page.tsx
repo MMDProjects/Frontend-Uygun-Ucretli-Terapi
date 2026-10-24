@@ -46,7 +46,9 @@ export default function TestlerPage() {
           <>
             <Select value={testFilter} onValueChange={(v) => setTestFilter(v ?? "__all__")}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tüm testler" />
+                <SelectValue>
+                  {(v: string) => tests.find((t) => t.id === v)?.title ?? "Tüm testler"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">Tüm testler</SelectItem>

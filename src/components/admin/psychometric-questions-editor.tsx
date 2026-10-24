@@ -213,7 +213,13 @@ export function PsychometricQuestionsEditor({
                     }
                   >
                     <SelectTrigger className="w-full max-w-md">
-                      <SelectValue placeholder="Seçin" />
+                      <SelectValue>
+                        {(v: string) => {
+                          if (v === "__none__") return "— Yok —";
+                          const s = subscales.find((x) => x.id === v);
+                          return s ? s.name || s.id : v;
+                        }}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">— Yok —</SelectItem>

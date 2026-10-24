@@ -124,7 +124,13 @@ function AssignDialog({
               disabled={submitting}
             >
               <SelectTrigger id="expert-select">
-                <SelectValue placeholder="Uzman seçin…" />
+                <SelectValue>
+                  {(v: string) =>
+                    experts.find((e) => e.id === v)?.fullName ?? (
+                      <span className="text-muted-foreground">Uzman seçin…</span>
+                    )
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {experts.map((e) => (

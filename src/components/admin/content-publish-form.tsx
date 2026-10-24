@@ -322,7 +322,13 @@ export function ContentPublishForm({
             }}
           >
             <SelectTrigger id="content-category" className="w-full min-w-0">
-              <SelectValue placeholder="Kategori seçin" />
+              <SelectValue>
+                {(v: string) =>
+                  CONTENT_CATEGORIES.find((c) => c.id === v)?.label ?? (
+                    <span className="text-muted-foreground">Kategori seçin</span>
+                  )
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {CONTENT_CATEGORIES.map((c) => (
