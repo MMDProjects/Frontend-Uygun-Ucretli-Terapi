@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery, type Paginated } from "@/lib/pagination";
 import type { BlogApprovalDto } from "@/types/dto/blog-approval";
 
 interface BackendBlog {
@@ -12,7 +13,7 @@ interface BackendBlog {
   createdAt: string;
   expertProfile: {
     user: { firstName: string; lastName: string };
-  };
+  } | null;
 }
 
 function mapToBlogApproval(blog: BackendBlog): BlogApprovalDto {
@@ -26,27 +27,37 @@ function mapToBlogApproval(blog: BackendBlog): BlogApprovalDto {
     excerpt,
     content: blog.content,
     coverImageUrl: blog.coverImageUrl ?? null,
-    authorName:
-      `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim(),
+    authorName: blog.expertProfile?.user
+      ? `${blog.expertProfile.user.firstName} ${blog.expertProfile.user.lastName}`.trim()
+      : "Editör",
     submittedAt: blog.createdAt,
     status: blog.status === "REVIZE_GONDERILDI" ? "revised" : "pending",
   };
 }
 
 /**
- * Lists blog posts awaiting admin approval (status: ONAY_BEKLIYOR).
+ * Lists blog posts awaiting admin approval (ONAY_BEKLIYOR | REVIZE_GONDERILDI).
+ * Kuyruk filtresi backend'de uygulanır (queue=approvals).
  */
-export async function listPendingBlogApprovals(): Promise<BlogApprovalDto[]> {
+export async function listPendingBlogApprovals(
+  page = 1,
+  limit = 20
+): Promise<Paginated<BlogApprovalDto>> {
   const base = getOptionalApiBase();
-  if (!base) return [];
+  if (!base) return { data: [], total: 0, page, limit };
 
-  const payload = await apiFetch<{ data: BackendBlog[] }>("/admin/blogs?limit=100");
+  const payload = await apiFetch<Paginated<BackendBlog>>(
+    `/admin/blogs${buildQuery({ queue: "approvals", page, limit })}`
+  );
   if (!Array.isArray(payload?.data)) {
     throw new Error("Blog onayları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
-  return payload.data
-    .filter((b) => b.status === "ONAY_BEKLIYOR" || b.status === "REVIZE_GONDERILDI")
-    .map(mapToBlogApproval);
+  return {
+    data: payload.data.map(mapToBlogApproval),
+    total: payload.total ?? payload.data.length,
+    page: payload.page ?? page,
+    limit: payload.limit ?? limit,
+  };
 }
 
 /** Approve: sets blog status to AKTIF. */

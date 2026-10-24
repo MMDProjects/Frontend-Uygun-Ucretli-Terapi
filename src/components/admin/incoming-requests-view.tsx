@@ -1,10 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { getAccessToken } from "@/lib/auth-cookies";
 import { getOptionalApiBase } from "@/lib/http-client";
-import { useIncomingRequests } from "@/hooks/use-incoming-requests";
+import { Pager } from "@/components/shared/pager";
+import {
+  INCOMING_REQUESTS_PAGE_LIMIT,
+  useIncomingRequests,
+} from "@/hooks/use-incoming-requests";
 import { updateIncomingRequestStatus } from "@/services/forms/incoming-requests.service";
 import type {
   IncomingRequest,
@@ -15,9 +19,12 @@ import { IncomingRequestsTable } from "./incoming-requests-table";
 
 interface IncomingRequestsViewProps {
   isCorporate?: boolean;
+  /** Backend'e giden (debounce edilmiş) arama metni. */
   searchQuery: string;
   selectedStatuses: IncomingRequestStatus[];
   filterEmail?: string | null;
+  page: number;
+  onPageChange: (page: number) => void;
 }
 
 export function IncomingRequestsView({
@@ -25,47 +32,20 @@ export function IncomingRequestsView({
   searchQuery,
   selectedStatuses,
   filterEmail,
+  page,
+  onPageChange,
 }: IncomingRequestsViewProps) {
-  const { requests: allRequests, setRequests: setAllRequests, loading, error, refetch } =
-    useIncomingRequests();
+  const { requests, setRequests, total, loading, error, refetch } = useIncomingRequests({
+    page,
+    isCorporate,
+    statuses: selectedStatuses,
+    search: searchQuery,
+    email: filterEmail,
+    onPageOverflow: onPageChange,
+  });
 
   const [messageOpen, setMessageOpen] = useState(false);
   const [messageRequest, setMessageRequest] = useState<IncomingRequest | null>(null);
-
-  const requests = useMemo(
-    () => allRequests.filter((r) =>
-      isCorporate === undefined ? true : r.isCorporate === isCorporate
-    ),
-    [allRequests, isCorporate]
-  );
-
-  const filteredRequests = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    const targetEmail = filterEmail?.toLowerCase().trim();
-    return requests.filter((req) => {
-      const matchEmail = !targetEmail || req.email.toLowerCase() === targetEmail;
-
-      const matchSearch =
-        q.length === 0 ||
-        req.fullName.toLowerCase().includes(q) ||
-        req.email.toLowerCase().includes(q) ||
-        req.subject.toLowerCase().includes(q) ||
-        req.message.toLowerCase().includes(q);
-
-      const matchStatus =
-        selectedStatuses.length === 0 ||
-        selectedStatuses.includes(req.status);
-
-      return matchEmail && matchSearch && matchStatus;
-    });
-  }, [requests, searchQuery, selectedStatuses, filterEmail]);
-
-  const setRequests = (updater: (prev: IncomingRequest[]) => IncomingRequest[]) => {
-    setAllRequests((prev) => {
-      const next = updater(prev);
-      return prev.map((r) => next.find((n) => n.id === r.id) ?? r);
-    });
-  };
 
   const handleStatusChangeRow = async (id: string, status: IncomingRequestStatus) => {
     const previous = [...requests];
@@ -75,7 +55,7 @@ export function IncomingRequestsView({
       const hasApi = getOptionalApiBase() !== null;
       toast.success(hasApi ? "Durum güncellendi" : "Durum güncellendi (yerel)");
     } catch (e) {
-      setRequests(() => previous);
+      setRequests(previous);
       toast.error(e instanceof Error ? e.message : "Durum güncellenemedi");
       void refetch();
     }
@@ -84,7 +64,7 @@ export function IncomingRequestsView({
   return (
     <div className="space-y-4">
       <IncomingRequestsTable
-        requests={filteredRequests}
+        requests={requests}
         loading={loading}
         error={error}
         onRefresh={refetch}
@@ -92,6 +72,16 @@ export function IncomingRequestsView({
         onStatusChange={handleStatusChangeRow}
         isCorporate={isCorporate}
       />
+
+      {!error ? (
+        <Pager
+          page={page}
+          total={total}
+          limit={INCOMING_REQUESTS_PAGE_LIMIT}
+          disabled={loading}
+          onChange={onPageChange}
+        />
+      ) : null}
 
       <IncomingRequestMessageDialog
         request={messageRequest}

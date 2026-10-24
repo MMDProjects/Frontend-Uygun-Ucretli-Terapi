@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   clampExpertPriorityScore,
   getExpertDetail,
-  listExperts,
+  listExpertsPage,
   sortExpertsByPriority,
   toggleExpertActive,
   toggleExpertPublish,
@@ -12,8 +12,14 @@ import {
 } from "@/services/users/experts-list.service";
 import type { ExpertDetail, ExpertListItem } from "@/types/dto/expert-list";
 
+const PAGE_LIMIT = 20;
+
 interface UseExpertsResult {
   experts: ExpertListItem[];
+  page: number;
+  total: number;
+  limit: number;
+  setPage: (page: number) => void;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -26,26 +32,46 @@ interface UseExpertsResult {
   closeDetail: () => void;
 }
 
-export function useExperts(): UseExpertsResult {
+export function useExperts(search = ""): UseExpertsResult {
   const [experts, setExperts] = useState<ExpertListItem[]>([]);
+  // Sayfa numarası aramaya bağlı tutulur: arama değişince otomatik 1. sayfaya döner.
+  const [pageState, setPageState] = useState({ search, page: 1 });
+  const page = pageState.search === search ? pageState.page : 1;
+  const setPage = useCallback(
+    (next: number) => setPageState({ search, page: next }),
+    [search]
+  );
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<ExpertDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const requestRef = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++requestRef.current;
     setLoading(true);
     setError(null);
     try {
-      const data = await listExperts();
-      setExperts(data);
+      const res = await listExpertsPage({ page, limit: PAGE_LIMIT, search });
+      if (requestId !== requestRef.current) return;
+      const lastPage = Math.max(1, Math.ceil(res.total / PAGE_LIMIT));
+      if (page > lastPage) {
+        // Sayfa boşaldı (ör. son uzman silindi): son sayfaya geç, efekt yeniden çeker.
+        setPageState({ search, page: lastPage });
+        return;
+      }
+      setExperts(res.data);
+      setTotal(res.total);
+      setLoading(false);
     } catch (e) {
+      if (requestId !== requestRef.current) return;
       setError(e instanceof Error ? e.message : "Uzman listesi yüklenemedi");
       setExperts([]);
-    } finally {
+      setTotal(0);
       setLoading(false);
     }
-  }, []);
+  }, [page, search]);
 
   const openDetail = useCallback(async (expertId: string) => {
     setDetailLoading(true);
@@ -127,6 +153,10 @@ export function useExperts(): UseExpertsResult {
 
   return {
     experts,
+    page,
+    total,
+    limit: PAGE_LIMIT,
+    setPage,
     loading,
     error,
     refetch: load,

@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery } from "@/lib/pagination";
 import { computePsychometricScores } from "@/lib/psychometric-scoring";
 import type {
   TestAnswersMap,
@@ -94,12 +95,6 @@ function buildMockSubmissions(): TestResultSubmission[] {
   ];
 }
 
-let resultsStore: TestResultSubmission[] = buildMockSubmissions();
-
-function cloneResults(r: TestResultSubmission[]): TestResultSubmission[] {
-  return JSON.parse(JSON.stringify(r)) as TestResultSubmission[];
-}
-
 function applyResultFilters(
   list: TestResultSubmission[],
   filters: TestResultsListFilters
@@ -174,29 +169,49 @@ function mapResultsFromResponse(payload: unknown): TestResultSubmission[] {
   return (raw as BackendTestResult[]).map(mapBackendResult);
 }
 
+export const TEST_RESULTS_PAGE_LIMIT = 20;
+
+export interface TestResultsPage {
+  data: TestResultSubmission[];
+  total: number;
+}
+
 export async function listTestResults(
   filters: TestResultsListFilters = {},
-  accessToken?: string | null
-): Promise<TestResultSubmission[]> {
+  accessToken?: string | null,
+  paging: { page?: number; limit?: number } = {}
+): Promise<TestResultsPage> {
+  const page = paging.page ?? 1;
+  const limit = paging.limit ?? TEST_RESULTS_PAGE_LIMIT;
+
+  // Mock veri yalnızca API adresi tanımlı değilken; sayfalama tarayıcıda yapılır
   const base = getOptionalApiBase();
   if (!base) {
-    return applyResultFilters(cloneResults(resultsStore), filters);
+    const filtered = applyResultFilters(buildMockSubmissions(), filters);
+    return {
+      data: filtered.slice((page - 1) * limit, page * limit),
+      total: filtered.length,
+    };
   }
 
-  const params = new URLSearchParams();
-  if (filters.testId) params.set("testId", filters.testId);
-  if (filters.search) params.set("search", filters.search);
-  const qs = params.toString();
-  const path = `/admin/test-results${qs ? `?${qs}` : ""}`;
-  const payload = await apiFetch<unknown>(path, { token: accessToken });
+  const qs = buildQuery({
+    page,
+    limit,
+    testId: filters.testId,
+    search: filters.search?.trim() || undefined,
+  });
+  const payload = await apiFetch<unknown>(`/admin/test-results${qs}`, {
+    token: accessToken,
+  });
   if (!responseLooksSuccessful(payload)) {
     throw new Error("Test sonuçları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
-  const mapped = mapResultsFromResponse(payload);
-  if (mapped.length > 0) {
-    resultsStore = cloneResults(mapped);
-  }
-  return applyResultFilters(cloneResults(resultsStore), filters);
+  const data = mapResultsFromResponse(payload);
+  const total =
+    isRecord(payload) && typeof payload.total === "number"
+      ? payload.total
+      : data.length;
+  return { data, total };
 }
 
 export async function getTestResult(
@@ -205,7 +220,7 @@ export async function getTestResult(
 ): Promise<TestResultSubmission | null> {
   const base = getOptionalApiBase();
   if (!base) {
-    return cloneResults(resultsStore).find((s) => s.id === id) ?? null;
+    return buildMockSubmissions().find((s) => s.id === id) ?? null;
   }
   const payload = await apiFetch<unknown>(
     `/admin/test-results/${encodeURIComponent(id)}`,

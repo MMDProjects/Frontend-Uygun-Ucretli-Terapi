@@ -5,6 +5,7 @@ import { ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useBlogPosts } from "@/hooks/use-blog-posts";
+import { Pager } from "@/components/shared/pager";
 import { PageHeader } from "@/features/admin/components/page-header";
 import type { BlogPostDto } from "@/types/dto/blog-post";
 import { apiFetch } from "@/lib/api";
@@ -29,7 +30,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function BlogPostsView({ hideHeader }: { hideHeader?: boolean } = {}) {
-  const { posts, loading, error, refetch, remove } = useBlogPosts();
+  const { posts, page, total, limit, setPage, loading, error, refetch, remove } =
+    useBlogPosts();
   const [selectedPost, setSelectedPost] = useState<BlogPostDto | null>(null);
   const [pendingDelete, setPendingDelete] = useState<BlogPostDto | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -209,6 +211,10 @@ export function BlogPostsView({ hideHeader }: { hideHeader?: boolean } = {}) {
             </Card>
           ))}
         </div>
+      ) : null}
+
+      {!error ? (
+        <Pager page={page} total={total} limit={limit} disabled={loading} onChange={setPage} />
       ) : null}
 
       {/* Detail / Edit Dialog */}

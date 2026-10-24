@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { INCOMING_STATUS_LABELS, INCOMING_STATUS_ORDER } from "@/lib/incoming-request-meta";
 import type { IncomingRequestStatus } from "@/types/dto/incoming-request";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,18 @@ export default function GelenTaleplerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<IncomingRequestStatus[]>([]);
   const filterCount = selectedStatuses.length;
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 300);
+
+  // Her sekme kendi sayfasını tutar; arama/durum/e-posta değişince sayfalar 1'e döner.
+  const filterKey = `${debouncedSearch}|${selectedStatuses.join(",")}|${danisanEmail ?? ""}`;
+  const [pageState, setPageState] = useState<{ key: string; pages: Record<Tab, number> }>({
+    key: filterKey,
+    pages: { bireysel: 1, kurumsal: 1 },
+  });
+  const pages: Record<Tab, number> =
+    pageState.key === filterKey ? pageState.pages : { bireysel: 1, kurumsal: 1 };
+  const setTabPage = (tab: Tab, next: number) =>
+    setPageState({ key: filterKey, pages: { ...pages, [tab]: next } });
 
   const clearDanisanFilter = () => router.push("/admin/formlar/talepler");
 
@@ -52,7 +65,7 @@ export default function GelenTaleplerPage() {
         description="İletişim formları ve uzman görüşme taleplerini buradan yönetin."
       >
         <Input
-          placeholder="Ara (ad, e-posta, konu)..."
+          placeholder="Ara (ad, e-posta, mesaj)..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full md:w-[260px]"
@@ -134,18 +147,22 @@ export default function GelenTaleplerPage() {
       {activeTab === "bireysel" && (
         <IncomingRequestsView
           isCorporate={false}
-          searchQuery={searchQuery}
+          searchQuery={debouncedSearch}
           selectedStatuses={selectedStatuses}
           filterEmail={danisanEmail}
+          page={pages.bireysel}
+          onPageChange={(next) => setTabPage("bireysel", next)}
         />
       )}
 
       {activeTab === "kurumsal" && (
         <IncomingRequestsView
           isCorporate={true}
-          searchQuery={searchQuery}
+          searchQuery={debouncedSearch}
           selectedStatuses={selectedStatuses}
           filterEmail={danisanEmail}
+          page={pages.kurumsal}
+          onPageChange={(next) => setTabPage("kurumsal", next)}
         />
       )}
     </div>

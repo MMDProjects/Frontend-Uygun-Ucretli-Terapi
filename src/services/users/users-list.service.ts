@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery } from "@/lib/pagination";
 import type { DanisanRole, DanisanUser, UserListStatus } from "@/types/dto/user-list";
 
 export const MOCK_DANISAN_USERS: DanisanUser[] = [
@@ -128,23 +129,69 @@ function responseLooksSuccessful(payload: unknown): boolean {
   return false;
 }
 
+export const USERS_PAGE_LIMIT = 20;
+
+export interface ListUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: UserListStatus;
+}
+
+export interface UsersPage {
+  data: DanisanUser[];
+  total: number;
+}
+
+function filterMockUsers(params: ListUsersParams): DanisanUser[] {
+  const q = params.search?.toLowerCase().trim() ?? "";
+  return MOCK_DANISAN_USERS.filter((user) => {
+    const matchSearch =
+      q.length === 0 ||
+      user.name.toLowerCase().includes(q) ||
+      user.email.toLowerCase().includes(q) ||
+      user.id.includes(q) ||
+      `#${user.id}`.includes(q);
+    const matchStatus = !params.status || user.status === params.status;
+    return matchSearch && matchStatus;
+  });
+}
+
 /**
- * GET /users with Bearer token. Mock list only when API URL is not configured (local/demo mode).
+ * GET /admin/users?page&limit&search&status with Bearer token. Mock list only when API URL is not
+ * configured (local/demo mode); mock'ta filtre ve sayfalama tarayıcıda yapılır.
  * Real HTTP or network failures throw so callers can surface an error to the user.
  */
 export async function listUsers(
+  params: ListUsersParams = {},
   accessToken?: string | null
-): Promise<DanisanUser[]> {
+): Promise<UsersPage> {
+  const page = params.page ?? 1;
+  const limit = params.limit ?? USERS_PAGE_LIMIT;
+  const search = params.search?.trim() || undefined;
+
   const base = getOptionalApiBase();
   if (!base) {
-    return MOCK_DANISAN_USERS;
+    const filtered = filterMockUsers({ ...params, search });
+    return {
+      data: filtered.slice((page - 1) * limit, page * limit),
+      total: filtered.length,
+    };
   }
 
-  const payload = await apiFetch<unknown>("/admin/users", { token: accessToken });
+  const qs = buildQuery({ page, limit, search, status: params.status });
+  const payload = await apiFetch<unknown>(`/admin/users${qs}`, {
+    token: accessToken,
+  });
 
   if (!responseLooksSuccessful(payload)) {
     throw new Error("Kullanıcılar yüklenemedi: beklenmeyen sunucu yanıtı");
   }
 
-  return mapUsersFromResponse(payload);
+  const data = mapUsersFromResponse(payload);
+  const total =
+    isRecord(payload) && typeof payload.total === "number"
+      ? payload.total
+      : data.length;
+  return { data, total };
 }

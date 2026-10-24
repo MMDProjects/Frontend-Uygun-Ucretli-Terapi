@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery, type Paginated } from "@/lib/pagination";
 import type {
   IncomingRequest,
   IncomingRequestStatus,
@@ -70,16 +71,48 @@ export function mapIncomingRequestsFromResponse(
   return arr.map(mapContactForm);
 }
 
-export async function listIncomingRequests(
-  accessToken?: string | null
-): Promise<IncomingRequest[]> {
-  const base = getOptionalApiBase();
-  if (!base) return [];
+export interface IncomingRequestsQuery {
+  page?: number;
+  limit?: number;
+  isCorporate?: boolean;
+  statuses?: IncomingRequestStatus[];
+  search?: string;
+  /** Tam e-posta eşleşmesi (?danisan=). */
+  email?: string | null;
+}
 
-  const payload = await apiFetch<unknown>("/admin/contact-forms?limit=100", {
+/**
+ * Filtreler (sekme, durum, arama, e-posta) backend'de uygulanır.
+ * Durumlar backend enum'una çevrilip virgülle birleştirilir (YENI,ISLEMDE,COZULDU).
+ */
+export async function listIncomingRequests(
+  query: IncomingRequestsQuery = {},
+  accessToken?: string | null
+): Promise<Paginated<IncomingRequest>> {
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 20;
+  const base = getOptionalApiBase();
+  if (!base) return { data: [], total: 0, page, limit };
+
+  const qs = buildQuery({
+    page,
+    limit,
+    isCorporate: query.isCorporate,
+    status: query.statuses?.map((s) => STATUS_MAP_REVERSE[s]).join(","),
+    search: query.search?.trim(),
+    email: query.email?.trim(),
+  });
+  const payload = await apiFetch<unknown>(`/admin/contact-forms${qs}`, {
     token: accessToken,
   });
-  return mapIncomingRequestsFromResponse(payload);
+  const data = mapIncomingRequestsFromResponse(payload);
+  const p = (payload ?? {}) as Partial<Paginated<unknown>>;
+  return {
+    data,
+    total: typeof p.total === "number" ? p.total : data.length,
+    page: typeof p.page === "number" ? p.page : page,
+    limit: typeof p.limit === "number" ? p.limit : limit,
+  };
 }
 
 export async function updateIncomingRequestStatus(

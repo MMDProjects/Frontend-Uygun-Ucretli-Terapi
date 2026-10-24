@@ -311,9 +311,16 @@ type RawNotification = {
   createdAt: string;
 };
 
-export async function getMyUzmanNotifications(): Promise<ApiUzmanNotification[]> {
+// Parametresiz çağrı son 50 bildirimi döndürür; sayfalama için { page, limit } verilir.
+export async function getMyUzmanNotifications(
+  opts: { page?: number; limit?: number } = {},
+): Promise<ApiUzmanNotification[]> {
   const token = getAccessToken();
-  const raw = await apiFetch<RawNotification[]>("/notifications/all", { token });
+  const qs = new URLSearchParams();
+  if (opts.page) qs.set("page", String(opts.page));
+  if (opts.limit) qs.set("limit", String(opts.limit));
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+  const raw = await apiFetch<RawNotification[]>(`/notifications/all${query}`, { token });
   return raw.map((n) => ({ ...n, type: mapNotificationType(n.type) }));
 }
 

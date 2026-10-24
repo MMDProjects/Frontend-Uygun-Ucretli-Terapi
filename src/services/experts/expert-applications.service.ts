@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import { getOptionalApiBase } from "@/lib/http-client";
+import { buildQuery, type Paginated } from "@/lib/pagination";
 import type { ExpertApplication } from "@/types/dto/expert-application";
 
 interface BackendExpert {
@@ -67,19 +68,28 @@ function mapToApplication(expert: BackendExpert): ExpertApplication {
 }
 
 /**
- * Lists pending expert registration applications (status: ONAY_BEKLIYOR).
+ * Lists pending expert registration applications (status: ONAY_BEKLIYOR, yayında değil).
+ * Kuyruk filtresi backend'de uygulanır (queue=applications).
  */
-export async function listExpertApplications(): Promise<ExpertApplication[]> {
+export async function listExpertApplications(
+  page = 1,
+  limit = 20
+): Promise<Paginated<ExpertApplication>> {
   const base = getOptionalApiBase();
-  if (!base) return [];
+  if (!base) return { data: [], total: 0, page, limit };
 
-  const payload = await apiFetch<{ data: BackendExpert[] }>("/admin/experts?limit=100");
+  const payload = await apiFetch<Paginated<BackendExpert>>(
+    `/admin/experts${buildQuery({ queue: "applications", page, limit })}`
+  );
   if (!Array.isArray(payload?.data)) {
     throw new Error("Uzman başvuruları yüklenemedi: beklenmeyen sunucu yanıtı");
   }
-  return payload.data
-    .filter((e) => !e.isPublished && e.status === "ONAY_BEKLIYOR")
-    .map(mapToApplication);
+  return {
+    data: payload.data.map(mapToApplication),
+    total: payload.total ?? payload.data.length,
+    page: payload.page ?? page,
+    limit: payload.limit ?? limit,
+  };
 }
 
 /**

@@ -7,6 +7,7 @@ import { ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useBlogApprovals } from "@/hooks/use-blog-approvals";
+import { Pager } from "@/components/shared/pager";
 import {
   blogAdminRevisionSchema,
   blogApprovalRejectSchema,
@@ -125,6 +126,10 @@ function RejectBlogDialog({ post, open, onOpenChange, onReject }: RejectBlogDial
 export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {}) {
   const {
     approvals,
+    page,
+    total,
+    limit,
+    setPage,
     loading,
     error,
     refetch,
@@ -347,6 +352,10 @@ export function BlogApprovalsView({ hideHeader }: { hideHeader?: boolean } = {})
             </Card>
           ))}
         </div>
+      ) : null}
+
+      {!error ? (
+        <Pager page={page} total={total} limit={limit} disabled={loading} onChange={setPage} />
       ) : null}
 
       <RejectBlogDialog
