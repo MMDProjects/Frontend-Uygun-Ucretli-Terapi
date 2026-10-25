@@ -1,5 +1,6 @@
 export type Channel = "WHATSAPP" | "INSTAGRAM" | "WEB";
 export type ConversationStatus = "OPEN" | "PENDING_AGENT" | "CLOSED";
+export type ContactType = "DANISAN" | "UZMAN" | "EKIP";
 export type SenderType = "CLIENT" | "BOT" | "AGENT";
 export type LeadStatus =
   | "YENI"
@@ -27,6 +28,7 @@ export interface ContactSummary {
   fullName: string | null;
   phone: string | null;
   instagramId: string | null;
+  contactType: ContactType;
 }
 
 export interface Contact extends ContactSummary {
@@ -47,12 +49,16 @@ export interface ConversationBase {
   flaggedCrisis: boolean;
   createdAt: string;
   lastMessageAt: string;
+  handoffReason: string | null;
+  handoffSummary: string | null;
+  handedOffAt: string | null;
 }
 
 export interface LastMessagePreview {
   content: string;
   senderType: SenderType;
   createdAt: string;
+  isDraft?: boolean;
 }
 
 export interface ConversationListItem extends ConversationBase {
@@ -110,6 +116,17 @@ export interface ConversationDetail extends ConversationBase {
   leads: Lead[];
   appointments: ConversationAppointment[];
   windowOpen: boolean;
+  windowExpiresAt: string | null;
+}
+
+export interface DraftTool {
+  name: string;
+  args: Record<string, unknown>;
+}
+
+export interface DraftMeta {
+  tools?: DraftTool[];
+  mode?: "SHADOW" | "STANDBY";
 }
 
 export interface InboxMessage {
@@ -120,6 +137,9 @@ export interface InboxMessage {
   metaMessageId: string | null;
   agentUserId: string | null;
   agentUser: { firstName: string; lastName: string } | null;
+  externalSource: string | null;
+  isDraft?: boolean;
+  draftMeta?: DraftMeta | null;
   createdAt: string;
 }
 
@@ -129,6 +149,7 @@ export interface InboxCounts {
   crisis: number;
   newLeads: number;
   openUnanswered: number;
+  attention?: number;
 }
 
 export interface UnansweredQuestion {
@@ -167,6 +188,7 @@ export interface ListConversationsParams {
   status?: ConversationStatus | "ALL";
   channel?: Channel;
   crisis?: boolean;
+  contactType?: ContactType;
   q?: string;
   page?: number;
   limit?: number;
@@ -178,6 +200,7 @@ export interface ListMessagesParams {
 }
 
 export interface UpdateContactInput {
+  contactType?: ContactType;
   fullName?: string;
   age?: number;
   phone?: string;

@@ -8,6 +8,8 @@ import { useInboxStream } from "@/hooks/use-inbox-stream";
 import { cn } from "@/lib/utils";
 import { getConversation } from "@/services/inbox/conversations.service";
 import type { ConversationDetail } from "@/services/inbox/types";
+import { AlertControls } from "@/features/admin/assistant/alert-controls";
+import { AssistantModeBadge } from "@/features/admin/assistant/assistant-mode-badge";
 import { ContactPanel } from "./contact-panel";
 import { ConversationList } from "./conversation-list";
 import { MessageThread, type MessageThreadHandle } from "./message-thread";
@@ -77,7 +79,12 @@ export function InboxView() {
   });
 
   return (
-    <div className="-m-4 flex h-[calc(100vh-3.5rem)] overflow-hidden bg-card sm:-m-6">
+    <div className="-m-4 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden bg-card sm:-m-6">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2">
+        <AssistantModeBadge />
+        <AlertControls />
+      </header>
+      <div className="flex min-h-0 flex-1 overflow-hidden">
       <aside
         className={cn(
           "w-full shrink-0 border-r border-border lg:block lg:w-80",
@@ -130,6 +137,7 @@ export function InboxView() {
           />
         ) : null}
       </aside>
+      </div>
     </div>
   );
 }

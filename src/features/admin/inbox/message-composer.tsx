@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,21 +15,40 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import type { Channel } from "@/services/inbox/types";
+import { MESSAGE_MAX_LENGTH } from "./constants";
 
-const MAX_LENGTH = 4096;
+export interface MessageComposerHandle {
+  insertText: (text: string) => void;
+}
 
 interface MessageComposerProps {
+  ref?: Ref<MessageComposerHandle>;
   botActive: boolean;
+  channel: Channel;
   onSend: (content: string) => Promise<void>;
 }
 
-export function MessageComposer({ botActive, onSend }: MessageComposerProps) {
+export function MessageComposer({ ref, botActive, channel, onSend }: MessageComposerProps) {
+  const maxLength = MESSAGE_MAX_LENGTH[channel];
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertText: (text) => {
+        setValue(text.slice(0, maxLength));
+        requestAnimationFrame(() => textareaRef.current?.focus());
+      },
+    }),
+    [maxLength],
+  );
 
   const trimmed = value.trim();
-  const canSend = trimmed.length > 0 && trimmed.length <= MAX_LENGTH && !sending;
+  const canSend = trimmed.length > 0 && trimmed.length <= maxLength && !sending;
 
   async function doSend() {
     if (!canSend) return;
@@ -57,6 +76,7 @@ export function MessageComposer({ botActive, onSend }: MessageComposerProps) {
     <div className="border-t border-border bg-card p-3">
       <div className="flex items-end gap-2">
         <Textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
@@ -66,7 +86,7 @@ export function MessageComposer({ botActive, onSend }: MessageComposerProps) {
             }
           }}
           rows={1}
-          maxLength={MAX_LENGTH}
+          maxLength={maxLength}
           placeholder="Mesajınızı yazın (Enter gönderir, Shift+Enter yeni satır)"
           aria-label="Mesaj"
           className="max-h-40 min-h-11 flex-1 resize-none rounded-xl px-3 py-2.5"
@@ -82,6 +102,18 @@ export function MessageComposer({ botActive, onSend }: MessageComposerProps) {
           {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
         </Button>
       </div>
+
+      {value.length > maxLength * 0.8 ? (
+        <p
+          className={
+            value.length >= maxLength
+              ? "mt-1 text-right text-[11px] font-medium text-destructive"
+              : "mt-1 text-right text-[11px] text-muted-foreground"
+          }
+        >
+          {value.length} / {maxLength}
+        </p>
+      ) : null}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
