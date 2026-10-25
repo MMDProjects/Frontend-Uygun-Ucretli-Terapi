@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api";
+import { apiFetch, tryRefreshToken } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-cookies";
 
 export type AdminNotificationType = "INFO" | "WARNING" | "DANGER_PANIC";
@@ -21,23 +21,60 @@ export async function markAllAdminNotificationsRead(): Promise<void> {
   await apiFetch("/notifications/read-all", { method: "PATCH", token });
 }
 
+const NOTIF_MIN_DELAY_MS = 1000;
+const NOTIF_MAX_DELAY_MS = 30000;
+
 export function subscribeToNotificationStream(
   onMessage: (data: { type: AdminNotificationType; message: string; id: string }) => void,
 ): () => void {
-  const token = getAccessToken();
-  if (!token || typeof window === "undefined") return () => {};
+  if (typeof window === "undefined") return () => {};
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-  const es = new EventSource(`${apiUrl}/notifications/stream?token=${encodeURIComponent(token)}`);
+  let es: EventSource | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let delay = NOTIF_MIN_DELAY_MS;
+  let stopped = false;
 
-  es.onmessage = (e) => {
-    try {
-      const parsed = JSON.parse(e.data);
-      onMessage(parsed);
-    } catch {}
+  const scheduleReconnect = () => {
+    if (stopped) return;
+    timer = setTimeout(() => void connect(), delay);
+    delay = Math.min(delay * 2, NOTIF_MAX_DELAY_MS);
   };
 
-  return () => es.close();
+  const connect = async () => {
+    if (stopped) return;
+    const token = getAccessToken() ?? (await tryRefreshToken());
+    if (stopped) return;
+    if (!token) {
+      scheduleReconnect();
+      return;
+    }
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+    const source = new EventSource(
+      `${apiUrl}/notifications/stream?token=${encodeURIComponent(token)}`,
+    );
+    es = source;
+    source.onopen = () => {
+      delay = NOTIF_MIN_DELAY_MS;
+    };
+    source.onmessage = (e) => {
+      try {
+        onMessage(JSON.parse(e.data));
+      } catch {}
+    };
+    source.onerror = () => {
+      source.close();
+      if (es === source) es = null;
+      scheduleReconnect();
+    };
+  };
+
+  void connect();
+
+  return () => {
+    stopped = true;
+    if (timer) clearTimeout(timer);
+    es?.close();
+  };
 }
 
 export type ExpertItem = {

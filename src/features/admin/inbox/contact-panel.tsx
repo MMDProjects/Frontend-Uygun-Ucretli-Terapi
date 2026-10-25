@@ -23,6 +23,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +40,7 @@ import {
 } from "@/services/inbox/conversations.service";
 import type {
   Contact,
+  ContactType,
   ConversationDetail,
   UpdateContactInput,
 } from "@/services/inbox/types";
@@ -45,6 +53,7 @@ import {
   formatDateTime,
   formatRelative,
 } from "./labels";
+import { CONTACT_TYPE_LABELS, CONTACT_TYPE_ORDER } from "./constants";
 import { QuickAppointmentDialog } from "./quick-appointment-dialog";
 
 interface ContactPanelProps {
@@ -83,6 +92,58 @@ function Field({ label, value }: { label: string; value: string | null }) {
         {value && value.length > 0 ? value : "—"}
       </span>
     </div>
+  );
+}
+
+function ContactTypeSection({
+  contact,
+  onChanged,
+}: {
+  contact: Contact;
+  onChanged: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  async function handleChange(next: ContactType) {
+    if (next === contact.contactType || saving) return;
+    setSaving(true);
+    try {
+      await updateContact(contact.id, { contactType: next });
+      toast.success("Kişi tipi güncellendi");
+      onChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Güncellenemedi");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Section title="Kişi tipi">
+      <Select
+        value={contact.contactType}
+        onValueChange={(v) => {
+          if (v) void handleChange(v as ContactType);
+        }}
+        disabled={saving}
+      >
+        <SelectTrigger className="h-9 w-full rounded-lg" aria-label="Kişi tipi">
+          <SelectValue>
+            {(v: string) => CONTACT_TYPE_LABELS[v as ContactType] ?? v}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {CONTACT_TYPE_ORDER.map((t) => (
+            <SelectItem key={t} value={t}>
+              {CONTACT_TYPE_LABELS[t]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {contact.contactType !== "DANISAN" ? (
+        <p className="text-xs text-muted-foreground">Elif bu kişiye cevap vermez.</p>
+      ) : null}
+    </Section>
   );
 }
 
@@ -300,6 +361,8 @@ export function ContactPanel({ detail, onBack, onChanged }: ContactPanelProps) {
             contact={detail.contact}
             onChanged={onChanged}
           />
+
+          <ContactTypeSection contact={detail.contact} onChanged={onChanged} />
 
           <Section title="Kanal">
             <div className="flex items-center gap-2 text-sm">

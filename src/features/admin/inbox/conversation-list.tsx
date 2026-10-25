@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { listConversations } from "@/services/inbox/conversations.service";
 import type {
+  ContactType,
   ConversationListItem,
   ListConversationsParams,
 } from "@/services/inbox/types";
@@ -16,7 +17,9 @@ import {
   contactName,
   formatRelative,
 } from "./labels";
-import { handoffReasonLabel } from "./constants";
+import { CONTACT_TYPE_LABELS, CONTACT_TYPE_ORDER, handoffReasonLabel } from "./constants";
+
+type TypeFilter = ContactType | "ALL";
 
 type TabKey = "ALL" | "BOT" | "PENDING" | "CRISIS" | "CLOSED";
 
@@ -64,11 +67,12 @@ export function ConversationList({
   onSelect,
 }: ConversationListProps) {
   const [tab, setTab] = useState<TabKey>("ALL");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [searchInput, setSearchInput] = useState("");
   const [q, setQ] = useState("");
   const [result, setResult] = useState<ListResult | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const key = `${tab}|${q}`;
+  const key = `${tab}|${typeFilter}|${q}`;
   const items = result?.key === key ? result.items : [];
   const total = result?.key === key ? result.total : 0;
   const loading = result?.key !== key;
@@ -84,7 +88,7 @@ export function ConversationList({
   const load = useCallback(
     async (silent: boolean) => {
       const requestId = ++requestRef.current;
-      const loadKey = `${tab}|${q}`;
+      const loadKey = `${tab}|${typeFilter}|${q}`;
       const loaded = itemsLenRef.current;
       const limit = silent
         ? Math.min(MAX_LIMIT, Math.max(PAGE_SIZE, Math.ceil(loaded / PAGE_SIZE) * PAGE_SIZE))
@@ -92,6 +96,7 @@ export function ConversationList({
       try {
         const res = await listConversations({
           ...tabParams(tab),
+          contactType: typeFilter === "ALL" ? undefined : typeFilter,
           q: q || undefined,
           page: 1,
           limit,
@@ -107,7 +112,7 @@ export function ConversationList({
         }
       }
     },
-    [tab, q],
+    [tab, typeFilter, q],
   );
 
   const loadRef = useRef(load);
@@ -133,6 +138,7 @@ export function ConversationList({
       const page = Math.floor(itemsLenRef.current / PAGE_SIZE) + 1;
       const res = await listConversations({
         ...tabParams(tab),
+        contactType: typeFilter === "ALL" ? undefined : typeFilter,
         q: q || undefined,
         page,
         limit: PAGE_SIZE,
@@ -183,6 +189,24 @@ export function ConversationList({
             </button>
           ))}
         </div>
+        <div className="flex gap-1 overflow-x-auto" role="group" aria-label="Kişi tipi filtresi">
+          {(["ALL", ...CONTACT_TYPE_ORDER] as TypeFilter[]).map((tf) => (
+            <button
+              key={tf}
+              type="button"
+              onClick={() => setTypeFilter(tf)}
+              aria-pressed={typeFilter === tf}
+              className={cn(
+                "shrink-0 rounded-md border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                typeFilter === tf
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {tf === "ALL" ? "Tümü" : CONTACT_TYPE_LABELS[tf]}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -200,7 +224,7 @@ export function ConversationList({
           </div>
         ) : items.length === 0 ? (
           <p className="p-6 text-center text-sm text-muted-foreground">
-            {q || tab !== "ALL" ? "Bu filtreye uygun konuşma yok" : "Henüz konuşma yok"}
+            {q || tab !== "ALL" || typeFilter !== "ALL" ? "Bu filtreye uygun konuşma yok" : "Henüz konuşma yok"}
           </p>
         ) : (
           <ul>
@@ -208,7 +232,9 @@ export function ConversationList({
               const active = c.id === selectedId;
               const preview = c.lastMessage
                 ? `${
-                    c.lastMessage.senderType === "CLIENT"
+                    c.lastMessage.isDraft
+                      ? "Taslak: "
+                      : c.lastMessage.senderType === "CLIENT"
                       ? ""
                       : c.lastMessage.senderType === "BOT"
                         ? "Elif: "
@@ -234,9 +260,21 @@ export function ConversationList({
                         {formatRelative(c.lastMessageAt)}
                       </span>
                     </div>
-                    <p className="truncate text-xs text-muted-foreground">{preview}</p>
-                    {c.flaggedCrisis || c.status !== "OPEN" ? (
+                    <p
+                      className={cn(
+                        "truncate text-xs text-muted-foreground",
+                        c.lastMessage?.isDraft && "italic",
+                      )}
+                    >
+                      {preview}
+                    </p>
+                    {c.flaggedCrisis || c.status !== "OPEN" || c.contact.contactType !== "DANISAN" ? (
                       <div className="flex flex-wrap gap-1">
+                        {c.contact.contactType !== "DANISAN" ? (
+                          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-800">
+                            {CONTACT_TYPE_LABELS[c.contact.contactType]}
+                          </span>
+                        ) : null}
                         {c.flaggedCrisis ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
                             <TriangleAlert className="size-3" />

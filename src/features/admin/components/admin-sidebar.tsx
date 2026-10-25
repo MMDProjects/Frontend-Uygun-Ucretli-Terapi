@@ -9,7 +9,7 @@ import { siteConfig } from "@/lib/constants/site";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { logout } from "@/lib/services/auth.service";
-import { useInboxCounts } from "@/hooks/use-inbox-counts";
+import { useSharedInboxCounts } from "@/features/admin/assistant/inbox-counts-context";
 
 type NavItem = { label: string; href: string; badge?: number; urgent?: boolean };
 type NavGroup = { title: string; items: NavItem[] };
@@ -48,6 +48,7 @@ const groups: NavGroup[] = [
       { label: "Mesajlar", href: "/admin/mesajlar" },
       { label: "Arama Talepleri", href: "/admin/arama-talepleri" },
       { label: "Bilgi Bankası", href: "/admin/bilgi-bankasi" },
+      { label: "Asistan Ayarları", href: "/admin/asistan-ayarlari" },
     ],
   },
   {
@@ -64,7 +65,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { displayName } = useAuthStore();
   const { unreadCount } = useAdminNotificationStore();
-  const { counts } = useInboxCounts();
+  const counts = useSharedInboxCounts();
 
   const dynamicBadges: Record<string, { badge: number; urgent?: boolean }> = {
     "/admin/mesajlar": {

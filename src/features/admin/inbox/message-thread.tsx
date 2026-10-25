@@ -30,12 +30,14 @@ import {
   ChannelBadge,
   contactName,
   dayKey,
+  formatDateTime,
   formatDayLabel,
   formatTime,
 } from "./labels";
 import { EXTERNAL_SOURCE_INSTAGRAM_APP } from "./constants";
+import { DraftBubble } from "./draft-bubble";
 import { HandoffCard } from "./handoff-card";
-import { MessageComposer } from "./message-composer";
+import { MessageComposer, type MessageComposerHandle } from "./message-composer";
 
 const PAGE_SIZE = 50;
 const NEAR_BOTTOM_PX = 120;
@@ -50,6 +52,18 @@ type PendingScroll = { type: "bottom" } | { type: "restore"; prevHeight: number 
 interface KnowledgeDraft {
   title: string;
   content: string;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function formatRemaining(ms: number): string {
+  const totalMinutes = Math.max(1, Math.floor(ms / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days} gün ${hours} saat`;
+  if (hours > 0) return `${hours} saat ${minutes} dk`;
+  return `${minutes} dk`;
 }
 
 interface MessageThreadProps {
@@ -104,6 +118,8 @@ export function MessageThread({
   const [showNew, setShowNew] = useState(false);
   const [draft, setDraft] = useState<KnowledgeDraft | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const composerRef = useRef<MessageComposerHandle>(null);
   const nearBottomRef = useRef(true);
   const pendingScrollRef = useRef<PendingScroll | null>(null);
   const loadingOlderRef = useRef(false);
@@ -128,6 +144,11 @@ export function MessageThread({
       cancelled = true;
     };
   }, [conversationId]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
@@ -211,6 +232,15 @@ export function MessageThread({
 
   const canWrite = detail ? detail.windowOpen && detail.status !== "CLOSED" : false;
   const rows = buildRows(messages);
+  const expiresMs = detail?.windowExpiresAt ? new Date(detail.windowExpiresAt).getTime() : null;
+  const remainingMs = expiresMs !== null ? expiresMs - now : null;
+  const windowInfo =
+    detail && canWrite && detail.windowExpiresAt && remainingMs !== null && remainingMs > 0
+      ? {
+          text: `Yanıt süresi: ${formatRemaining(remainingMs)} (${formatDateTime(detail.windowExpiresAt)} tarihine kadar)`,
+          humanAgent: detail.channel === "INSTAGRAM" && remainingMs > DAY_MS,
+        }
+      : null;
 
   return (
     <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col bg-muted/40">
@@ -327,6 +357,19 @@ export function MessageThread({
                       </span>
                     </div>
                   ) : null}
+                  {m.isDraft ? (
+                    <div className="flex justify-end">
+                      <div className="flex max-w-[85%] flex-col items-end gap-0.5 sm:max-w-[70%]">
+                        <DraftBubble
+                          message={m}
+                          onCopy={canWrite ? (text) => composerRef.current?.insertText(text) : undefined}
+                        />
+                        <span className="px-1 text-[11px] text-muted-foreground">
+                          {formatTime(m.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
                   <div className={cn("flex", isClient ? "justify-start" : "justify-end")}>
                     <div
                       className={cn(
@@ -369,6 +412,7 @@ export function MessageThread({
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               );
             })}
@@ -388,11 +432,22 @@ export function MessageThread({
       ) : null}
 
       {!detail ? null : canWrite ? (
+        <>
+        {windowInfo ? (
+          <div className="border-t border-border bg-card px-4 pt-2 text-[11px] text-muted-foreground">
+            <p>{windowInfo.text}</p>
+            {windowInfo.humanAgent ? (
+              <p>İnsan temsilci etiketiyle gönderilecek (7 gün)</p>
+            ) : null}
+          </div>
+        ) : null}
         <MessageComposer
+          ref={composerRef}
           botActive={detail.isBotActive}
           channel={detail.channel}
           onSend={handleSend}
         />
+        </>
       ) : (
         <div className="flex items-start gap-2 border-t border-border bg-amber-50 px-4 py-3 text-xs text-amber-900 sm:text-sm">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />

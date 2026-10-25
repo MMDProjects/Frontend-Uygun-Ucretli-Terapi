@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -18,17 +18,34 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Channel } from "@/services/inbox/types";
 import { MESSAGE_MAX_LENGTH } from "./constants";
 
+export interface MessageComposerHandle {
+  insertText: (text: string) => void;
+}
+
 interface MessageComposerProps {
+  ref?: Ref<MessageComposerHandle>;
   botActive: boolean;
   channel: Channel;
   onSend: (content: string) => Promise<void>;
 }
 
-export function MessageComposer({ botActive, channel, onSend }: MessageComposerProps) {
+export function MessageComposer({ ref, botActive, channel, onSend }: MessageComposerProps) {
   const maxLength = MESSAGE_MAX_LENGTH[channel];
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      insertText: (text) => {
+        setValue(text.slice(0, maxLength));
+        requestAnimationFrame(() => textareaRef.current?.focus());
+      },
+    }),
+    [maxLength],
+  );
 
   const trimmed = value.trim();
   const canSend = trimmed.length > 0 && trimmed.length <= maxLength && !sending;
@@ -59,6 +76,7 @@ export function MessageComposer({ botActive, channel, onSend }: MessageComposerP
     <div className="border-t border-border bg-card p-3">
       <div className="flex items-end gap-2">
         <Textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {

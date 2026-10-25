@@ -7,6 +7,7 @@ import { AdminTopBar } from "@/features/admin/components/admin-topbar";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useAdminNotificationStore } from "@/lib/stores/admin-notification-store";
 import { subscribeToNotificationStream } from "@/lib/services/admin.service";
+import { InboxCountsProvider } from "@/features/admin/assistant/inbox-counts-context";
 import { cn } from "@/lib/utils";
 
 export default function AdminLayout({
@@ -60,6 +61,7 @@ export default function AdminLayout({
   }
 
   return (
+    <InboxCountsProvider>
     <div className="flex h-screen overflow-hidden bg-muted">
       {/* Sidebar */}
       <aside
@@ -88,5 +90,6 @@ export default function AdminLayout({
         <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>
+    </InboxCountsProvider>
   );
 }
