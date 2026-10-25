@@ -16,6 +16,7 @@ import {
   contactName,
   formatRelative,
 } from "./labels";
+import { handoffReasonLabel } from "./constants";
 
 type TabKey = "ALL" | "BOT" | "PENDING" | "CRISIS" | "CLOSED";
 
@@ -245,6 +246,17 @@ export function ConversationList({
                         {c.status === "PENDING_AGENT" ? (
                           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
                             Personel bekliyor
+                          </span>
+                        ) : null}
+                        {c.status === "PENDING_AGENT" && c.handoffReason ? (
+                          <span
+                            className={
+                              c.handoffReason === "acil_durum"
+                                ? "rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+                                : "rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-800"
+                            }
+                          >
+                            {handoffReasonLabel(c.handoffReason)}
                           </span>
                         ) : null}
                         {c.status === "CLOSED" ? (

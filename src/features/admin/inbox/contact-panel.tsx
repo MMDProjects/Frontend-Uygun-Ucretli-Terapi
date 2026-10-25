@@ -99,6 +99,7 @@ function ContactCard({
   const [age, setAge] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const isWhatsapp = contact.channel === "WHATSAPP";
 
   function startEdit() {
     setFullName(contact.fullName ?? "");
@@ -113,7 +114,7 @@ function ContactCard({
     const nameTrim = fullName.trim();
     if (nameTrim && nameTrim !== (contact.fullName ?? "")) input.fullName = nameTrim;
     const phoneTrim = phone.trim();
-    if (phoneTrim && phoneTrim !== (contact.phone ?? "")) input.phone = phoneTrim;
+    if (!isWhatsapp && phoneTrim && phoneTrim !== (contact.phone ?? "")) input.phone = phoneTrim;
     if (age.trim() !== "") {
       const ageNum = Number(age);
       if (!Number.isInteger(ageNum) || ageNum < 0 || ageNum > 120) {
@@ -201,8 +202,15 @@ function ContactCard({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               maxLength={32}
+              disabled={isWhatsapp}
+              readOnly={isWhatsapp}
               className="h-9 rounded-lg text-sm"
             />
+            {isWhatsapp ? (
+              <p className="text-[11px] text-muted-foreground">
+                WhatsApp numarası mesaj adresidir, değiştirilemez.
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="space-y-1">

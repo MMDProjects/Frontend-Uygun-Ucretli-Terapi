@@ -47,6 +47,9 @@ export interface ConversationBase {
   flaggedCrisis: boolean;
   createdAt: string;
   lastMessageAt: string;
+  handoffReason: string | null;
+  handoffSummary: string | null;
+  handedOffAt: string | null;
 }
 
 export interface LastMessagePreview {
@@ -120,6 +123,7 @@ export interface InboxMessage {
   metaMessageId: string | null;
   agentUserId: string | null;
   agentUser: { firstName: string; lastName: string } | null;
+  externalSource: string | null;
   createdAt: string;
 }
 
@@ -129,6 +133,7 @@ export interface InboxCounts {
   crisis: number;
   newLeads: number;
   openUnanswered: number;
+  attention?: number;
 }
 
 export interface UnansweredQuestion {

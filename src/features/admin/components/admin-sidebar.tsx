@@ -68,7 +68,7 @@ export function AdminSidebar() {
 
   const dynamicBadges: Record<string, { badge: number; urgent?: boolean }> = {
     "/admin/mesajlar": {
-      badge: (counts?.pendingAgent ?? 0) + (counts?.crisis ?? 0),
+      badge: counts?.attention ?? (counts?.pendingAgent ?? 0) + (counts?.crisis ?? 0),
       urgent: (counts?.crisis ?? 0) > 0,
     },
     "/admin/arama-talepleri": { badge: counts?.newLeads ?? 0 },

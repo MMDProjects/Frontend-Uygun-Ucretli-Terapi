@@ -33,6 +33,8 @@ import {
   formatDayLabel,
   formatTime,
 } from "./labels";
+import { EXTERNAL_SOURCE_INSTAGRAM_APP } from "./constants";
+import { HandoffCard } from "./handoff-card";
 import { MessageComposer } from "./message-composer";
 
 const PAGE_SIZE = 50;
@@ -264,6 +266,10 @@ export function MessageThread({
         </div>
       ) : null}
 
+      {detail && !detail.isBotActive && detail.handoffReason ? (
+        <HandoffCard detail={detail} />
+      ) : null}
+
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -309,7 +315,9 @@ export function MessageThread({
                   ? "Danışan"
                   : m.senderType === "BOT"
                     ? "Elif"
-                    : agentName(m.agentUser);
+                    : m.externalSource === EXTERNAL_SOURCE_INSTAGRAM_APP
+                      ? "Instagram uygulamasından"
+                      : agentName(m.agentUser);
               return (
                 <div key={m.id} className="space-y-3">
                   {showDay ? (
@@ -380,7 +388,11 @@ export function MessageThread({
       ) : null}
 
       {!detail ? null : canWrite ? (
-        <MessageComposer botActive={detail.isBotActive} onSend={handleSend} />
+        <MessageComposer
+          botActive={detail.isBotActive}
+          channel={detail.channel}
+          onSend={handleSend}
+        />
       ) : (
         <div className="flex items-start gap-2 border-t border-border bg-amber-50 px-4 py-3 text-xs text-amber-900 sm:text-sm">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />

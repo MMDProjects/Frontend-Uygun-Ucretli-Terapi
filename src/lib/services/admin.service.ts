@@ -28,7 +28,7 @@ export function subscribeToNotificationStream(
   if (!token || typeof window === "undefined") return () => {};
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-  const es = new EventSource(`${apiUrl}/notifications/stream?token=${token}`);
+  const es = new EventSource(`${apiUrl}/notifications/stream?token=${encodeURIComponent(token)}`);
 
   es.onmessage = (e) => {
     try {
