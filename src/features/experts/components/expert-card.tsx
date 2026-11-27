@@ -21,7 +21,6 @@ export function ExpertCard({
   showPhoto = true,
   centerCta = false,
   expandContentDesktop = false,
-  standardPrice,
   discountedPrice,
 }: ExpertCardProps) {
   const initials = expert.name
@@ -66,18 +65,12 @@ export function ExpertCard({
         </div>
       </div>
 
-      {/* Fiyat badge — uzmanın kendi fiyatı varsa onu, yoksa global fiyatı göster */}
+      {/* Fiyat badge — uzmanın kendi indirimli fiyatı varsa onu, yoksa global fiyatı göster */}
       {(() => {
-        const effStandard = expert.standardPrice ?? standardPrice;
         const effDiscounted = expert.discountedPrice ?? discountedPrice;
         return effDiscounted != null ? (
           <div className="mt-3 px-6">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#014a3e] px-3 py-1 text-xs font-semibold text-white">
-              {effStandard != null && effStandard !== effDiscounted && (
-                <span className="line-through opacity-60">
-                  {Number(effStandard).toLocaleString("tr-TR")} TL
-                </span>
-              )}
               <span>{Number(effDiscounted).toLocaleString("tr-TR")} TL</span>
             </span>
           </div>
